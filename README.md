@@ -16,7 +16,7 @@ GeoPackage de terrain est préparé et relu par
 évolutions demandées à ces paquets sont livrées en briefs (`briefs/`).
 
 > **État : prototype (0.x).** La chaîne est validée sur données
-> synthétiques ; l'application Android n'a pas encore été compilée ni
+> synthétiques ; l'application Android compile mais n'a pas encore été
 > testée sur appareil, et aucune placette réelle n'a été mesurée. Voir
 > [`PLAN.md`](PLAN.md).
 
@@ -53,7 +53,7 @@ Détails : [`docs/architecture.md`](docs/architecture.md).
 | [`core/`](core/) | paquet `groma` : numérotation, azimuts, cercles, troncs, géoréférencement, houppiers, MNT, rapprochement, schéma et écriture du GeoPackage | Python | testé |
 | [`server/`](server/) | `groma-server` : API FastAPI (envoi reprenable), file de tâches SQLite, pipeline 3D, rapport, image Docker | Python | testé sur données synthétiques |
 | [`android/groma-core`](android/groma-core/) | portage de la logique commune (numérotation, cercles, appariement, GeoPackage, contrôle qualité…) | Kotlin/JVM | testé |
-| [`android/app`](android/app/) | application Groma : capture ARCore, ArUco, calcul embarqué, envoi | Kotlin/Android | écrite, **jamais compilée** |
+| [`android/app`](android/app/) | application Groma : capture ARCore, ArUco, calcul embarqué, envoi | Kotlin/Android | compile (CI), **non testée sur appareil** |
 | [`fixtures/`](fixtures/) | cas de test communs aux trois langages (numérotation, rapprochement) | JSON | |
 | [`briefs/`](briefs/) | briefs pour `nemeton` et `nemetonshiny`, code R de référence et tests | R, Markdown | |
 | [`exemples/`](exemples/) | GeoPackage d'exemple (2 placettes, rasters) et résultat serveur | | passe la chaîne nemeton |
@@ -110,7 +110,7 @@ Configuration, GPU (COLMAP CUDA, VGGT, SAM 2) et stockage S3 :
 |---|---|
 | `python` | `pytest core server benchmark` sous Python 3.11 et 3.12 |
 | `kotlin` | `gradle :groma-core:test` |
-| `android-app` | `gradle :app:assembleDebug` ; **non bloquant** tant que l'application n'a pas été compilée une première fois |
+| `android-app` | `gradle :app:assembleDebug`, APK de debug en artefact |
 | `r` | numérotation R sur les cas communs et intégration avec `nemeton` |
 | `docker` | construction de l'image serveur |
 

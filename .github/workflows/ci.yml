@@ -49,9 +49,7 @@ jobs:
         working-directory: android
 
   android-app:
-    # The app has never been built yet (see PLAN.md): report, do not block.
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

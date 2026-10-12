@@ -26,10 +26,10 @@ Source unique de l'état d'avancement. Mis à jour à chaque étape.
 | 3 | Schéma `inventaire_video.gpkg`, exemple, briefs nemeton et nemetonshiny | fait ; exemple validé avec les vraies fonctions de nemeton (14 attentes R) |
 | 4 | Pipeline serveur de bout en bout | fait sur données synthétiques (20 tests). COLMAP, VGGT et SAM 2 écrits mais **non exécutés** (pas de GPU ni de binaire ici) |
 | 4b | `benchmark/` | script prêt, **en attente d'une vraie placette** |
-| 5 | Application Android avec contrôle qualité | logique testée en Kotlin (29 tests) ; application écrite, **non compilée** (pas de SDK Android ici) |
+| 5 | Application Android avec contrôle qualité | logique testée en Kotlin (29 tests) ; application **compilée en CI** (APK de debug), non testée sur appareil |
 | 6 | Calcul embarqué provisoire | écrit (`CalculEmbarque.kt`), à tester sur appareil |
 | 7 | Envoi, file d'attente, résultats pour nemetonshiny | fait côté serveur (envoi reprenable testé) ; `EnvoiWorker.kt` écrit |
-| 7b | CI (Python 3.11/3.12, Kotlin, R, Docker, APK non bloquant), versions, releases, Dependabot | fait |
+| 7b | CI (Python 3.11/3.12, Kotlin, R, Docker, APK), versions, releases, Dependabot | fait |
 | 8 | Essence proposée par photo d'écorce ou de feuilles | plus tard |
 
 ## Résultats sur données synthétiques (pas encore sur le terrain)
@@ -59,7 +59,7 @@ reconstruction en sous-bois.
 2. **NTRIP en forêt** : client NTRIP intégré à QField ≥ 4.2 ; sans 4G, il
    faut un repli PPK (UBX brut + RTKLIB). Les identifiants Centipède sont à
    vérifier.
-3. Compiler et tester `android/app` (SDK Android, appareil ARCore Depth).
+3. Tester `android/app` sur un appareil ARCore Depth (la compilation passe en CI).
 4. Image Docker GPU : COLMAP avec CUDA, VGGT (licence à vérifier), SAM 2.
 5. Première placette réelle : tourner, mesurer à la main, `benchmark/`.
 6. Déposer les briefs dans `/home/pascal/dev/briefs/vers-nemeton/` et
