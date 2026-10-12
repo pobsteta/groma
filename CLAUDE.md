@@ -32,12 +32,15 @@ Inventaire forestier par vidéo (application Android Groma, paquet Python
   au plus).
 * Unités : mètres, diamètres en cm, azimuts en degrés ou grades selon la
   placette (calculs internes en degrés, nord géographique).
-* Conventional Commits.
+* Conventional Commits (en français après le type : `feat(core): …`) ; ils
+  pilotent les versions (release-please). PR fusionnées en squash, titre
+  conforme. Ne jamais modifier les numéros de version à la main.
 
 ## Commandes
 
 ```bash
 pytest core server benchmark
 cd android && gradle :groma-core:test
+cd android && gradle :app:assembleDebug   # SDK Android requis
 GROMA_FIXTURES=$PWD/fixtures/numerotation Rscript -e 'source("briefs/vers-nemeton/R/numerotation.R"); testthat::test_file("briefs/vers-nemeton/tests/test-numerotation.R")'
 ```

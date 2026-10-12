@@ -1,0 +1,121 @@
+name: release
+
+# On every push to main, release-please keeps a release PR up to date
+# (version bump in all packages + CHANGELOG.md). Merging that PR tags vX.Y.Z,
+# creates the GitHub release, and the jobs below attach the artifacts.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  packages: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    outputs:
+      created: ${{ steps.rp.outputs.release_created }}
+      tag: ${{ steps.rp.outputs.tag_name }}
+      version: ${{ steps.rp.outputs.version }}
+    steps:
+      - uses: googleapis/release-please-action@v4
+        id: rp
+        with:
+          # A PAT lets CI run on the release PR (PRs opened with GITHUB_TOKEN
+          # do not trigger workflows); falls back to GITHUB_TOKEN.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  tests:
+    needs: release-please
+    if: needs.release-please.outputs.created == 'true'
+    uses: ./.github/workflows/ci.yml
+
+  python-dist:
+    needs: [release-please, tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install build
+      - run: python -m build core --outdir dist && python -m build server --outdir dist
+      - run: gh release upload "${{ needs.release-please.outputs.tag }}" dist/* --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  docker:
+    needs: [release-please, tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/groma-server
+          tags: |
+            type=semver,pattern={{version}},value=${{ needs.release-please.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ needs.release-please.outputs.version }}
+            type=raw,value=latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: server/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  android:
+    needs: [release-please, tests]
+    runs-on: ubuntu-latest
+    # The app has never been built yet (see PLAN.md): never block a release on it.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.release-please.outputs.tag }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.14.3"
+      - name: APK signé (si le keystore est configuré) ou APK de debug
+        working-directory: android
+        env:
+          KEYSTORE_B64: ${{ secrets.GROMA_KEYSTORE_BASE64 }}
+          GROMA_KEYSTORE_PASSWORD: ${{ secrets.GROMA_KEYSTORE_PASSWORD }}
+          GROMA_KEY_ALIAS: ${{ secrets.GROMA_KEY_ALIAS }}
+          GROMA_KEY_PASSWORD: ${{ secrets.GROMA_KEY_PASSWORD }}
+          VERSION: ${{ needs.release-please.outputs.version }}
+        run: |
+          mkdir -p ../dist
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/groma.jks"
+            GROMA_KEYSTORE="$RUNNER_TEMP/groma.jks" gradle :app:assembleRelease
+            cp app/build/outputs/apk/release/app-release.apk "../dist/groma-$VERSION.apk"
+          else
+            gradle :app:assembleDebug
+            cp app/build/outputs/apk/debug/app-debug.apk "../dist/groma-$VERSION-debug.apk"
+          fi
+      - run: gh release upload "${{ needs.release-please.outputs.tag }}" dist/*.apk --clobber
+        env:
+          GH_TOKEN: ${{ github.token }}

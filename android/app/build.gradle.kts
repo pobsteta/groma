@@ -3,6 +3,15 @@ plugins {
     kotlin("android")
 }
 
+// Single project version, bumped by release-please. versionCode is derived
+// from it (MAJOR*10000 + MINOR*100 + PATCH) so every release is monotonic.
+val versionGroma = "0.1.0" // x-release-please-version
+val codeVersionGroma = versionGroma.split(".").map(String::toInt).let { (ma, mi, pa) -> ma * 10000 + mi * 100 + pa }
+
+// Release signing from the environment (CI secrets); without it the release
+// build stays unsigned and the CI ships the debug APK instead.
+val keystoreGroma: String? = System.getenv("GROMA_KEYSTORE")
+
 android {
     namespace = "groma.app"
     compileSdk = 35
@@ -11,8 +20,25 @@ android {
         applicationId = "fr.nemeton.groma"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = codeVersionGroma
+        versionName = versionGroma
+    }
+
+    signingConfigs {
+        if (keystoreGroma != null) {
+            create("release") {
+                storeFile = file(keystoreGroma)
+                storePassword = System.getenv("GROMA_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("GROMA_KEY_ALIAS")
+                keyPassword = System.getenv("GROMA_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            if (keystoreGroma != null) signingConfig = signingConfigs.getByName("release")
+        }
     }
 
     compileOptions {
