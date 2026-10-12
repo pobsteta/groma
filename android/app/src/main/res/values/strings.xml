@@ -16,4 +16,25 @@
     <string name="jeton">Jeton d\'accès</string>
     <string name="cibles_vues">Cibles vues : %1$s</string>
     <string name="couverture">Couverture : %1$d %%</string>
+    <string name="camera_requise">La caméra est nécessaire pour filmer la placette.</string>
+    <string name="menu">Menu</string>
+    <string name="menu_changer_projet">Changer de projet</string>
+    <string name="menu_parametres">Paramètres</string>
+    <string name="menu_apropos">À propos</string>
+    <string name="aucun_projet">Aucun projet ouvert.\nOuvre le dossier du projet préparé dans nemetonshiny.</string>
+    <string name="aucune_placette">Ce projet ne contient aucune placette.</string>
+    <string name="placettes_nombre">%1$d placettes · %2$d à faire</string>
+    <string name="placette_rayon">Rayon %1$s m · seuil %2$s cm</string>
+    <string name="etat_a_faire">À faire</string>
+    <string name="etat_provisoire">Provisoire</string>
+    <string name="etat_envoye">Envoyée</string>
+    <string name="etat_definitif">Définitive</string>
+    <string name="param_titre">Paramètres</string>
+    <string name="param_retour">Retour</string>
+    <string name="param_envoi_section">Envoi au serveur</string>
+    <string name="param_envoi_desc">Les prises de vue restent sur le téléphone tant qu\'aucun serveur n\'est renseigné. L\'envoi part en Wi-Fi, ou en 4G si tu l\'autorises.</string>
+    <string name="param_4g_desc">Les paquets peuvent peser plusieurs centaines de Mo.</string>
+    <string name="apropos_titre">Groma %1$s</string>
+    <string name="apropos_texte">Inventaire forestier par vidéo, plateforme Néméton.</string>
+    <string name="fermer">Fermer</string>
 </resources>

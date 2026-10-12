@@ -18,6 +18,7 @@ par GeoPackage et GeoTIFF : ce dépôt n'importe pas son code R.
 | COLMAP | serveur | BSD-3 | binaire appelé en sous-processus |
 | ARCore SDK (client) | Android | Apache-2.0 | requiert « Services Google Play pour la RA » (propriétaire, installé sur l'appareil) |
 | AndroidX, WorkManager | Android | Apache-2.0 | |
+| Jetpack Compose, Material 3, icônes Material (core) | Android (écran principal, style Marculus) | Apache-2.0 | |
 | kotlinx-serialization, JUnit 5, sqlite-jdbc | tests Kotlin | Apache-2.0 / EPL-2.0 / Apache-2.0 | tests seulement |
 | boto3 | serveur (option S3) | Apache-2.0 | |
 | Police UnifrakturCook Bold | icône Android (rendue en PNG) | OFL-1.1 | téléchargée par `android/app/icone/generer_icone.py`, non versionnée ; seul le rendu est distribué |
