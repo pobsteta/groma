@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity() {
         findViewById<EditText>(R.id.serveur).setText(p.getString("serveur", ""))
         findViewById<EditText>(R.id.jeton).setText(p.getString("jeton", ""))
         findViewById<CheckBox>(R.id.envoi4g).isChecked = p.getBoolean("4g", false)
-        ServeurLocal(File(filesDir, "detections")).demarrer()
+        ServeurLocal.demarrerUneFois(File(filesDir, "detections"))
         afficher()
     }
 
