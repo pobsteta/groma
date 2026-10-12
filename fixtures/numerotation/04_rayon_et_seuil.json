@@ -1,0 +1,53 @@
+{
+  "id": "04_rayon_et_seuil",
+  "description": "Bornes incluses : arbre à exactement 20 m et 7,5 cm retenu ; 20,5 m exclu (hors_rayon) ; 7,4 cm exclu (sous_seuil).",
+  "parametres": {
+    "rayon_m": 20.0,
+    "seuil_diam_cm": 7.5,
+    "unite_azimut": "deg",
+    "tolerance_deg": 1.0
+  },
+  "arbres": [
+    {
+      "id": "BORD",
+      "x": 0.0,
+      "y": 20.0,
+      "dbh_cm": 7.5
+    },
+    {
+      "id": "N45",
+      "x": 7.071068,
+      "y": 7.071068,
+      "dbh_cm": 25
+    },
+    {
+      "id": "PETIT",
+      "x": 5.0,
+      "y": 0.0,
+      "dbh_cm": 7.4
+    },
+    {
+      "id": "S180",
+      "x": 0.0,
+      "y": -10.0,
+      "dbh_cm": 25
+    },
+    {
+      "id": "LOIN",
+      "x": -20.5,
+      "y": -0.0,
+      "dbh_cm": 40
+    }
+  ],
+  "attendu": {
+    "numeros": {
+      "BORD": "1",
+      "N45": "2",
+      "S180": "3"
+    },
+    "exclus": {
+      "PETIT": "sous_seuil",
+      "LOIN": "hors_rayon"
+    }
+  }
+}

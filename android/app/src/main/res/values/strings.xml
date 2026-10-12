@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Groma</string>
+    <string name="ouvrir_projet">Ouvrir le dossier du projet</string>
+    <string name="choisir_placette">Choisir la placette</string>
+    <string name="filmer">Filmer la placette</string>
+    <string name="terminer">Terminer la prise de vue</string>
+    <string name="suivi_ok">Suivi : OK</string>
+    <string name="suivi_perdu">Suivi perdu</string>
+    <string name="verdict_ok">Prise de vue suffisante</string>
+    <string name="verdict_refaire">Prise de vue à refaire</string>
+    <string name="calcul_embarque">Calcul provisoire en cours…</string>
+    <string name="envoi_en_attente">Envoi en attente de réseau</string>
+    <string name="envoi_4g">Autoriser l\'envoi en 4G</string>
+    <string name="serveur">Adresse du serveur</string>
+    <string name="jeton">Jeton d\'accès</string>
+    <string name="cibles_vues">Cibles vues : %1$s</string>
+    <string name="couverture">Couverture : %1$d %%</string>
+</resources>

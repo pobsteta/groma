@@ -1,0 +1,105 @@
+{
+  "id": "05_sort_de_l_inventaire",
+  "description": "u2, mesuré à 6 cm par le serveur, passe sous le seuil : il porte une essence, donc il est gardé à vérifier (V1). Un nouvel arbre de 5 cm sans attribut est simplement ignoré.",
+  "parametres": {
+    "tolerance_m": 0.5,
+    "rayon_m": 20.0,
+    "seuil_diam_cm": 7.5,
+    "unite_azimut": "deg",
+    "tolerance_deg": 1.0
+  },
+  "centre": [
+    1000.0,
+    2000.0
+  ],
+  "convergence_deg": 0.0,
+  "provisoires": [
+    {
+      "uuid": "u1",
+      "plot_id": "P01",
+      "tree_id": "1",
+      "dbh_cm": 25,
+      "statut": "vivant",
+      "etat_detection": "provisoire",
+      "methode": "embarque",
+      "h_m": null,
+      "h_source": "aucune",
+      "essence_arbre": "charme",
+      "qualite": null,
+      "notes": null,
+      "photos": null,
+      "x": 1000.694593,
+      "y": 2003.939231
+    },
+    {
+      "uuid": "u2",
+      "plot_id": "P01",
+      "tree_id": "2",
+      "dbh_cm": 9,
+      "statut": "vivant",
+      "etat_detection": "provisoire",
+      "methode": "embarque",
+      "h_m": null,
+      "h_source": "aucune",
+      "essence_arbre": "charme",
+      "qualite": null,
+      "notes": null,
+      "photos": null,
+      "x": 1003.0,
+      "y": 2000.0
+    }
+  ],
+  "definitifs": [
+    {
+      "plot_id": "P01",
+      "dbh_cm": 25.5,
+      "methode": "classique",
+      "x": 1000.694593,
+      "y": 2003.939231
+    },
+    {
+      "plot_id": "P01",
+      "dbh_cm": 6.0,
+      "methode": "classique",
+      "x": 1003.0,
+      "y": 2000.0
+    },
+    {
+      "plot_id": "P01",
+      "dbh_cm": 5.0,
+      "methode": "classique",
+      "x": 1000.0,
+      "y": 1995.0
+    }
+  ],
+  "attendu": {
+    "par_uuid": {
+      "u1": {
+        "tree_id": "1",
+        "etat_detection": "definitif"
+      },
+      "u2": {
+        "tree_id": "V1",
+        "etat_detection": "a_verifier",
+        "essence_arbre": "charme",
+        "dbh_cm": 6.0
+      }
+    },
+    "nouveaux": [],
+    "nombre_arbres": 2,
+    "non_retrouves": [],
+    "numeros_modifies": [
+      [
+        "u2",
+        "2",
+        "V1"
+      ]
+    ],
+    "alertes": [
+      {
+        "uuid": "u2",
+        "motif": "sous_seuil"
+      }
+    ]
+  }
+}

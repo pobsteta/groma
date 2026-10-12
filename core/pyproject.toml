@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "groma"
+version = "0.1.0"
+description = "Groma : fonctions pures de l'inventaire forestier par vidéo (numérotation, géoréférencement, cercles, houppiers, rapprochement)."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "GPL-3.0-or-later"
+dependencies = [
+  "numpy>=1.26",
+  "scipy>=1.11",
+  "shapely>=2.0",
+]
+
+[project.optional-dependencies]
+geo = ["pyproj>=3.6", "rasterio>=1.3", "pyogrio>=0.7", "geopandas>=0.14"]
+dev = ["pytest>=8", "groma[geo]"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+groma = ["donnees/*.json", "donnees/*.sql"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

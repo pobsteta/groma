@@ -1,0 +1,38 @@
+# Groma server: API + worker sharing one data volume.
+#   GROMA_JETON=... docker compose -f server/docker-compose.yml up -d
+# GPU worker: uncomment the `deploy` block (NVIDIA Container Toolkit).
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    image: groma-server
+    environment:
+      GROMA_JETON: ${GROMA_JETON:?définir GROMA_JETON}
+    ports:
+      - "8000:8000"
+    volumes:
+      - donnees:/var/lib/groma
+    restart: unless-stopped
+
+  worker:
+    image: groma-server
+    depends_on: [api]
+    command: ["groma-worker"]
+    environment:
+      GROMA_RECONSTRUCTEURS: ${GROMA_RECONSTRUCTEURS:-colmap,vggt,profondeur}
+      GROMA_S3_URL: ${GROMA_S3_URL:-}
+      GROMA_S3_BUCKET: ${GROMA_S3_BUCKET:-groma}
+    volumes:
+      - donnees:/var/lib/groma
+    restart: unless-stopped
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+volumes:
+  donnees:

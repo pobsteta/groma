@@ -1,0 +1,43 @@
+{
+  "id": "06_egalite_numero_un",
+  "description": "Deux arbres visibles à égalité pour le n° 1 (az 2,0° à 15 m et 2,7° à 6 m) : le plus proche est le n° 1, l'autre le n° 2.",
+  "parametres": {
+    "rayon_m": 20.0,
+    "seuil_diam_cm": 7.5,
+    "unite_azimut": "deg",
+    "tolerance_deg": 1.0
+  },
+  "arbres": [
+    {
+      "id": "TA",
+      "x": 0.523492,
+      "y": 14.990862,
+      "dbh_cm": 30
+    },
+    {
+      "id": "TB",
+      "x": 0.282639,
+      "y": 5.993339,
+      "dbh_cm": 10
+    },
+    {
+      "id": "TC",
+      "x": 0.0,
+      "y": -8.0,
+      "dbh_cm": 30
+    }
+  ],
+  "attendu": {
+    "numeros": {
+      "TB": "1",
+      "TA": "2",
+      "TC": "3"
+    },
+    "exclus": {},
+    "visibles": [
+      "TA",
+      "TB",
+      "TC"
+    ]
+  }
+}

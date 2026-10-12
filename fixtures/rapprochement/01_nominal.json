@@ -1,0 +1,119 @@
+{
+  "id": "01_nominal",
+  "description": "Trois arbres retrouvés à 20 cm près : attributs terrain conservés, position et diamètre mis à jour, numéros inchangés. Sans essence, l'arbre est à compléter.",
+  "parametres": {
+    "tolerance_m": 0.5,
+    "rayon_m": 20.0,
+    "seuil_diam_cm": 7.5,
+    "unite_azimut": "deg",
+    "tolerance_deg": 1.0
+  },
+  "centre": [
+    1000.0,
+    2000.0
+  ],
+  "convergence_deg": 0.0,
+  "provisoires": [
+    {
+      "uuid": "u1",
+      "plot_id": "P01",
+      "tree_id": "1",
+      "dbh_cm": 28,
+      "statut": "vivant",
+      "etat_detection": "provisoire",
+      "methode": "embarque",
+      "h_m": null,
+      "h_source": "aucune",
+      "essence_arbre": "hetre",
+      "qualite": null,
+      "notes": "fourche",
+      "photos": null,
+      "x": 1002.5,
+      "y": 2004.330127
+    },
+    {
+      "uuid": "u2",
+      "plot_id": "P01",
+      "tree_id": "2",
+      "dbh_cm": 35,
+      "statut": "vivant",
+      "etat_detection": "provisoire",
+      "methode": "embarque",
+      "h_m": null,
+      "h_source": "aucune",
+      "essence_arbre": "chene_sessile",
+      "qualite": "B",
+      "notes": null,
+      "photos": null,
+      "x": 1006.928203,
+      "y": 1996.0
+    },
+    {
+      "uuid": "u3",
+      "plot_id": "P01",
+      "tree_id": "3",
+      "dbh_cm": 22,
+      "statut": "vivant",
+      "etat_detection": "provisoire",
+      "methode": "embarque",
+      "h_m": null,
+      "h_source": "aucune",
+      "essence_arbre": null,
+      "qualite": null,
+      "notes": null,
+      "photos": null,
+      "x": 990.603074,
+      "y": 1996.579799
+    }
+  ],
+  "definitifs": [
+    {
+      "plot_id": "P01",
+      "dbh_cm": 29.5,
+      "methode": "classique",
+      "x": 1002.7,
+      "y": 2004.330127
+    },
+    {
+      "plot_id": "P01",
+      "dbh_cm": 34.0,
+      "methode": "classique",
+      "x": 1006.928203,
+      "y": 1996.2
+    },
+    {
+      "plot_id": "P01",
+      "dbh_cm": 23.1,
+      "methode": "classique",
+      "x": 990.453074,
+      "y": 1996.579799
+    }
+  ],
+  "attendu": {
+    "par_uuid": {
+      "u1": {
+        "tree_id": "1",
+        "etat_detection": "definitif",
+        "essence_arbre": "hetre",
+        "notes": "fourche",
+        "dbh_cm": 29.5,
+        "num_provisoire": "1"
+      },
+      "u2": {
+        "tree_id": "2",
+        "etat_detection": "definitif",
+        "essence_arbre": "chene_sessile",
+        "qualite": "B",
+        "dbh_cm": 34.0
+      },
+      "u3": {
+        "tree_id": "3",
+        "etat_detection": "a_completer",
+        "dbh_cm": 23.1
+      }
+    },
+    "nouveaux": [],
+    "non_retrouves": [],
+    "numeros_modifies": []
+  }
+}

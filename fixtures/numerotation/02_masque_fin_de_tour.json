@@ -1,0 +1,58 @@
+{
+  "id": "02_masque_fin_de_tour",
+  "description": "A (az 5°) est caché par B (az 5,5°, plus proche, 60 cm) : B est le n° 1 et A, d'azimut inférieur, est numéroté en fin de tour.",
+  "parametres": {
+    "rayon_m": 20.0,
+    "seuil_diam_cm": 7.5,
+    "unite_azimut": "deg",
+    "tolerance_deg": 1.0
+  },
+  "arbres": [
+    {
+      "id": "A",
+      "x": 1.045869,
+      "y": 11.954336,
+      "dbh_cm": 30
+    },
+    {
+      "id": "B",
+      "x": 0.383383,
+      "y": 3.981585,
+      "dbh_cm": 60
+    },
+    {
+      "id": "C",
+      "x": 6.0,
+      "y": 0.0,
+      "dbh_cm": 30
+    },
+    {
+      "id": "D",
+      "x": -2.736161,
+      "y": -7.517541,
+      "dbh_cm": 30
+    },
+    {
+      "id": "E",
+      "x": -8.660254,
+      "y": 5.0,
+      "dbh_cm": 30
+    }
+  ],
+  "attendu": {
+    "numeros": {
+      "B": "1",
+      "C": "2",
+      "D": "3",
+      "E": "4",
+      "A": "5"
+    },
+    "exclus": {},
+    "visibles": [
+      "B",
+      "C",
+      "D",
+      "E"
+    ]
+  }
+}

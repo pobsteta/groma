@@ -1,0 +1,131 @@
+{
+  "id": "04_hauteur_mesuree_faux_positif_ecart_dbh",
+  "description": "Une hauteur mesurée n'est jamais écrasée par le MNH ; un faux positif non retrouvé reste faux positif (F1) ; un écart de diamètre de 20 à 45 cm déclenche une alerte sans casser l'appariement.",
+  "parametres": {
+    "tolerance_m": 0.5,
+    "rayon_m": 20.0,
+    "seuil_diam_cm": 7.5,
+    "unite_azimut": "deg",
+    "tolerance_deg": 1.0
+  },
+  "centre": [
+    1000.0,
+    2000.0
+  ],
+  "convergence_deg": 0.0,
+  "provisoires": [
+    {
+      "uuid": "u1",
+      "plot_id": "P01",
+      "tree_id": "1",
+      "dbh_cm": 30,
+      "statut": "vivant",
+      "etat_detection": "provisoire",
+      "methode": "embarque",
+      "h_m": 25.0,
+      "h_source": "mesuree",
+      "essence_arbre": "hetre",
+      "qualite": null,
+      "notes": null,
+      "photos": null,
+      "x": 1004.242641,
+      "y": 2004.242641
+    },
+    {
+      "uuid": "u2",
+      "plot_id": "P01",
+      "tree_id": "2",
+      "dbh_cm": 15,
+      "statut": "vivant",
+      "etat_detection": "faux_positif",
+      "methode": "embarque",
+      "h_m": null,
+      "h_source": "aucune",
+      "essence_arbre": null,
+      "qualite": null,
+      "notes": "souche",
+      "photos": null,
+      "x": 1004.499513,
+      "y": 1994.637689
+    },
+    {
+      "uuid": "u3",
+      "plot_id": "P01",
+      "tree_id": "3",
+      "dbh_cm": 20,
+      "statut": "vivant",
+      "etat_detection": "provisoire",
+      "methode": "embarque",
+      "h_m": null,
+      "h_source": "aucune",
+      "essence_arbre": "frene",
+      "qualite": null,
+      "notes": null,
+      "photos": null,
+      "x": 991.13673,
+      "y": 1998.437166
+    }
+  ],
+  "definitifs": [
+    {
+      "plot_id": "P01",
+      "dbh_cm": 31.0,
+      "methode": "classique",
+      "x": 1004.242641,
+      "y": 2004.242641,
+      "h_m": 30.0,
+      "h_source": "mnh",
+      "houppier_id": 12
+    },
+    {
+      "plot_id": "P01",
+      "dbh_cm": 45.0,
+      "methode": "classique",
+      "x": 991.13673,
+      "y": 1998.437166
+    }
+  ],
+  "attendu": {
+    "par_uuid": {
+      "u1": {
+        "tree_id": "1",
+        "h_m": 25.0,
+        "h_source": "mesuree",
+        "etat_detection": "definitif"
+      },
+      "u2": {
+        "tree_id": "F1",
+        "etat_detection": "faux_positif",
+        "notes": "souche"
+      },
+      "u3": {
+        "tree_id": "2",
+        "dbh_cm": 45.0,
+        "etat_detection": "definitif",
+        "essence_arbre": "frene"
+      }
+    },
+    "nouveaux": [],
+    "non_retrouves": [
+      "u2"
+    ],
+    "numeros_modifies": [
+      [
+        "u2",
+        "2",
+        "F1"
+      ],
+      [
+        "u3",
+        "3",
+        "2"
+      ]
+    ],
+    "alertes": [
+      {
+        "uuid": "u3",
+        "motif": "ecart_dbh"
+      }
+    ]
+  }
+}
