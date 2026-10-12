@@ -1,0 +1,15 @@
+{
+  "id": "08_vide",
+  "description": "Placette sans arbre.",
+  "parametres": {
+    "rayon_m": 20.0,
+    "seuil_diam_cm": 7.5,
+    "unite_azimut": "deg",
+    "tolerance_deg": 1.0
+  },
+  "arbres": [],
+  "attendu": {
+    "numeros": {},
+    "exclus": {}
+  }
+}

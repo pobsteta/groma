@@ -1,0 +1,51 @@
+{
+  "id": "05_grades",
+  "description": "Placette en grades. La tolérance d'égalité reste 1° (1,11 gr) : G3 à 101 gr et G2 à 100 gr sont à égalité, le plus proche (G3) d'abord. Les azimuts sont rendus en grades.",
+  "parametres": {
+    "rayon_m": 20.0,
+    "seuil_diam_cm": 7.5,
+    "unite_azimut": "gr",
+    "tolerance_deg": 1.0
+  },
+  "arbres": [
+    {
+      "id": "G1",
+      "x": 2.723943,
+      "y": 5.346039,
+      "dbh_cm": 30
+    },
+    {
+      "id": "G2",
+      "x": 10.0,
+      "y": 0.0,
+      "dbh_cm": 30
+    },
+    {
+      "id": "G3",
+      "x": 4.999383,
+      "y": -0.078537,
+      "dbh_cm": 30
+    },
+    {
+      "id": "G4",
+      "x": -8.0,
+      "y": -0.0,
+      "dbh_cm": 30
+    }
+  ],
+  "attendu": {
+    "numeros": {
+      "G1": "1",
+      "G3": "2",
+      "G2": "3",
+      "G4": "4"
+    },
+    "exclus": {},
+    "azimuts": {
+      "G1": 30.0,
+      "G2": 100.0,
+      "G3": 101.0,
+      "G4": 300.0
+    }
+  }
+}

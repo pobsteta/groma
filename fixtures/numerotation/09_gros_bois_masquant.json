@@ -1,0 +1,71 @@
+{
+  "id": "09_gros_bois_masquant",
+  "description": "Un gros bois de 120 cm à 3 m (az 50°) masque trois arbres ; H1 (az 10°) est masqué par H0 (az 11°) qui devient le n° 1, H1 est numéroté en dernier.",
+  "parametres": {
+    "rayon_m": 20.0,
+    "seuil_diam_cm": 7.5,
+    "unite_azimut": "deg",
+    "tolerance_deg": 1.0
+  },
+  "arbres": [
+    {
+      "id": "H1",
+      "x": 2.604723,
+      "y": 14.772116,
+      "dbh_cm": 30
+    },
+    {
+      "id": "H0",
+      "x": 0.954045,
+      "y": 4.908136,
+      "dbh_cm": 50
+    },
+    {
+      "id": "T30",
+      "x": 4.0,
+      "y": 6.928203,
+      "dbh_cm": 30
+    },
+    {
+      "id": "H40",
+      "x": 7.713451,
+      "y": 9.192533,
+      "dbh_cm": 30
+    },
+    {
+      "id": "H45",
+      "x": 6.363961,
+      "y": 6.363961,
+      "dbh_cm": 30
+    },
+    {
+      "id": "BIG",
+      "x": 2.298133,
+      "y": 1.928363,
+      "dbh_cm": 120
+    },
+    {
+      "id": "H55",
+      "x": 8.19152,
+      "y": 5.735764,
+      "dbh_cm": 30
+    }
+  ],
+  "attendu": {
+    "numeros": {
+      "H0": "1",
+      "T30": "2",
+      "H40": "3",
+      "H45": "4",
+      "BIG": "5",
+      "H55": "6",
+      "H1": "7"
+    },
+    "exclus": {},
+    "visibles": [
+      "H0",
+      "T30",
+      "BIG"
+    ]
+  }
+}

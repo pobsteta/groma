@@ -1,0 +1,45 @@
+{
+  "id": "03_egalite_plus_proche",
+  "description": "T2 (az 100°, 12 m) et T3 (az 100,6°, 6 m) sont à égalité d'azimut (écart < 1°) : le plus proche (T3) passe d'abord.",
+  "parametres": {
+    "rayon_m": 20.0,
+    "seuil_diam_cm": 7.5,
+    "unite_azimut": "deg",
+    "tolerance_deg": 1.0
+  },
+  "arbres": [
+    {
+      "id": "T1",
+      "x": 1.710101,
+      "y": 4.698463,
+      "dbh_cm": 30
+    },
+    {
+      "id": "T2",
+      "x": 11.817693,
+      "y": -2.083778,
+      "dbh_cm": 30
+    },
+    {
+      "id": "T3",
+      "x": 5.897612,
+      "y": -1.103708,
+      "dbh_cm": 30
+    },
+    {
+      "id": "T4",
+      "x": -6.577848,
+      "y": -2.394141,
+      "dbh_cm": 30
+    }
+  ],
+  "attendu": {
+    "numeros": {
+      "T1": "1",
+      "T3": "2",
+      "T2": "3",
+      "T4": "4"
+    },
+    "exclus": {}
+  }
+}

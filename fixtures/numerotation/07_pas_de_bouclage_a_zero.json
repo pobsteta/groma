@@ -1,0 +1,43 @@
+{
+  "id": "07_pas_de_bouclage_a_zero",
+  "description": "Le n° 1 est le plus petit azimut à partir de 0° : Q (0,3°) est le n° 1, P (359,6°, visible) vient en fin de tour malgré un écart de 0,7° avec Q.",
+  "parametres": {
+    "rayon_m": 20.0,
+    "seuil_diam_cm": 7.5,
+    "unite_azimut": "deg",
+    "tolerance_deg": 1.0
+  },
+  "arbres": [
+    {
+      "id": "P",
+      "x": -0.069813,
+      "y": 9.999756,
+      "dbh_cm": 30
+    },
+    {
+      "id": "Q",
+      "x": 0.02618,
+      "y": 4.999931,
+      "dbh_cm": 10
+    },
+    {
+      "id": "R",
+      "x": 5.0,
+      "y": 0.0,
+      "dbh_cm": 30
+    }
+  ],
+  "attendu": {
+    "numeros": {
+      "Q": "1",
+      "R": "2",
+      "P": "3"
+    },
+    "exclus": {},
+    "visibles": [
+      "P",
+      "Q",
+      "R"
+    ]
+  }
+}

@@ -1,0 +1,152 @@
+{
+  "nom": "inventaire_video",
+  "version": "1.0.0",
+  "crs": 2154,
+  "description": "Schéma du GeoPackage inventaire_video.gpkg produit par nemeton (sous-onglet Terrain > Inventaire vidéo) et complété sur le terrain par QField (saisie) et Groma (détections). Source unique : Python (groma), Kotlin (application Groma) et brief nemeton.",
+  "domaines": {
+    "type_plan": ["Base", "Over"],
+    "exposition": ["N", "NE", "E", "SE", "S", "SW", "W", "NW", "flat"],
+    "unite_azimut": ["deg", "gr"],
+    "etat_traitement": ["a_faire", "provisoire", "envoye", "definitif"],
+    "qualite_gnss": ["fix", "float"],
+    "id_cible": ["C1", "C2", "C3"],
+    "statut": ["vivant", "mort", "chablis", "coupe"],
+    "qualite": ["A", "B", "C", "D"],
+    "h_source": ["mnh", "mesuree", "aucune"],
+    "etat_detection": ["provisoire", "definitif", "a_completer", "a_verifier", "faux_positif"],
+    "methode": ["embarque", "classique", "ia"]
+  },
+  "couches": [
+    {
+      "nom": "placettes",
+      "geometrie": "POINT",
+      "index_spatial": false,
+      "lecture_seule": false,
+      "remarque": "Géométrie (point prévu du plan GRTS) et colonnes de plan jamais modifiées. Pas d'index spatial : Groma y met à jour etat_traitement, et les déclencheurs R*Tree de GDAL (update4/update5) se préparent sur tout UPDATE et appellent ST_IsEmpty, absente du SQLite Android.",
+      "colonnes": [
+        {"nom": "plot_id", "type": "TEXT", "requis": true, "origine": "nemeton"},
+        {"nom": "visit_order", "type": "INTEGER", "min": 1, "max": 10000, "origine": "nemeton"},
+        {"nom": "type", "type": "TEXT", "domaine": "type_plan", "origine": "nemeton"},
+        {"nom": "date_visite", "type": "DATETIME", "origine": "nemeton"},
+        {"nom": "observateur", "type": "TEXT", "origine": "nemeton"},
+        {"nom": "pente_pct", "type": "REAL", "min": 0, "max": 200, "origine": "nemeton"},
+        {"nom": "exposition", "type": "TEXT", "domaine": "exposition", "origine": "nemeton"},
+        {"nom": "recouvrement_pct", "type": "REAL", "min": 0, "max": 100, "origine": "nemeton"},
+        {"nom": "photos", "type": "TEXT", "widget": "photo", "origine": "nemeton"},
+        {"nom": "notes", "type": "TEXT", "origine": "nemeton"},
+        {"nom": "wgt", "type": "REAL", "cache": true, "lecture_seule": true, "origine": "plan"},
+        {"nom": "ip", "type": "REAL", "cache": true, "lecture_seule": true, "origine": "plan"},
+        {"nom": "stratum", "type": "TEXT", "cache": true, "lecture_seule": true, "origine": "plan"},
+        {"nom": "strat_height", "type": "TEXT", "cache": true, "lecture_seule": true, "origine": "plan"},
+        {"nom": "strat_type", "type": "TEXT", "cache": true, "lecture_seule": true, "origine": "plan"},
+        {"nom": "strat_topo", "type": "TEXT", "cache": true, "lecture_seule": true, "origine": "plan"},
+        {"nom": "rayon_m", "type": "REAL", "defaut": 20, "min": 1, "max": 50, "origine": "groma"},
+        {"nom": "seuil_diam_cm", "type": "REAL", "defaut": 7.5, "min": 0, "max": 100, "origine": "groma"},
+        {"nom": "unite_azimut", "type": "TEXT", "domaine": "unite_azimut", "defaut": "deg", "origine": "groma"},
+        {"nom": "declinaison_deg", "type": "REAL", "min": -30, "max": 30, "origine": "groma", "remarque": "Déclinaison magnétique, positive vers l'est : az_geo = az_mag + declinaison_deg."},
+        {"nom": "convergence_deg", "type": "REAL", "cache": true, "lecture_seule": true, "origine": "groma", "remarque": "Convergence des méridiens Lambert-93 au point prévu, gamma = n * (lon - 3°) : az_geo = az_grille + convergence_deg. Calculée à la création."},
+        {"nom": "etat_traitement", "type": "TEXT", "domaine": "etat_traitement", "defaut": "a_faire", "origine": "groma"}
+      ]
+    },
+    {
+      "nom": "centres_mesures",
+      "geometrie": "POINT",
+      "index_spatial": true,
+      "lecture_seule": false,
+      "remarque": "Centre mesuré au RTK (pied de la canne). La géométrie est la position mesurée.",
+      "colonnes": [
+        {"nom": "plot_id", "type": "TEXT", "requis": true},
+        {"nom": "qualite_gnss", "type": "TEXT", "domaine": "qualite_gnss"},
+        {"nom": "precision_h_m", "type": "REAL", "min": 0, "max": 100},
+        {"nom": "ecart_prevu_m", "type": "REAL", "min": 0, "lecture_seule": true},
+        {"nom": "date_mesure", "type": "DATETIME"}
+      ]
+    },
+    {
+      "nom": "cibles",
+      "geometrie": "POINT",
+      "index_spatial": true,
+      "lecture_seule": false,
+      "remarque": "Mesures manuelles depuis le centre. Azimut magnétique lu à la boussole de visée, dans l'unité de la placette.",
+      "colonnes": [
+        {"nom": "plot_id", "type": "TEXT", "requis": true},
+        {"nom": "id_cible", "type": "TEXT", "domaine": "id_cible", "requis": true},
+        {"nom": "azimut_mesure", "type": "REAL", "min": 0, "max": 400},
+        {"nom": "distance_mesuree_m", "type": "REAL", "min": 0, "max": 60},
+        {"nom": "dbh_mesure_cm", "type": "REAL", "min": 0, "max": 1000}
+      ]
+    },
+    {
+      "nom": "arbres",
+      "geometrie": "POINT",
+      "index_spatial": false,
+      "lecture_seule": false,
+      "remarque": "Couche saisie dans QField. Pas d'index spatial : les déclencheurs R*Tree GeoPackage appellent ST_IsEmpty/ST_MinX, absentes du SQLite Android. Les lignes sont créées par le déclencheur trg_detections_insert (jamais écrasées).",
+      "colonnes": [
+        {"nom": "plot_id", "type": "TEXT", "requis": true, "origine": "nemeton"},
+        {"nom": "tree_id", "type": "TEXT", "requis": true, "origine": "nemeton"},
+        {"nom": "espece", "type": "TEXT", "lecture_seule": true, "origine": "nemeton", "remarque": "Type de peuplement nemeton, déduit d'essence_arbre par nemeton (map_bdforet_essence)."},
+        {"nom": "dbh_cm", "type": "REAL", "requis": true, "min": 0, "max": 1000, "origine": "nemeton"},
+        {"nom": "h_m", "type": "REAL", "min": 0, "max": 80, "origine": "nemeton"},
+        {"nom": "statut", "type": "TEXT", "domaine": "statut", "defaut": "vivant", "origine": "nemeton"},
+        {"nom": "qualite", "type": "TEXT", "domaine": "qualite", "origine": "nemeton"},
+        {"nom": "photos", "type": "TEXT", "widget": "photo", "origine": "nemeton"},
+        {"nom": "notes", "type": "TEXT", "origine": "nemeton"},
+        {"nom": "uuid", "type": "TEXT", "requis": true, "cache": true, "lecture_seule": true, "origine": "groma"},
+        {"nom": "num_provisoire", "type": "TEXT", "lecture_seule": true, "origine": "groma"},
+        {"nom": "azimut", "type": "REAL", "lecture_seule": true, "origine": "groma"},
+        {"nom": "distance_m", "type": "REAL", "lecture_seule": true, "origine": "groma"},
+        {"nom": "essence_arbre", "type": "TEXT", "domaine_externe": "essences_bdforet_v2", "origine": "groma"},
+        {"nom": "h_source", "type": "TEXT", "domaine": "h_source", "defaut": "aucune", "origine": "groma"},
+        {"nom": "houppier_id", "type": "INTEGER", "lecture_seule": true, "origine": "groma"},
+        {"nom": "etat_detection", "type": "TEXT", "domaine": "etat_detection", "origine": "groma"},
+        {"nom": "methode", "type": "TEXT", "domaine": "methode", "lecture_seule": true, "origine": "groma"}
+      ]
+    },
+    {
+      "nom": "detections",
+      "geometrie": "POINT",
+      "index_spatial": false,
+      "lecture_seule": true,
+      "remarque": "Couche écrite par la seule application Groma (décision 3). Lecture seule dans QField. Reliée à arbres par uuid.",
+      "colonnes": [
+        {"nom": "uuid", "type": "TEXT", "requis": true},
+        {"nom": "plot_id", "type": "TEXT", "requis": true},
+        {"nom": "num_provisoire", "type": "TEXT"},
+        {"nom": "azimut", "type": "REAL"},
+        {"nom": "distance_m", "type": "REAL"},
+        {"nom": "dbh_cm", "type": "REAL"},
+        {"nom": "h_m", "type": "REAL"},
+        {"nom": "h_source", "type": "TEXT", "domaine": "h_source"},
+        {"nom": "houppier_id", "type": "INTEGER"},
+        {"nom": "etat_detection", "type": "TEXT", "domaine": "etat_detection"},
+        {"nom": "methode", "type": "TEXT", "domaine": "methode"},
+        {"nom": "score", "type": "REAL", "min": 0, "max": 1},
+        {"nom": "date_detection", "type": "DATETIME"}
+      ]
+    },
+    {
+      "nom": "houppiers",
+      "geometrie": "POLYGON",
+      "index_spatial": true,
+      "lecture_seule": true,
+      "remarque": "Sortie de nemeton::segment_houppiers() autour de chaque placette.",
+      "colonnes": [
+        {"nom": "plot_id", "type": "TEXT"},
+        {"nom": "houppier_id", "type": "INTEGER", "requis": true},
+        {"nom": "h_max", "type": "REAL"},
+        {"nom": "surface_m2", "type": "REAL"}
+      ]
+    }
+  ],
+  "rasters": {
+    "format": "GeoTIFF Float32, une bande, bandes non tuilées (strips), compression DEFLATE sans prédicteur, nodata -9999, EPSG:2154",
+    "resolution_m": 0.5,
+    "marge_m": 10,
+    "chemins": {
+      "mnt": "rasters/{plot_id}_mnt.tif",
+      "mnh": "rasters/{plot_id}_mnh.tif"
+    }
+  },
+  "declencheurs": "core/src/groma/donnees/declencheurs.sql"
+}

@@ -1,0 +1,87 @@
+{
+  "id": "03_affectation_optimale",
+  "description": "Deux arbres provisoires à 60 cm l'un de l'autre. Un appariement glouton donnerait D1 à u2 et laisserait u1 sans partenaire (0,9 m > 0,5 m) ; l'affectation optimale apparie u1-D1 et u2-D2.",
+  "parametres": {
+    "tolerance_m": 0.5,
+    "rayon_m": 20.0,
+    "seuil_diam_cm": 7.5,
+    "unite_azimut": "deg",
+    "tolerance_deg": 1.0
+  },
+  "centre": [
+    1000.0,
+    2000.0
+  ],
+  "convergence_deg": 0.0,
+  "provisoires": [
+    {
+      "uuid": "u1",
+      "plot_id": "P01",
+      "tree_id": "1",
+      "dbh_cm": 30,
+      "statut": "vivant",
+      "etat_detection": "provisoire",
+      "methode": "embarque",
+      "h_m": null,
+      "h_source": "aucune",
+      "essence_arbre": "hetre",
+      "qualite": null,
+      "notes": null,
+      "photos": null,
+      "x": 1000.0,
+      "y": 2005.0
+    },
+    {
+      "uuid": "u2",
+      "plot_id": "P01",
+      "tree_id": "2",
+      "dbh_cm": 30,
+      "statut": "vivant",
+      "etat_detection": "provisoire",
+      "methode": "embarque",
+      "h_m": null,
+      "h_source": "aucune",
+      "essence_arbre": "sapin_pectine",
+      "qualite": null,
+      "notes": null,
+      "photos": null,
+      "x": 1000.6,
+      "y": 2005.0
+    }
+  ],
+  "definitifs": [
+    {
+      "plot_id": "P01",
+      "x": 1000.3,
+      "y": 2005.0,
+      "dbh_cm": 30.0,
+      "methode": "classique"
+    },
+    {
+      "plot_id": "P01",
+      "x": 1000.9,
+      "y": 2005.0,
+      "dbh_cm": 30.0,
+      "methode": "classique"
+    }
+  ],
+  "attendu": {
+    "par_uuid": {
+      "u1": {
+        "tree_id": "1",
+        "etat_detection": "definitif",
+        "essence_arbre": "hetre",
+        "x": 1000.3
+      },
+      "u2": {
+        "tree_id": "2",
+        "etat_detection": "definitif",
+        "essence_arbre": "sapin_pectine",
+        "x": 1000.9
+      }
+    },
+    "nouveaux": [],
+    "non_retrouves": [],
+    "numeros_modifies": []
+  }
+}

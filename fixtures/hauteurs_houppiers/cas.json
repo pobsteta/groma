@@ -1,0 +1,30 @@
+{
+  "description": "Affectation de h_m par point-dans-polygone sur la position du tronc. Coordonnées locales en mètres. Règles : houppier le plus haut en cas de superposition ; rien si le tronc n'est dans aucun houppier (pas de repli sur le plus proche) ; hauteurs hors 1-70 m ignorées ; une hauteur mesurée n'est jamais écrasée ; un tronc sur le bord d'un houppier est dedans.",
+  "houppiers": [
+    {"houppier_id": 1, "wkt": "POLYGON ((0 0, 4 0, 4 4, 0 4, 0 0))", "h_max": 24.5},
+    {"houppier_id": 2, "wkt": "POLYGON ((3 0, 7 0, 7 4, 3 4, 3 0))", "h_max": 31.0},
+    {"houppier_id": 3, "wkt": "POLYGON ((10 0, 14 0, 14 4, 10 4, 10 0))", "h_max": 75.0},
+    {"houppier_id": 4, "wkt": "POLYGON ((20 0, 24 0, 24 4, 20 4, 20 0))", "h_max": 0.6},
+    {"houppier_id": 5, "wkt": "POLYGON ((10 3, 14 3, 14 8, 10 8, 10 3))", "h_max": 18.0}
+  ],
+  "arbres": [
+    {"id": "dans_un", "x": 1, "y": 1, "h_m": null, "h_source": "aucune",
+     "attendu": {"h_m": 24.5, "h_source": "mnh", "houppier_id": 1}},
+    {"id": "superposes", "x": 3.5, "y": 2, "h_m": null, "h_source": "aucune",
+     "attendu": {"h_m": 31.0, "h_source": "mnh", "houppier_id": 2}},
+    {"id": "aucun", "x": 8.5, "y": 2, "h_m": null, "h_source": "aucune",
+     "attendu": {"h_m": null, "h_source": "aucune", "houppier_id": null}},
+    {"id": "trop_haut_ignore", "x": 12, "y": 1, "h_m": null, "h_source": "aucune",
+     "attendu": {"h_m": null, "h_source": "aucune", "houppier_id": null}},
+    {"id": "trop_haut_et_valide", "x": 12, "y": 3.5, "h_m": null, "h_source": "aucune",
+     "attendu": {"h_m": 18.0, "h_source": "mnh", "houppier_id": 5}},
+    {"id": "trop_bas_ignore", "x": 22, "y": 2, "h_m": null, "h_source": "aucune",
+     "attendu": {"h_m": null, "h_source": "aucune", "houppier_id": null}},
+    {"id": "mesuree_conservee", "x": 1, "y": 1, "h_m": 22.0, "h_source": "mesuree",
+     "attendu": {"h_m": 22.0, "h_source": "mesuree", "houppier_id": null}},
+    {"id": "sur_le_bord", "x": 0, "y": 2, "h_m": null, "h_source": "aucune",
+     "attendu": {"h_m": 24.5, "h_source": "mnh", "houppier_id": 1}},
+    {"id": "mnh_remplace", "x": 5, "y": 2, "h_m": 20.0, "h_source": "mnh",
+     "attendu": {"h_m": 31.0, "h_source": "mnh", "houppier_id": 2}}
+  ]
+}

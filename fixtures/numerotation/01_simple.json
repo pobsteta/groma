@@ -1,0 +1,45 @@
+{
+  "id": "01_simple",
+  "description": "Quatre arbres bien séparés : ordre des azimuts croissants depuis 0°.",
+  "parametres": {
+    "rayon_m": 20.0,
+    "seuil_diam_cm": 7.5,
+    "unite_azimut": "deg",
+    "tolerance_deg": 1.0
+  },
+  "arbres": [
+    {
+      "id": "A",
+      "x": 2.5,
+      "y": 4.330127,
+      "dbh_cm": 30
+    },
+    {
+      "id": "B",
+      "x": 4.330127,
+      "y": -2.5,
+      "dbh_cm": 30
+    },
+    {
+      "id": "C",
+      "x": -2.5,
+      "y": -4.330127,
+      "dbh_cm": 30
+    },
+    {
+      "id": "D",
+      "x": -4.330127,
+      "y": 2.5,
+      "dbh_cm": 30
+    }
+  ],
+  "attendu": {
+    "numeros": {
+      "A": "1",
+      "B": "2",
+      "C": "3",
+      "D": "4"
+    },
+    "exclus": {}
+  }
+}
