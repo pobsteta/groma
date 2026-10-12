@@ -1,7 +1,9 @@
 package groma.app
 
+import android.Manifest
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.ArrayAdapter
 import android.widget.Button
@@ -11,10 +13,19 @@ import android.widget.ListView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import java.io.File
 
 class MainActivity : AppCompatActivity() {
     private var projet: Projet? = null
+    private var plotEnAttente: String? = null
+
+    // ARCore throws if the camera permission is missing: ask before opening a plot.
+    private val demanderCamera = registerForActivityResult(ActivityResultContracts.RequestPermission()) { accorde ->
+        val plot = plotEnAttente.also { plotEnAttente = null } ?: return@registerForActivityResult
+        if (accorde) ouvrirPlacette(plot)
+        else Toast.makeText(this, "La caméra est nécessaire pour filmer la placette.", Toast.LENGTH_LONG).show()
+    }
 
     private val choisirDossier = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri == null) return@registerForActivityResult
@@ -53,10 +64,17 @@ class MainActivity : AppCompatActivity() {
         val liste = findViewById<ListView>(R.id.placettes)
         liste.adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, lignes.map { it.first })
         liste.setOnItemClickListener { _, _, i, _ ->
-            startActivity(Intent(this, CaptureActivity::class.java)
-                .putExtra(CaptureActivity.EXTRA_PROJET, pr.dossier.path)
-                .putExtra(CaptureActivity.EXTRA_PLOT, lignes[i].second))
+            val plot = lignes[i].second
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) ouvrirPlacette(plot)
+            else { plotEnAttente = plot; demanderCamera.launch(Manifest.permission.CAMERA) }
         }
+    }
+
+    private fun ouvrirPlacette(plot: String) {
+        val pr = projet ?: return
+        startActivity(Intent(this, CaptureActivity::class.java)
+            .putExtra(CaptureActivity.EXTRA_PROJET, pr.dossier.path)
+            .putExtra(CaptureActivity.EXTRA_PLOT, plot))
     }
 }
 
