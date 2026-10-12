@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+    <android.opengl.GLSurfaceView android:id="@+id/vue" android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+    <TextView android:id="@+id/etat" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:background="#99000000" android:padding="8dp" android:textColor="#FFFFFF" />
+    <TextView android:id="@+id/alerte" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|top" android:background="#CCB71C1C" android:padding="8dp"
+        android:textColor="#FFFFFF" android:visibility="gone" />
+    <Button android:id="@+id/terminer" android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end" android:layout_margin="16dp" android:text="@string/terminer" />
+</FrameLayout>

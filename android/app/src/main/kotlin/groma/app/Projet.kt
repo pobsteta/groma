@@ -1,0 +1,81 @@
+package groma.app
+
+import android.content.Context
+import android.database.sqlite.SQLiteDatabase
+import android.net.Uri
+import androidx.documentfile.provider.DocumentFile
+import groma.core.CibleMesuree
+import groma.core.GeoPackage
+import groma.core.GeoTiff
+import groma.core.Grille
+import groma.core.Houppier
+import groma.core.ParametresPlacette
+import java.io.File
+
+/**
+ * The QField project folder delivered by nemetonshiny (inventaire_video.gpkg
+ * + rasters/), imported into Groma's own storage through the system folder
+ * picker. Since Android 11 QField works on ITS imported copy, in its private
+ * folder: see docs/terrain.md for how detections reach QField's copy.
+ */
+class Projet(val dossier: File) {
+    val gpkg = File(dossier, "inventaire_video.gpkg")
+
+    fun ouvrir(): SQLiteDatabase = SQLiteDatabase.openDatabase(gpkg.path, null, SQLiteDatabase.OPEN_READWRITE)
+
+    fun placettes(): List<Map<String, Any?>> = ouvrir().use { GeoPackage.lirePoints(SqliteAndroid(it), "placettes") }
+
+    fun parametres(plotId: String): ParametresPlacette = ouvrir().use { db ->
+        val s = SqliteAndroid(db)
+        val p = GeoPackage.lirePoints(s, "placettes", plotId).single()
+        // Measured RTK centre when present, else the planned point.
+        val c = GeoPackage.lirePoints(s, "centres_mesures", plotId).firstOrNull() ?: p
+        ParametresPlacette(
+            plotId, c["x"] as Double, c["y"] as Double,
+            (p["rayon_m"] as? Number)?.toDouble() ?: 20.0,
+            (p["seuil_diam_cm"] as? Number)?.toDouble() ?: 7.5,
+            p["unite_azimut"] as? String ?: "deg",
+            (p["declinaison_deg"] as? Number)?.toDouble() ?: 0.0,
+            (p["convergence_deg"] as? Number)?.toDouble() ?: 0.0,
+        )
+    }
+
+    fun cibles(plotId: String): List<CibleMesuree> = ouvrir().use { db ->
+        GeoPackage.lirePoints(SqliteAndroid(db), "cibles", plotId).mapNotNull {
+            val az = (it["azimut_mesure"] as? Number)?.toDouble() ?: return@mapNotNull null
+            val d = (it["distance_mesuree_m"] as? Number)?.toDouble() ?: return@mapNotNull null
+            CibleMesuree(it["id_cible"] as String, az, d, (it["dbh_mesure_cm"] as? Number)?.toDouble())
+        }
+    }
+
+    fun houppiers(plotId: String): List<Houppier> = ouvrir().use { db ->
+        SqliteAndroid(db).requete("SELECT houppier_id, h_max, geom FROM houppiers WHERE plot_id = ?", listOf(plotId)).map {
+            Houppier((it["houppier_id"] as Number).toInt(), GeoPackage.decoderAnneau(it["geom"] as ByteArray), (it["h_max"] as? Number)?.toDouble())
+        }
+    }
+
+    fun mnt(plotId: String): Grille? = raster("${plotId}_mnt.tif")
+    fun mnh(plotId: String): Grille? = raster("${plotId}_mnh.tif")
+
+    private fun raster(nom: String): Grille? = File(dossier, "rasters/$nom").takeIf { it.exists() }?.let { GeoTiff.lire(it.readBytes()) }
+
+    companion object {
+        /** Copy the picked folder (SAF tree URI) into the app storage. */
+        fun importer(ctx: Context, arbre: Uri): Projet {
+            val racine = DocumentFile.fromTreeUri(ctx, arbre) ?: error("Dossier illisible.")
+            val cible = File(ctx.getExternalFilesDir(null), "projets/${racine.name ?: "projet"}")
+            copier(ctx, racine, cible)
+            require(File(cible, "inventaire_video.gpkg").exists()) { "Le dossier ne contient pas inventaire_video.gpkg." }
+            return Projet(cible)
+        }
+
+        private fun copier(ctx: Context, src: DocumentFile, dst: File) {
+            dst.mkdirs()
+            for (f in src.listFiles()) {
+                val nom = f.name ?: continue
+                if (f.isDirectory) copier(ctx, f, File(dst, nom))
+                else ctx.contentResolver.openInputStream(f.uri)!!.use { i -> File(dst, nom).outputStream().use { i.copyTo(it) } }
+            }
+        }
+    }
+}
