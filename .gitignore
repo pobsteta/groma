@@ -9,3 +9,4 @@ build/
 android/local.properties
 *.groma.zip
 .Rhistory
+.claude/settings.local.json
