@@ -10,6 +10,33 @@
   sur trois arbres, face au centre. Imprimer avec une marge blanche d'au moins
   un module et plastifier (mat).
 
+## Préparer le projet à partir du plan d'échantillonnage
+
+En attendant l'onglet « Inventaire vidéo » de nemetonshiny (brief du
+2026-10-12), le projet Groma se prépare à partir du plan tiré dans l'onglet
+Échantillonnage, enregistré dans `<projet>/data/samples.gpkg` (couche
+`plots`), ou du GeoPackage du projet QField exporté (couche `placettes`) :
+
+```bash
+pip install -e "core[geo]"
+groma-preparer ~/nemeton_projects/<projet>/data/samples.gpkg \
+    --sortie ~/terrain/<projet> --rayon 15 --declinaison 2.1
+```
+
+* `--rayon` (obligatoire) : rayon de la placette en mètres. Reprendre celui
+  du plan (15 m par défaut dans nemetonshiny), pour filmer la surface qui a
+  servi au tirage.
+* `--declinaison` (obligatoire) : déclinaison magnétique en degrés, positive
+  vers l'est (calculateurs IGN ou NOAA).
+* Options : `--seuil` (7,5 cm), `--unite deg|gr`, `--placettes P001,P004`,
+  `--base-seulement` (sans les placettes de remplacement), `--ecraser`.
+
+Les colonnes du plan (`type`, `visit_order`, `stratum`, `ip`, `wgt`…) sont
+gardées telles quelles. Un `inventaire_video.gpkg` existant n'est jamais
+remplacé sans `--ecraser`. Le dossier produit s'ouvre dans Groma par
+« Changer de projet ». Il n'a pas de rasters : MNT, MNH et houppiers restent à
+la charge de nemeton.
+
 ## Déroulé sur une placette
 
 1. Planter la canne au point prévu (QField guide jusqu'au point GRTS).

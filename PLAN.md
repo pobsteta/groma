@@ -15,6 +15,7 @@ Source unique de l'état d'avancement. Mis à jour à chaque étape.
 | 2026-10-12 | Les `a_verifier` sont numérotés `V1…` et les `faux_positif` `F1…`, pour ne pas décaler les numéros des arbres retrouvés | Claude, à valider |
 | 2026-10-12 | File de tâches SQLite (pas de courtier) ; stockage local, S3 en option (MinIO signalé AGPL) | Claude, à valider |
 | 2026-10-12 | Version unique pour tout le dépôt (tags `vX.Y.Z`), montée par release-please à partir des Conventional Commits ; release = wheels, image GHCR, APK | Claude, à valider |
+| 2026-10-12 | Pont `groma-preparer` côté Groma (GeoPackage, sans toucher à nemeton) ; rayon et déclinaison obligatoires, rayon à reprendre du plan | Pascal |
 | 2026-10-12 | Licence du dépôt : GPL-3.0-or-later (alignée sur nemeton), fichier `LICENSE` | Pascal |
 
 ## Avancement (ordre de travail du brief)
@@ -30,6 +31,7 @@ Source unique de l'état d'avancement. Mis à jour à chaque étape.
 | 6 | Calcul embarqué provisoire | écrit (`CalculEmbarque.kt`), à tester sur appareil |
 | 7 | Envoi, file d'attente, résultats pour nemetonshiny | fait côté serveur (envoi reprenable testé) ; `EnvoiWorker.kt` écrit |
 | 7b | CI (Python 3.11/3.12, Kotlin, R, Docker, APK), versions, releases, Dependabot | fait |
+| 7c | `groma-preparer` : projet Groma à partir du plan d'échantillonnage de nemetonshiny (`samples.gpkg` ou export QField), rayon en paramètre | fait (9 tests), en attendant `creer_projet_inventaire_video()` ; sans rasters |
 | 8 | Essence proposée par photo d'écorce ou de feuilles | plus tard |
 
 ## Résultats sur données synthétiques (pas encore sur le terrain)
