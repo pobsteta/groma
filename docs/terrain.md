@@ -19,7 +19,7 @@ En attendant l'onglet « Inventaire vidéo » de nemetonshiny (brief du
 
 ```bash
 pip install -e "core[geo]"
-groma-preparer ~/nemeton_projects/<projet>/data/samples.gpkg \
+groma-preparer ~/.local/share/nemeton/projects/<id>/data/samples.gpkg \
     --sortie ~/terrain/<projet> --rayon 15 --declinaison 2.1
 ```
 
