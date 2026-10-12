@@ -15,7 +15,7 @@ Source unique de l'état d'avancement. Mis à jour à chaque étape.
 | 2026-10-12 | Les `a_verifier` sont numérotés `V1…` et les `faux_positif` `F1…`, pour ne pas décaler les numéros des arbres retrouvés | Claude, à valider |
 | 2026-10-12 | File de tâches SQLite (pas de courtier) ; stockage local, S3 en option (MinIO signalé AGPL) | Claude, à valider |
 | 2026-10-12 | Version unique pour tout le dépôt (tags `vX.Y.Z`), montée par release-please à partir des Conventional Commits ; release = wheels, image GHCR, APK | Claude, à valider |
-| — | Licence du dépôt : GPL-3.0-or-later proposée (alignée sur nemeton) | **à trancher** |
+| 2026-10-12 | Licence du dépôt : GPL-3.0-or-later (alignée sur nemeton), fichier `LICENSE` | Pascal |
 
 ## Avancement (ordre de travail du brief)
 

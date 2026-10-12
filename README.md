@@ -1,6 +1,7 @@
 # Groma
 
 [![ci](https://github.com/pobsteta/groma/actions/workflows/ci.yml/badge.svg)](https://github.com/pobsteta/groma/actions/workflows/ci.yml)
+[![licence](https://img.shields.io/badge/licence-GPL--3.0--or--later-blue)](LICENSE)
 [![release](https://img.shields.io/github/v/release/pobsteta/groma?include_prereleases&sort=semver)](https://github.com/pobsteta/groma/releases)
 
 Inventaire forestier sur placette circulaire **par vidéo au smartphone**.
@@ -159,6 +160,6 @@ noms de champs en français.
 
 ## Licence
 
-GPL-3.0-or-later proposée (alignée sur nemeton), **encore à confirmer**.
+[GPL-3.0-or-later](LICENSE), comme nemeton.
 Les licences des dépendances sont recensées dans
 [`docs/dependances.md`](docs/dependances.md).
