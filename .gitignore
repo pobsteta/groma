@@ -6,6 +6,7 @@ __pycache__/
 venv/
 build/
 .gradle/
+android/.kotlin/
 android/local.properties
 *.groma.zip
 .Rhistory
