@@ -52,6 +52,36 @@ lues, sans rien y écrire, dans `metadata.json` et `data/parcels.gpkg` du
 projet nemetonshiny ; sans elles, la table ne garde que le nom et les
 nombres de placettes.
 
+## Projets sur le téléphone
+
+Groma liste les projets du **dossier des projets**, choisi une fois par
+⋮ → « Dossier des projets… » (par défaut `Téléchargements/groma/`). Chaque
+sous-dossier qui contient `inventaire_video.gpkg` est un projet ; il garde
+le nom que lui donne `groma-preparer`, l'identifiant du projet
+nemetonshiny :
+
+```
+Téléchargements/groma/
+├── 20261008_212542_uywc/inventaire_video.gpkg
+└── 20261007_084614_qapz/inventaire_video.gpkg
+```
+
+* Un nouveau dossier est copié dans le stockage de Groma (copie de
+  travail) à l'ouverture de l'application ou par ⋮ → « Actualiser ». La
+  saisie se fait dans cette copie.
+* Chaque carte montre le nom de la forêt, les communes, la surface de la
+  zone et le nombre d'UG, les placettes (base + remplacement) et le rayon,
+  l'avancement (placettes Base faites, envoyées) et la surface inventoriée
+  (Σ π·r² des placettes faites). La puce « Terminés » bascule vers les
+  projets dont toutes les placettes Base sont faites.
+* **Mettre à jour** (menu de la carte) : quand le dossier contient une
+  préparation plus récente que la copie de travail. Refusé dès que la copie
+  contient des données de terrain (centre, cibles, détections, placette
+  traitée) : rien de ce qui a été saisi n'est écrasé.
+* **Retirer du téléphone** : supprime la copie de travail et le dossier
+  source ; refusé tant qu'une placette faite n'est pas envoyée.
+* ⋮ → « Importer un dossier… » copie un dossier situé ailleurs.
+
 ## Déroulé sur une placette
 
 1. Planter la canne au point prévu (QField guide jusqu'au point GRTS).
