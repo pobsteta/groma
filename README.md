@@ -148,6 +148,23 @@ Secrets facultatifs du dépôt :
 | `RELEASE_PLEASE_TOKEN` | PAT (`contents` + `pull-requests` en écriture) pour que la CI tourne aussi sur la PR de version |
 | `GROMA_KEYSTORE_BASE64`, `GROMA_KEYSTORE_PASSWORD`, `GROMA_KEY_ALIAS`, `GROMA_KEY_PASSWORD` | signature de l'APK de release |
 
+**Signature de l'APK.** Les quatre secrets `GROMA_KEY*` sont configurés
+depuis le 13/10/2026 (clé RSA 4096, alias `groma`, empreinte SHA-256
+`C9:DE:5B:DF:…:EC:C4:50:12`). La clé et ses mots de passe sont chez le
+mainteneur, hors du dépôt : `~/.config/groma/groma-release.jks` et
+`~/.config/groma/signature.env`. **Il faut en garder une copie de
+sauvegarde** : sans cette clé, plus aucune mise à jour de l'application ne
+s'installe par-dessus la précédente. APK signée en local :
+
+```bash
+set -a; . ~/.config/groma/signature.env; set +a
+cd android && gradle :app:assembleRelease
+```
+
+Une APK de debug (build local ou release 0.1.0) n'est pas signée avec la
+même clé : il faut la désinstaller une fois avant d'installer une APK de
+release.
+
 Dependabot propose chaque mois les mises à jour des actions, des
 dépendances Python et Gradle et de l'image de base Docker.
 
