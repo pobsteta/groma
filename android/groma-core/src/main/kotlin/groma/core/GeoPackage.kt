@@ -102,11 +102,49 @@ object GeoPackage {
         }
     }
 
+    /**
+     * The one-row `projet` table (schema 1.1.0), or null when the GeoPackage
+     * was prepared before it existed or the table is empty: the project list
+     * then falls back on the folder name.
+     */
+    fun lireProjet(db: BaseSqlite): InfosProjet? {
+        if (db.requete("SELECT 1 AS un FROM sqlite_master WHERE type = 'table' AND name = 'projet'").isEmpty()) return null
+        val l = db.requete("SELECT * FROM projet ORDER BY fid LIMIT 1").firstOrNull() ?: return null
+        fun texte(c: String) = (l[c] as? String)?.takeIf { it.isNotBlank() }
+        fun reel(c: String) = (l[c] as? Number)?.toDouble()
+        fun entier(c: String) = (l[c] as? Number)?.toInt()
+        return InfosProjet(
+            projetId = texte("projet_id") ?: return null,
+            projetNom = texte("projet_nom") ?: return null,
+            description = texte("description"),
+            proprietaire = texte("proprietaire"),
+            communes = texte("communes"),
+            surfaceZoneHa = reel("surface_zone_ha"),
+            surfaceCadastreHa = reel("surface_cadastre_ha"),
+            nbParcelles = entier("nb_parcelles"),
+            nbUg = entier("nb_ug"),
+            nbPlacettesBase = entier("nb_placettes_base"),
+            nbPlacettesRempl = entier("nb_placettes_rempl"),
+            planGenereLe = texte("plan_genere_le"),
+            prepareLe = texte("prepare_le"),
+            preparePar = texte("prepare_par"),
+            emprise = texte("emprise"),
+        )
+    }
+
     fun mettreAJourEtat(db: BaseSqlite, plotId: String, etat: String) {
         require(etat in setOf("a_faire", "provisoire", "envoye", "definitif"))
         db.transactionImmediate { db.executer("UPDATE placettes SET etat_traitement = ? WHERE plot_id = ?", listOf(etat, plotId)) }
     }
 }
+
+/** Row of the `projet` table: the nemetonshiny project the plan comes from. */
+data class InfosProjet(
+    val projetId: String, val projetNom: String, val description: String?, val proprietaire: String?,
+    val communes: String?, val surfaceZoneHa: Double?, val surfaceCadastreHa: Double?, val nbParcelles: Int?,
+    val nbUg: Int?, val nbPlacettesBase: Int?, val nbPlacettesRempl: Int?, val planGenereLe: String?,
+    val prepareLe: String?, val preparePar: String?, val emprise: String?,
+)
 
 data class Detection(
     val uuid: String, val plotId: String, val x: Double, val y: Double, val numProvisoire: String,

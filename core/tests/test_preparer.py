@@ -1,3 +1,6 @@
+import json
+import sqlite3
+
 import pytest
 
 gpd = pytest.importorskip("geopandas")
@@ -5,7 +8,7 @@ pyogrio = pytest.importorskip("pyogrio")
 from shapely.geometry import Point
 
 from groma.gpkg import lire_points
-from groma.preparer import lire_plan, main, preparer_projet
+from groma.preparer import lire_metadonnees, lire_plan, main, preparer_projet
 
 
 @pytest.fixture
@@ -80,8 +83,81 @@ def test_ne_remplace_pas_un_projet_existant(plan, tmp_path):
 
 def test_ligne_de_commande(plan, tmp_path, capsys):
     main([str(plan), "--sortie", str(tmp_path / "cli"), "--rayon", "17.5", "--declinaison", "1.8",
-          "--unite", "gr", "--placettes", "P01, P03"])
+          "--unite", "gr", "--placettes", "P01, P03", "--nom", "Essai"])
     lignes = lire_points(tmp_path / "cli" / "inventaire_video.gpkg", "placettes")
     assert [(r["plot_id"], r["rayon_m"], r["unite_azimut"]) for r in lignes] == [("P01", 17.5, "gr"), ("P03", 17.5, "gr")]
     with pytest.raises(SystemExit):  # rayon obligatoire
         main([str(plan), "--sortie", str(tmp_path / "x"), "--declinaison", "1"])
+
+
+def _ligne_projet(gpkg) -> dict:
+    with sqlite3.connect(gpkg) as cx:
+        cx.row_factory = sqlite3.Row
+        return dict(cx.execute("SELECT * FROM projet").fetchone())
+
+
+@pytest.fixture
+def projet_nemetonshiny(plan, tmp_path):
+    """<projets>/<id>/ as nemetonshiny keeps it: metadata.json, data/samples.gpkg, parcels, communes."""
+    racine = tmp_path / "projects" / "20261008_212542_uywc"
+    (racine / "data").mkdir(parents=True)
+    plan.rename(racine / "data" / "samples.gpkg")
+    (racine / "metadata.json").write_text(json.dumps({
+        "id": "20261008_212542_uywc", "name": "Forêt communale de Couchey (ONF)", "description": "19 parcelles",
+        "owner": "", "parcels_count": 2, "ug_count": 3, "samples_generated_at": "2026-10-12 20:05:07",
+    }), "utf-8")
+    from shapely.geometry import box
+
+    parcelles = gpd.GeoDataFrame(
+        {"commune": ["21200", "21200"], "contenance": [10000, 5000]},
+        geometry=[box(925000, 6700000, 925100, 6700100), box(925100, 6700000, 925150, 6700100)],
+        crs=2154,
+    ).to_crs(4326)  # nemetonshiny keeps parcels in WGS84
+    pyogrio.write_dataframe(parcelles, racine / "data" / "parcels.gpkg", layer="parcels", driver="GPKG")
+    communes = gpd.GeoDataFrame({"code": ["21200"], "nom": ["Couchey"]}, geometry=[box(924000, 6699000, 926000, 6701000)], crs=2154)
+    pyogrio.write_dataframe(communes, racine / "data" / "commune.gpkg", layer="commune", driver="GPKG")
+    return racine / "data" / "samples.gpkg"
+
+
+def test_metadonnees_nemetonshiny(projet_nemetonshiny):
+    m = lire_metadonnees(projet_nemetonshiny)
+    assert m["projet_id"] == "20261008_212542_uywc" and m["projet_nom"] == "Forêt communale de Couchey (ONF)"
+    assert (m["description"], m["proprietaire"], m["nb_parcelles"], m["nb_ug"]) == ("19 parcelles", None, 2, 3)
+    assert m["plan_genere_le"] == "2026-10-12 20:05:07"
+    assert m["surface_zone_ha"] == pytest.approx(1.5, abs=0.01) and m["surface_cadastre_ha"] == 1.5
+    assert m["communes"] == "Couchey (21200)"
+
+
+def test_metadonnees_hors_projet(plan, tmp_path):
+    assert lire_metadonnees(plan) == {}
+    # Unreadable parcels: the project still comes out, without areas.
+    (tmp_path / "p" / "data").mkdir(parents=True)
+    (tmp_path / "p" / "metadata.json").write_text('{"name": "Sans parcelles"}', "utf-8")
+    (tmp_path / "p" / "data" / "parcels.gpkg").write_text("pas un GeoPackage")
+    m = lire_metadonnees(tmp_path / "p" / "data" / "samples.gpkg")
+    assert m["projet_id"] == "p" and m["projet_nom"] == "Sans parcelles" and "surface_zone_ha" not in m
+
+
+def test_ligne_de_commande_projet_nemetonshiny(projet_nemetonshiny, tmp_path, monkeypatch):
+    # Output folder named after the project id, in the current directory.
+    monkeypatch.chdir(tmp_path)
+    main([str(projet_nemetonshiny), "--rayon", "15", "--declinaison", "2"])
+    gpkg = tmp_path / "20261008_212542_uywc" / "inventaire_video.gpkg"
+    r = _ligne_projet(gpkg)
+    assert (r["projet_id"], r["projet_nom"], r["communes"], r["nb_ug"]) == (
+        "20261008_212542_uywc", "Forêt communale de Couchey (ONF)", "Couchey (21200)", 3)
+    assert (r["nb_placettes_base"], r["nb_placettes_rempl"]) == (2, 1)
+    assert r["prepare_par"].startswith("groma-preparer ")
+    # --nom wins over the project name.
+    main([str(projet_nemetonshiny), "--rayon", "15", "--declinaison", "2", "--nom", "Couchey 2026", "--ecraser"])
+    assert _ligne_projet(gpkg)["projet_nom"] == "Couchey 2026"
+
+
+def test_ligne_de_commande_hors_projet(plan, tmp_path):
+    with pytest.raises(SystemExit):  # --nom obligatoire hors projet nemetonshiny
+        main([str(plan), "--sortie", str(tmp_path / "a"), "--rayon", "15", "--declinaison", "1"])
+    with pytest.raises(SystemExit):  # --sortie aussi
+        main([str(plan), "--nom", "Essai", "--rayon", "15", "--declinaison", "1"])
+    main([str(plan), "--sortie", str(tmp_path / "a"), "--nom", "Essai", "--rayon", "15", "--declinaison", "1"])
+    r = _ligne_projet(tmp_path / "a" / "inventaire_video.gpkg")
+    assert (r["projet_id"], r["projet_nom"], r["surface_zone_ha"]) == ("a", "Essai", None)
