@@ -124,10 +124,10 @@ object Preferences {
 
     fun projet(ctx: Context): Projet? = prefs(ctx).getString("projet", null)?.let { File(it) }?.takeIf { it.exists() }?.let { Projet(it) }
 
-    fun planifierEnvoi(ctx: Context, paquet: File, plotId: String) {
+    fun planifierEnvoi(ctx: Context, paquet: File, projetId: String, plotId: String) {
         val p = prefs(ctx)
         val serveur = p.getString("serveur", "").orEmpty()
         if (serveur.isBlank()) return // kept on the phone until a server is configured
-        EnvoiWorker.planifier(ctx, paquet, plotId, serveur, p.getString("jeton", null)?.ifBlank { null }, p.getBoolean("4g", false))
+        EnvoiWorker.planifier(ctx, paquet, projetId, plotId, serveur, p.getString("jeton", null)?.ifBlank { null }, p.getBoolean("4g", false))
     }
 }

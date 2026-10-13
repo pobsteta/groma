@@ -12,6 +12,7 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import groma.core.CleProjet
 import org.json.JSONObject
 import java.io.File
 import java.io.RandomAccessFile
@@ -29,11 +30,12 @@ class EnvoiWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx,
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         val paquet = File(inputData.getString(CLE_PAQUET)!!)
         val plotId = inputData.getString(CLE_PLOT)!!
+        val projetId = inputData.getString(CLE_PROJET).orEmpty() // empty: queued by a version without projects
         val serveur = inputData.getString(CLE_SERVEUR)!!.trimEnd('/')
         val jeton = inputData.getString(CLE_JETON)
         val etat = File(paquet.path + ".envoi") // keeps the upload id across retries
         try {
-            val id = if (etat.exists()) etat.readText() else creer(serveur, jeton, plotId, paquet).also { etat.writeText(it) }
+            val id = if (etat.exists()) etat.readText() else creer(serveur, jeton, projetId, plotId, paquet).also { etat.writeText(it) }
             var recu = JSONObject(requete("GET", "$serveur/televersements/$id", jeton)).getLong("recu")
             RandomAccessFile(paquet, "r").use { f ->
                 val tampon = ByteArray(TAILLE_MORCEAU)
@@ -55,8 +57,10 @@ class EnvoiWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx,
         }
     }
 
-    private fun creer(serveur: String, jeton: String?, plotId: String, paquet: File): String {
-        val corps = JSONObject().put("plot_id", plotId).put("taille", paquet.length()).put("sha256", sha256(paquet))
+    private fun creer(serveur: String, jeton: String?, projetId: String, plotId: String, paquet: File): String {
+        val corps = JSONObject().put("plot_id", plotId)
+        if (projetId.isNotEmpty()) corps.put("projet_id", projetId)
+        corps.put("taille", paquet.length()).put("sha256", sha256(paquet))
         return JSONObject(requete("POST", "$serveur/televersements", jeton, corps.toString().toByteArray(), "application/json")).getString("id")
     }
 
@@ -85,16 +89,16 @@ class EnvoiWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx,
     }
 
     companion object {
-        const val CLE_PAQUET = "paquet"; const val CLE_PLOT = "plot_id"; const val CLE_SERVEUR = "serveur"; const val CLE_JETON = "jeton"
+        const val CLE_PAQUET = "paquet"; const val CLE_PLOT = "plot_id"; const val CLE_PROJET = "projet_id"; const val CLE_SERVEUR = "serveur"; const val CLE_JETON = "jeton"
         const val TAILLE_MORCEAU = 4 * 1024 * 1024
 
-        fun planifier(ctx: Context, paquet: File, plotId: String, serveur: String, jeton: String?, autoriser4g: Boolean) {
+        fun planifier(ctx: Context, paquet: File, projetId: String, plotId: String, serveur: String, jeton: String?, autoriser4g: Boolean) {
             val req = OneTimeWorkRequestBuilder<EnvoiWorker>()
-                .setInputData(workDataOf(CLE_PAQUET to paquet.path, CLE_PLOT to plotId, CLE_SERVEUR to serveur, CLE_JETON to jeton))
+                .setInputData(workDataOf(CLE_PAQUET to paquet.path, CLE_PROJET to projetId, CLE_PLOT to plotId, CLE_SERVEUR to serveur, CLE_JETON to jeton))
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(if (autoriser4g) NetworkType.CONNECTED else NetworkType.UNMETERED).build())
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
                 .build()
-            WorkManager.getInstance(ctx).enqueueUniqueWork("envoi_$plotId", ExistingWorkPolicy.REPLACE, req)
+            WorkManager.getInstance(ctx).enqueueUniqueWork(CleProjet.travailEnvoi(projetId, plotId), ExistingWorkPolicy.REPLACE, req)
         }
     }
 }

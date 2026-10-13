@@ -5,10 +5,12 @@ import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import groma.core.CibleMesuree
+import groma.core.CleProjet
 import groma.core.GeoPackage
 import groma.core.GeoTiff
 import groma.core.Grille
 import groma.core.Houppier
+import groma.core.InfosProjet
 import groma.core.ParametresPlacette
 import java.io.File
 
@@ -22,6 +24,12 @@ class Projet(val dossier: File) {
     val gpkg = File(dossier, "inventaire_video.gpkg")
 
     fun ouvrir(): SQLiteDatabase = SQLiteDatabase.openDatabase(gpkg.path, null, SQLiteDatabase.OPEN_READWRITE)
+
+    /** Row of the `projet` table, null for a GeoPackage prepared before schema 1.1.0. */
+    fun infos(): InfosProjet? = ouvrir().use { GeoPackage.lireProjet(SqliteAndroid(it)) }
+
+    /** Key of the project's packages, uploads and detection exports (see [CleProjet]). */
+    val projetId: String by lazy { CleProjet.projetId(infos(), dossier.name) }
 
     fun placettes(): List<Map<String, Any?>> = ouvrir().use { GeoPackage.lirePoints(SqliteAndroid(it), "placettes") }
 
