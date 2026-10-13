@@ -4,10 +4,13 @@
     <android.opengl.GLSurfaceView android:id="@+id/vue" android:layout_width="match_parent"
         android:layout_height="match_parent" />
     <TextView android:id="@+id/etat" android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:background="#99000000" android:padding="8dp" android:textColor="#FFFFFF" />
+        android:layout_margin="12dp" android:background="@color/voile_marculus" android:padding="10dp"
+        android:textColor="@color/creme" android:textSize="14sp" />
     <TextView android:id="@+id/alerte" android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|top" android:background="#CCB71C1C" android:padding="8dp"
-        android:textColor="#FFFFFF" android:visibility="gone" />
+        android:layout_gravity="center_horizontal|top" android:layout_marginTop="12dp"
+        android:background="@color/alerte" android:padding="10dp"
+        android:textColor="#FFFFFF" android:textSize="16sp" android:textStyle="bold" android:visibility="gone" />
     <Button android:id="@+id/terminer" android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end" android:layout_margin="16dp" android:text="@string/terminer" />
+        android:layout_gravity="bottom|end" android:layout_margin="16dp" android:text="@string/terminer"
+        android:backgroundTint="@color/vert_vif" android:textColor="#FFFFFF" />
 </FrameLayout>

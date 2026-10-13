@@ -59,12 +59,14 @@ reconstruction en sous-bois.
 2. **NTRIP en forêt** : client NTRIP intégré à QField ≥ 4.2 ; sans 4G, il
    faut un repli PPK (UBX brut + RTKLIB). Les identifiants Centipède sont à
    vérifier.
-3. Tester `android/app` sur un appareil ARCore Depth (la compilation passe en CI).
+3. Tester `android/app` sur un appareil ARCore Depth : installée sur un
+   Galaxy S23 Ultra le 2026-10-12, l'écran de capture s'ouvre ; capture
+   complète d'une placette pas encore faite.
 4. Image Docker GPU : COLMAP avec CUDA, VGGT (licence à vérifier), SAM 2.
 5. Première placette réelle : tourner, mesurer à la main, `benchmark/`.
-6. Déposer les briefs dans `/home/pascal/dev/briefs/vers-nemeton/` et
-   `/home/pascal/dev/briefs/vers-nemetonshiny/` (non accessibles depuis la
-   session distante).
+6. ~~Déposer les briefs~~ : déposés le 2026-10-12 dans
+   `/home/pascal/dev/briefs/vers-nemeton/` et `vers-nemetonshiny/`, en
+   attente de traitement.
 
 ## Prochaine étape
 

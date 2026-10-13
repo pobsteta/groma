@@ -6,10 +6,12 @@ __pycache__/
 venv/
 build/
 .gradle/
+android/.kotlin/
 android/local.properties
 *.groma.zip
 .Rhistory
 .claude/settings.local.json
+android/app/icone/*.ttf
 *.jks
 *.keystore
 signature.env

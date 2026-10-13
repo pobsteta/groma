@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#FFFFFF</color>
+    <!-- Marculus palette (see ui/Theme.kt). -->
+    <color name="vert_marculus">#374742</color>
+    <color name="vert_vif">#3E7A40</color>
+    <color name="creme">#F5EBD8</color>
+    <color name="voile_marculus">#CC374742</color>
+    <color name="alerte">#CCB71C1C</color>
+</resources>

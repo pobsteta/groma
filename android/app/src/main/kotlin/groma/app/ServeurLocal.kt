@@ -1,5 +1,6 @@
 package groma.app
 
+import android.util.Log
 import java.io.File
 import java.net.InetAddress
 import java.net.ServerSocket
@@ -38,4 +39,22 @@ class ServeurLocal(private val dossierJson: File, val port: Int = 8765) {
     }
 
     fun arreter() { socket?.close(); socket = null }
+
+    companion object {
+        private var instance: ServeurLocal? = null
+
+        /**
+         * Starts the endpoint once per process: the activity is recreated on
+         * relaunch while the daemon thread still holds the port.
+         */
+        @Synchronized
+        fun demarrerUneFois(dossierJson: File) {
+            if (instance != null) return
+            instance = try {
+                ServeurLocal(dossierJson).also { it.demarrer() }
+            } catch (e: java.io.IOException) {
+                Log.w("groma", "Serveur local indisponible", e); null
+            }
+        }
+    }
 }

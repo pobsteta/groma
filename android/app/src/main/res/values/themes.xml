@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Marculus palette, also used by the capture screen and its dialogs. -->
+    <style name="Theme.Groma" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/vert_vif</item>
+        <item name="colorPrimaryDark">@color/vert_marculus</item>
+        <item name="colorAccent">@color/vert_vif</item>
+    </style>
+</resources>
