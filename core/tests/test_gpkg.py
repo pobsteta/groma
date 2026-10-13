@@ -39,7 +39,8 @@ def test_schema_noms_nmt():
 
 def test_couches_et_colonnes(gpkg):
     couches = dict(pyogrio.list_layers(gpkg))
-    assert set(couches) == {"placettes", "centres_mesures", "cibles", "arbres", "detections", "houppiers"}
+    assert set(couches) == {"placettes", "centres_mesures", "cibles", "arbres", "detections", "houppiers", "projet"}
+    assert couches["projet"] is None  # non-spatial table
     p = gpd.read_file(gpkg, layer="placettes")
     assert list(p.columns[:-1]) == noms_colonnes("placettes")
     assert p.loc[0, "wgt"] == 12.5 and p.loc[0, "rayon_m"] == 20 and p.loc[0, "unite_azimut"] == "deg"
@@ -51,6 +52,38 @@ def test_couches_et_colonnes(gpkg):
         noms = {r[0] for r in cx.execute("SELECT name FROM sqlite_master WHERE type='trigger'")}
     assert not any(n.startswith(("rtree_placettes", "rtree_arbres", "rtree_detections")) for n in noms)
     assert {"trg_detections_insert", "trg_detections_update"} <= noms
+
+
+def test_table_projet(tmp_path):
+    placettes = gpd.GeoDataFrame(
+        {"plot_id": ["P01", "P02", "P03"], "type": ["Base", "Over", "Base"]},
+        geometry=[Point(925000, 6700000), Point(925200, 6700100), Point(925400, 6700000)],
+        crs=2154,
+    )
+    g = creer_gpkg(tmp_path / "a.gpkg", placettes, projet={"projet_id": "20261008_x", "projet_nom": "Forêt", "nb_ug": 4, "description": None})
+    with sqlite3.connect(g) as cx:
+        cx.row_factory = sqlite3.Row
+        lignes = [dict(r) for r in cx.execute("SELECT * FROM projet")]
+        assert cx.execute("SELECT data_type FROM gpkg_contents WHERE table_name = 'projet'").fetchone()[0] == "attributes"
+    assert len(lignes) == 1
+    r = lignes[0]
+    assert (r["projet_id"], r["projet_nom"], r["nb_ug"], r["description"]) == ("20261008_x", "Forêt", 4, None)
+    # Completed from the plots.
+    assert (r["nb_placettes_base"], r["nb_placettes_rempl"]) == (2, 1)
+    assert r["emprise"].startswith("POLYGON ((") and r["prepare_le"] and r["prepare_par"].startswith("groma ")
+    # Without projet: empty table, same columns.
+    g = creer_gpkg(tmp_path / "b.gpkg", placettes)
+    with sqlite3.connect(g) as cx:
+        assert cx.execute("SELECT COUNT(*) FROM projet").fetchone()[0] == 0
+        assert [c[1] for c in cx.execute("PRAGMA table_info(projet)")][1:] == noms_colonnes("projet")
+
+
+@pytest.mark.parametrize("projet", [{"projet_id": "x"}, {"projet_id": "x", "projet_nom": "y", "inconnue": 1}])
+def test_table_projet_invalide(tmp_path, projet):
+    placettes = gpd.GeoDataFrame({"plot_id": ["P01"]}, geometry=[Point(925000, 6700000)], crs=2154)
+    with pytest.raises(ValueError, match="projet"):
+        creer_gpkg(tmp_path / "a.gpkg", placettes, projet=projet)
+    assert not (tmp_path / "a.gpkg").exists()  # checked before anything is written
 
 
 def test_geometrie_point_aller_retour():

@@ -19,8 +19,10 @@ En attendant l'onglet « Inventaire vidéo » de nemetonshiny (brief du
 
 ```bash
 pip install -e "core[geo]"
+cd ~/terrain
 groma-preparer ~/.local/share/nemeton/projects/<id>/data/samples.gpkg \
-    --sortie ~/terrain/<projet> --rayon 15 --declinaison 2.1
+    --rayon 15 --declinaison 2.1
+adb push <id> /sdcard/Download/groma/
 ```
 
 * `--rayon` (obligatoire) : rayon de la placette en mètres. Reprendre celui
@@ -28,14 +30,27 @@ groma-preparer ~/.local/share/nemeton/projects/<id>/data/samples.gpkg \
   servi au tirage.
 * `--declinaison` (obligatoire) : déclinaison magnétique en degrés, positive
   vers l'est (calculateurs IGN ou NOAA).
+* `--sortie` : dossier produit. Par défaut `./<id>`, l'identifiant du projet
+  nemetonshiny : **le dossier garde ce nom sur le téléphone**, Groma s'en
+  sert pour reconnaître le projet.
+* `--nom` : nom affiché dans Groma. Par défaut celui du projet
+  nemetonshiny ; obligatoire, comme `--sortie`, pour un plan qui ne vient
+  pas d'un dossier de projet nemetonshiny (export QField, fichier copié).
 * Options : `--seuil` (7,5 cm), `--unite deg|gr`, `--placettes P001,P004`,
   `--base-seulement` (sans les placettes de remplacement), `--ecraser`.
 
 Les colonnes du plan (`type`, `visit_order`, `stratum`, `ip`, `wgt`…) sont
 gardées telles quelles. Un `inventaire_video.gpkg` existant n'est jamais
-remplacé sans `--ecraser`. Le dossier produit s'ouvre dans Groma par
-« Changer de projet ». Il n'a pas de rasters : MNT, MNH et houppiers restent à
-la charge de nemeton.
+remplacé sans `--ecraser`. Il n'a pas de rasters : MNT, MNH et houppiers
+restent à la charge de nemeton.
+
+La table `projet` du GeoPackage décrit le projet pour la liste des projets
+de Groma : nom et description, communes, surface de la zone (surface SIG
+des parcelles) et cadastrale, nombre de parcelles, d'UG et de placettes
+(base et remplacement), date du plan et de la préparation. Ces valeurs sont
+lues, sans rien y écrire, dans `metadata.json` et `data/parcels.gpkg` du
+projet nemetonshiny ; sans elles, la table ne garde que le nom et les
+nombres de placettes.
 
 ## Déroulé sur une placette
 

@@ -97,4 +97,31 @@ class GeoPackageTest {
             assertEquals("provisoire", GeoPackage.lirePoints(db, "placettes", "P002").single()["etat_traitement"])
         }
     }
+
+    @Test
+    fun projetDeLExemple() {
+        copieExemple().use { cx ->
+            val db = SqliteJdbc(cx)
+            val p = GeoPackage.lireProjet(db)!!
+            assertEquals("exemple_synthetique", p.projetId)
+            assertEquals("Forêt d'exemple (synthétique)", p.projetNom)
+            assertEquals(12.5, p.surfaceZoneHa!!, 1e-9)
+            assertEquals(2 to 0, p.nbPlacettesBase to p.nbPlacettesRempl)
+            assertEquals(null, p.proprietaire)
+            assertEquals(null, p.surfaceCadastreHa)
+            assertTrue(p.emprise!!.startsWith("POLYGON (("))
+        }
+    }
+
+    @Test
+    fun projetAbsentOuVide() {
+        // GeoPackage prepared before schema 1.1.0, then an empty table: no project info, no crash.
+        copieExemple().use { cx ->
+            val db = SqliteJdbc(cx)
+            db.executer("DELETE FROM projet")
+            assertEquals(null, GeoPackage.lireProjet(db))
+            db.executer("DROP TABLE projet")
+            assertEquals(null, GeoPackage.lireProjet(db))
+        }
+    }
 }

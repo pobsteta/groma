@@ -124,12 +124,50 @@ def _ecrire(gdf, chemin: Path, nom_couche: str) -> None:
     )
 
 
+def ligne_projet(placettes, projet: dict) -> dict:
+    """Complete the ``projet`` row with what the plots tell: plot counts,
+    extent (WKT, EPSG:4326) and preparation date. Given values win."""
+    import shapely
+    from shapely.geometry import box
+
+    from . import __version__
+
+    manquants = [c["nom"] for c in couche("projet")["colonnes"] if c.get("requis") and not projet.get(c["nom"])]
+    if manquants:
+        raise ValueError(f"Table projet : {', '.join(manquants)} manquant(s).")
+    inconnus = set(projet) - set(noms_colonnes("projet"))
+    if inconnus:
+        raise ValueError(f"Table projet : colonnes inconnues {sorted(inconnus)}.")
+    rempl = int((placettes["type"] == "Over").sum()) if "type" in placettes.columns else 0
+    calcule = {
+        "nb_placettes_base": len(placettes) - rempl,
+        "nb_placettes_rempl": rempl,
+        "emprise": shapely.to_wkt(box(*placettes.to_crs(4326).total_bounds), rounding_precision=6),
+        "prepare_le": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "prepare_par": f"groma {__version__}",
+    }
+    return calcule | {k: v for k, v in projet.items() if v is not None}
+
+
+def _ecrire_projet(chemin: Path, ligne: dict | None) -> None:
+    """Non-spatial ``projet`` table (GeoPackage "attributes"), empty without ``ligne``."""
+    import pandas as pd
+    import pyogrio
+
+    spec = couche("projet")
+    df = pd.DataFrame({c["nom"]: pd.Series(dtype=_dtype(c["type"])) for c in spec["colonnes"]})
+    if ligne is not None:
+        df = pd.concat([df, pd.DataFrame([ligne])], ignore_index=True)[df.columns].astype(df.dtypes.to_dict())
+    pyogrio.write_dataframe(df, chemin, layer="projet", driver="GPKG", layer_options={"FID": "fid"})
+
+
 def creer_gpkg(
     chemin: str | Path,
     placettes,
     houppiers=None,
     cibles=None,
     centres_mesures=None,
+    projet: dict | None = None,
 ) -> Path:
     """Create ``inventaire_video.gpkg``.
 
@@ -137,6 +175,10 @@ def creer_gpkg(
     least ``plot_id``; plan columns (``wgt``, ``ip``, ``stratum``,
     ``strat_*``) are kept as they are. Missing Groma columns are added with
     their defaults.
+
+    ``projet``: values of the one-row ``projet`` table (``projet_id`` and
+    ``projet_nom`` required), completed by :func:`ligne_projet`. Without
+    it the table is created empty.
     """
     chemin = Path(chemin)
     if chemin.exists():
@@ -147,6 +189,8 @@ def creer_gpkg(
 
         lon = p.to_crs(4326).geometry.x
         p["convergence_deg"] = [round(convergence_lambert93_deg(v), 6) for v in lon]
+    # Validated before anything is written.
+    ligne = ligne_projet(p, projet) if projet is not None else None
     _ecrire(_completer(p, "placettes"), chemin, "placettes")
     _ecrire(_completer(centres_mesures, "centres_mesures") if centres_mesures is not None else _gdf_vide("centres_mesures"), chemin, "centres_mesures")
     _ecrire(_completer(cibles, "cibles") if cibles is not None else _gdf_vide("cibles"), chemin, "cibles")
@@ -156,6 +200,7 @@ def creer_gpkg(
         _ecrire(_completer(houppiers, "houppiers"), chemin, "houppiers")
     else:
         _ecrire(_gdf_vide("houppiers"), chemin, "houppiers")
+    _ecrire_projet(chemin, ligne)
     with sqlite3.connect(chemin) as cx:
         cx.executescript(sql_declencheurs())
     log.info("GeoPackage créé : %s", chemin)
