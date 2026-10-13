@@ -98,6 +98,7 @@ class Lidar(BaseModel):
 class Manifeste(BaseModel):
     format: str = FORMAT
     version: int = VERSION
+    projet_id: str = ""  # project of the plot (absent from packages older than the project list)
     plot_id: str
     date: str | None = None
     appareil: dict[str, Any] = Field(default_factory=dict)

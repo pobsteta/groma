@@ -107,7 +107,8 @@ transport entre les deux bacs à sable. Options, par ordre de préférence :
 
 1. **Plugin de projet QField** (`inventaire_video.qml`, livré dans le `.qgz`
    à côté du `.qgs` : QField le charge après accord de l'utilisateur). Il lit
-   les détections provisoires exposées par Groma sur `http://127.0.0.1:8765/detections/<plot_id>`
+   les détections provisoires exposées par Groma sur `http://127.0.0.1:8765/detections/<projet_id>/<plot_id>`
+   (`/detections/<plot_id>` reste servi quand un seul projet a cette placette)
    (`ServeurLocal.kt`) et les écrit dans la couche `detections` **par QField
    lui-même**, ce qui déclenche les mêmes déclencheurs. Un seul processus
    écrit alors dans le fichier. **À valider sur appareil** : accès réseau

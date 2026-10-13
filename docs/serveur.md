@@ -43,10 +43,21 @@ nemetonshiny :
 
 | Méthode | Chemin |
 |---|---|
-| POST | `/televersements` puis PUT `/televersements/{id}?offset=N`, POST `/televersements/{id}/terminer` |
-| GET | `/placettes` (état de chaque placette, pour le bloc « Suivre ») |
+| POST | `/televersements` ({`projet_id`, `plot_id`, `taille`, `sha256`}) puis PUT `/televersements/{id}?offset=N`, POST `/televersements/{id}/terminer` |
+| GET | `/placettes?projet_id=…` (état de chaque placette, pour le bloc « Suivre » ; sans `projet_id`, tous les projets) |
 | GET | `/taches/{id}` |
-| GET | `/placettes/{plot_id}/resultat.gpkg`, `/rapport.json`, `/rapport.html` |
+| GET | `/projets/{projet_id}/placettes/{plot_id}/resultat.gpkg`, `/rapport.json`, `/rapport.html` |
+| GET | `/placettes/{plot_id}/resultat.gpkg`, … : projet par défaut |
+
+Une placette est identifiée par le couple (`projet_id`, `plot_id`) : deux
+plans d'échantillonnage peuvent avoir chacun une `P001`. `projet_id` est
+l'identifiant du projet nemetonshiny (table `projet` du GeoPackage). Un
+téléphone d'avant la liste des projets n'envoie pas de `projet_id` : ses
+placettes vont dans le projet par défaut (`""`), servi par les chemins sans
+`/projets/`. Paquets et résultats sont rangés par projet
+(`paquets/<projet_id>/`, `resultats/<projet_id>/<plot_id>/<tâche>/`, `_`
+pour le projet par défaut) ; une base de file d'attente plus ancienne est
+migrée au démarrage.
 
 Authentification : jeton porteur (`GROMA_JETON`).
 

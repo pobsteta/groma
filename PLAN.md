@@ -32,7 +32,7 @@ Source unique de l'état d'avancement. Mis à jour à chaque étape.
 | 7 | Envoi, file d'attente, résultats pour nemetonshiny | fait côté serveur (envoi reprenable testé) ; `EnvoiWorker.kt` écrit |
 | 7b | CI (Python 3.11/3.12, Kotlin, R, Docker, APK), versions, releases, Dependabot | fait |
 | 7c | `groma-preparer` : projet Groma à partir du plan d'échantillonnage de nemetonshiny (`samples.gpkg` ou export QField), rayon en paramètre | fait (9 tests), en attendant `creer_projet_inventaire_video()` ; sans rasters |
-| 7d | Liste des projets façon contextes Marculus (plusieurs plans sur le téléphone, table `projet`, `projet_id` dans les paquets) | brief écrit (`briefs/groma/2026-10-13-liste-des-projets.md`) ; PR 1 faite : table `projet` (schéma 1.1.0), `groma-preparer` la remplit depuis le projet nemetonshiny, lecture Kotlin. Reste : `projet_id` dans les paquets, écran Projets |
+| 7d | Liste des projets façon contextes Marculus (plusieurs plans sur le téléphone, table `projet`, `projet_id` dans les paquets) | brief écrit (`briefs/groma/2026-10-13-liste-des-projets.md`) ; PR 1 faite : table `projet` (schéma 1.1.0), `groma-preparer` la remplit depuis le projet nemetonshiny, lecture Kotlin. PR 2 faite : `projet_id` dans les paquets, les envois, les exports de détections et le serveur (rangement et routes par projet, compatible sans `projet_id`). Reste : écran Projets |
 | 8 | Essence proposée par photo d'écorce ou de feuilles | plus tard |
 
 ## Résultats sur données synthétiques (pas encore sur le terrain)

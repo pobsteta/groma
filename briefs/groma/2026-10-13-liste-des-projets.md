@@ -225,6 +225,9 @@ cliquable, colonne de textes et menu ⋮ à droite.
 * `creer_projet_inventaire_video()` écrit la table `projet` selon le schéma
   ci-dessus.
 * Elle nomme le dossier de sortie d'après l'identifiant du projet.
+* `groma_etat_placettes()` et `groma_telecharger_resultats()` passent
+  l'identifiant du projet au serveur : `GET /placettes?projet_id=…` et
+  `GET /projets/{projet_id}/placettes/{plot_id}/…` (livrés par la PR 2).
 
 ## 8. Découpage proposé
 
