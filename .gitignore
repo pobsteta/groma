@@ -12,3 +12,6 @@ android/local.properties
 .Rhistory
 .claude/settings.local.json
 android/app/icone/*.ttf
+*.jks
+*.keystore
+signature.env
