@@ -1,4 +1,5 @@
 import hashlib
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -68,3 +69,54 @@ def test_file_reprise_apres_echec(tmp_path):
     f.prendre()
     f.echouer(tid, "panne", tentatives_max=2)
     assert f.obtenir(tid)["etat"] == "echec"
+
+
+def _televerser(c, h, corps: dict, donnees: bytes) -> str:
+    tid = c.post("/televersements", json=corps | {"taille": len(donnees), "sha256": hashlib.sha256(donnees).hexdigest()}, headers=h).json()["id"]
+    c.put(f"/televersements/{tid}?offset=0", content=donnees, headers=h)
+    return c.post(f"/televersements/{tid}/terminer", headers=h).json()["tache_id"]
+
+
+def test_meme_placette_dans_deux_projets(cfg, tmp_path):
+    """Two sampling plans both have a P001: tasks, listing and results stay apart."""
+    h = {"Authorization": "Bearer secret"}
+    c = TestClient(creer_app(cfg))
+    ta = _televerser(c, h, {"projet_id": "foret_a", "plot_id": "P001"}, b"paquet A")
+    tb = _televerser(c, h, {"projet_id": "foret_b", "plot_id": "P001"}, b"paquet B")
+    t0 = _televerser(c, h, {"plot_id": "P001"}, b"ancien telephone")  # no projet_id: default project
+    file = FileAttente(cfg.base)
+    assert [Path(file.obtenir(t)["paquet"]).parent.name for t in (ta, tb, t0)] == ["foret_a", "foret_b", "_"]
+
+    tout = c.get("/placettes", headers=h).json()
+    assert sorted((p["projet_id"], p["plot_id"]) for p in tout) == [("", "P001"), ("foret_a", "P001"), ("foret_b", "P001")]
+    assert [p["id"] for p in c.get("/placettes?projet_id=foret_b", headers=h).json()] == [tb]
+
+    # Results: only foret_b's P001 is done.
+    rapport = tmp_path / "rapport_b.json"
+    rapport.write_text('{"plot_id": "P001", "projet": "b"}')
+    file.terminer(tb, str(rapport), str(rapport), str(rapport), "conforme")
+    assert c.get("/projets/foret_b/placettes/P001/rapport.json", headers=h).json()["projet"] == "b"
+    assert c.get("/projets/foret_a/placettes/P001/rapport.json", headers=h).status_code == 404
+    assert c.get("/placettes/P001/rapport.json", headers=h).status_code == 404  # default project
+    assert c.get("/projets/foret_b/placettes/P001/inconnu.txt", headers=h).status_code == 404
+    assert c.post("/televersements", json={"projet_id": "../x", "plot_id": "P1", "taille": 1, "sha256": "0" * 64}, headers=h).status_code == 422
+
+
+def test_file_creee_avant_projet_id(tmp_path):
+    """A queue base from before projet_id is migrated: old tasks go to the default project."""
+    import sqlite3
+
+    base = tmp_path / "t.sqlite"
+    with sqlite3.connect(base) as cx:
+        cx.executescript(
+            "CREATE TABLE taches (id TEXT PRIMARY KEY, plot_id TEXT NOT NULL, paquet TEXT NOT NULL,"
+            " etat TEXT NOT NULL DEFAULT 'en_attente', tentatives INTEGER NOT NULL DEFAULT 0, cree TEXT NOT NULL,"
+            " maj TEXT NOT NULL, erreur TEXT, gpkg TEXT, rapport_json TEXT, rapport_html TEXT, verdict TEXT);"
+            "CREATE INDEX taches_plot ON taches(plot_id, cree);"
+            "INSERT INTO taches (id, plot_id, paquet, cree, maj) VALUES ('t1', 'P001', 'x.zip', '2026-10-01', '2026-10-01');"
+        )
+    f = FileAttente(base)
+    assert f.derniere("P001")["id"] == "t1" and f.derniere("P001")["projet_id"] == ""
+    f.ajouter("P001", "y.zip", "foret_a")
+    assert f.derniere("P001")["id"] == "t1"
+    assert len(f.lister()) == 2 and len(f.lister("foret_a")) == 1

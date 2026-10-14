@@ -19,8 +19,10 @@ En attendant l'onglet « Inventaire vidéo » de nemetonshiny (brief du
 
 ```bash
 pip install -e "core[geo]"
+cd ~/terrain
 groma-preparer ~/.local/share/nemeton/projects/<id>/data/samples.gpkg \
-    --sortie ~/terrain/<projet> --rayon 15 --declinaison 2.1
+    --rayon 15 --declinaison 2.1
+adb push <id> /sdcard/Download/groma/
 ```
 
 * `--rayon` (obligatoire) : rayon de la placette en mètres. Reprendre celui
@@ -28,14 +30,93 @@ groma-preparer ~/.local/share/nemeton/projects/<id>/data/samples.gpkg \
   servi au tirage.
 * `--declinaison` (obligatoire) : déclinaison magnétique en degrés, positive
   vers l'est (calculateurs IGN ou NOAA).
+* `--sortie` : dossier produit. Par défaut `./<id>`, l'identifiant du projet
+  nemetonshiny : **le dossier garde ce nom sur le téléphone**, Groma s'en
+  sert pour reconnaître le projet.
+* `--nom` : nom affiché dans Groma. Par défaut celui du projet
+  nemetonshiny ; obligatoire, comme `--sortie`, pour un plan qui ne vient
+  pas d'un dossier de projet nemetonshiny (export QField, fichier copié).
 * Options : `--seuil` (7,5 cm), `--unite deg|gr`, `--placettes P001,P004`,
   `--base-seulement` (sans les placettes de remplacement), `--ecraser`.
 
 Les colonnes du plan (`type`, `visit_order`, `stratum`, `ip`, `wgt`…) sont
 gardées telles quelles. Un `inventaire_video.gpkg` existant n'est jamais
-remplacé sans `--ecraser`. Le dossier produit s'ouvre dans Groma par
-« Changer de projet ». Il n'a pas de rasters : MNT, MNH et houppiers restent à
-la charge de nemeton.
+remplacé sans `--ecraser`. Il n'a pas de rasters : MNT, MNH et houppiers
+restent à la charge de nemeton.
+
+La table `projet` du GeoPackage décrit le projet pour la liste des projets
+de Groma : nom et description, communes, surface de la zone (surface SIG
+des parcelles) et cadastrale, nombre de parcelles, d'UG et de placettes
+(base et remplacement), date du plan et de la préparation. Ces valeurs sont
+lues, sans rien y écrire, dans `metadata.json` et `data/parcels.gpkg` du
+projet nemetonshiny ; sans elles, la table ne garde que le nom et les
+nombres de placettes.
+
+## Projets sur le téléphone
+
+Groma liste les projets du **dossier des projets**, choisi une fois par
+⋮ → « Dossier des projets… » (par défaut `Téléchargements/groma/`). Chaque
+sous-dossier qui contient `inventaire_video.gpkg` est un projet ; il garde
+le nom que lui donne `groma-preparer`, l'identifiant du projet
+nemetonshiny :
+
+```
+Téléchargements/groma/
+├── 20261008_212542_uywc/inventaire_video.gpkg
+└── 20261007_084614_qapz/inventaire_video.gpkg
+```
+
+* Un nouveau dossier est copié dans le stockage de Groma (copie de
+  travail) à l'ouverture de l'application ou par ⋮ → « Actualiser ». La
+  saisie se fait dans cette copie.
+* Chaque carte montre le nom de la forêt, les communes, la surface de la
+  zone et le nombre d'UG, les placettes (base + remplacement) et le rayon,
+  l'avancement (placettes Base faites, envoyées) et la surface inventoriée
+  (Σ π·r² des placettes faites). La puce « Terminés » bascule vers les
+  projets dont toutes les placettes Base sont faites.
+* **Mettre à jour** (menu de la carte) : quand le dossier contient une
+  préparation plus récente que la copie de travail. Refusé dès que la copie
+  contient des données de terrain (centre, cibles, détections, placette
+  traitée) : rien de ce qui a été saisi n'est écrasé.
+* **Retirer du téléphone** : supprime la copie de travail et le dossier
+  source ; refusé tant qu'une placette faite n'est pas envoyée.
+* ⋮ → « Importer un dossier… » copie un dossier situé ailleurs.
+* Un GeoPackage préparé avant la table `projet` (Groma < 0.3) s'affiche
+  avec le nom de son dossier et ses seuls nombres de placettes.
+
+### Déposer les dossiers
+
+Par câble USB, avec `adb` :
+
+```bash
+adb push 20261008_212542_uywc 20261007_084614_qapz /sdcard/Download/groma/
+```
+
+ou en glissant les dossiers dans `Download/groma` depuis l'explorateur de
+fichiers de l'ordinateur (téléphone en mode « Transfert de fichiers »).
+
+Au premier lancement, ⋮ → « Dossier des projets… » ouvre le sélecteur
+d'Android sur `Download/groma` : toucher **Utiliser ce dossier**, puis
+**Autoriser**. Sur Samsung, cette seconde confirmation est indispensable :
+sans elle, Groma n'a pas accès au dossier et la liste reste vide.
+L'autorisation est gardée, même après un redémarrage.
+
+### Mettre à jour un projet
+
+Quand le plan change dans nemetonshiny (placettes ajoutées, rayon corrigé)
+avant le début du terrain :
+
+```bash
+groma-preparer ~/.local/share/nemeton/projects/<id>/data/samples.gpkg \
+    --rayon 15 --declinaison 2.1 --ecraser
+adb push <id> /sdcard/Download/groma/
+```
+
+Après « Actualiser », la carte signale « Nouvelle version disponible dans le dossier des
+projets » ; menu
+de la carte → **Mettre à jour**. Dès qu'une placette a été commencée sur
+le téléphone, la mise à jour est refusée : envoyer les placettes faites,
+puis préparer un nouveau projet nemetonshiny pour la suite.
 
 ## Déroulé sur une placette
 
@@ -92,7 +173,8 @@ transport entre les deux bacs à sable. Options, par ordre de préférence :
 
 1. **Plugin de projet QField** (`inventaire_video.qml`, livré dans le `.qgz`
    à côté du `.qgs` : QField le charge après accord de l'utilisateur). Il lit
-   les détections provisoires exposées par Groma sur `http://127.0.0.1:8765/detections/<plot_id>`
+   les détections provisoires exposées par Groma sur `http://127.0.0.1:8765/detections/<projet_id>/<plot_id>`
+   (`/detections/<plot_id>` reste servi quand un seul projet a cette placette)
    (`ServeurLocal.kt`) et les écrit dans la couche `detections` **par QField
    lui-même**, ce qui déclenche les mêmes déclencheurs. Un seul processus
    écrit alors dans le fichier. **À valider sur appareil** : accès réseau

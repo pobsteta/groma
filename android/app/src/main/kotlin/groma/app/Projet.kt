@@ -1,27 +1,32 @@
 package groma.app
 
-import android.content.Context
 import android.database.sqlite.SQLiteDatabase
-import android.net.Uri
-import androidx.documentfile.provider.DocumentFile
 import groma.core.CibleMesuree
+import groma.core.CleProjet
 import groma.core.GeoPackage
 import groma.core.GeoTiff
 import groma.core.Grille
 import groma.core.Houppier
+import groma.core.InfosProjet
 import groma.core.ParametresPlacette
 import java.io.File
 
 /**
  * The QField project folder delivered by nemetonshiny (inventaire_video.gpkg
- * + rasters/), imported into Groma's own storage through the system folder
- * picker. Since Android 11 QField works on ITS imported copy, in its private
- * folder: see docs/terrain.md for how detections reach QField's copy.
+ * + rasters/), copied into Groma's own storage by [DepotProjets]. Since
+ * Android 11 QField works on ITS imported copy, in its private folder: see
+ * docs/terrain.md for how detections reach QField's copy.
  */
 class Projet(val dossier: File) {
     val gpkg = File(dossier, "inventaire_video.gpkg")
 
     fun ouvrir(): SQLiteDatabase = SQLiteDatabase.openDatabase(gpkg.path, null, SQLiteDatabase.OPEN_READWRITE)
+
+    /** Row of the `projet` table, null for a GeoPackage prepared before schema 1.1.0. */
+    fun infos(): InfosProjet? = ouvrir().use { GeoPackage.lireProjet(SqliteAndroid(it)) }
+
+    /** Key of the project's packages, uploads and detection exports (see [CleProjet]). */
+    val projetId: String by lazy { CleProjet.projetId(infos(), dossier.name) }
 
     fun placettes(): List<Map<String, Any?>> = ouvrir().use { GeoPackage.lirePoints(SqliteAndroid(it), "placettes") }
 
@@ -58,24 +63,4 @@ class Projet(val dossier: File) {
     fun mnh(plotId: String): Grille? = raster("${plotId}_mnh.tif")
 
     private fun raster(nom: String): Grille? = File(dossier, "rasters/$nom").takeIf { it.exists() }?.let { GeoTiff.lire(it.readBytes()) }
-
-    companion object {
-        /** Copy the picked folder (SAF tree URI) into the app storage. */
-        fun importer(ctx: Context, arbre: Uri): Projet {
-            val racine = DocumentFile.fromTreeUri(ctx, arbre) ?: error("Dossier illisible.")
-            val cible = File(ctx.getExternalFilesDir(null), "projets/${racine.name ?: "projet"}")
-            copier(ctx, racine, cible)
-            require(File(cible, "inventaire_video.gpkg").exists()) { "Le dossier ne contient pas inventaire_video.gpkg." }
-            return Projet(cible)
-        }
-
-        private fun copier(ctx: Context, src: DocumentFile, dst: File) {
-            dst.mkdirs()
-            for (f in src.listFiles()) {
-                val nom = f.name ?: continue
-                if (f.isDirectory) copier(ctx, f, File(dst, nom))
-                else ctx.contentResolver.openInputStream(f.uri)!!.use { i -> File(dst, nom).outputStream().use { i.copyTo(it) } }
-            }
-        }
-    }
 }

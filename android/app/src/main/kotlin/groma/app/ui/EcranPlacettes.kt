@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
@@ -19,7 +19,6 @@ import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,13 +40,13 @@ import groma.app.R
 /** One plot as shown in the list. */
 data class LignePlacette(val plotId: String, val etat: String, val rayonM: Double?, val seuilCm: Double?)
 
-/** Home screen: plots of the open project, settings in the ⋮ menu (Marculus layout). */
+/** Plots of one project, opened from the project list; back returns to it. */
 @Composable
 fun EcranPlacettes(
-    projetOuvert: Boolean,
+    titre: String,
     placettes: List<LignePlacette>,
     version: String,
-    onOuvrirProjet: () -> Unit,
+    onRetour: () -> Unit,
     onPlacette: (String) -> Unit,
     onParametres: () -> Unit,
 ) {
@@ -56,17 +55,18 @@ fun EcranPlacettes(
     Scaffold(
         topBar = {
             BandeauCompact(
-                titre = stringResource(R.string.app_name),
+                titre = titre,
+                navigationIcon = {
+                    IconButton(onClick = onRetour) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.retour))
+                    }
+                },
                 actions = {
                     Box {
                         IconButton(onClick = { menu = true }) {
                             Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.menu))
                         }
                         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                            DropdownMenuItem(
-                                text = { Text(stringResource(if (projetOuvert) R.string.menu_changer_projet else R.string.ouvrir_projet)) },
-                                onClick = { menu = false; onOuvrirProjet() },
-                            )
                             DropdownMenuItem(text = { Text(stringResource(R.string.menu_parametres)) }, onClick = { menu = false; onParametres() })
                             DropdownMenuItem(text = { Text(stringResource(R.string.menu_apropos)) }, onClick = { menu = false; aPropos = true })
                         }
@@ -74,18 +74,8 @@ fun EcranPlacettes(
                 },
             )
         },
-        floatingActionButton = {
-            if (!projetOuvert) {
-                ExtendedFloatingActionButton(
-                    onClick = onOuvrirProjet,
-                    icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                    text = { Text(stringResource(R.string.ouvrir_projet)) },
-                )
-            }
-        },
     ) { padding ->
         when {
-            !projetOuvert -> Vide(stringResource(R.string.aucun_projet), Modifier.padding(padding))
             placettes.isEmpty() -> Vide(stringResource(R.string.aucune_placette), Modifier.padding(padding))
             else -> Column(Modifier.fillMaxSize().padding(padding)) {
                 Text(
@@ -95,7 +85,7 @@ fun EcranPlacettes(
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 )
                 LazyColumn(
-                    contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 88.dp),
+                    contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     items(placettes, key = { it.plotId }) { p -> CartePlacette(p) { onPlacette(p.plotId) } }

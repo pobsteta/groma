@@ -15,6 +15,7 @@ import com.google.ar.core.Frame
 import com.google.ar.core.Session
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.NotYetAvailableException
+import groma.core.CleProjet
 import groma.core.ControleQualite
 import groma.core.EchantillonPrise
 import groma.core.GeoPackage
@@ -63,8 +64,8 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         OpenCVLoader.initLocal()
         projet = Projet(File(intent.getStringExtra(EXTRA_PROJET)!!))
         plotId = intent.getStringExtra(EXTRA_PLOT)!!
-        travail = File(cacheDir, "capture_$plotId").apply { deleteRecursively(); mkdirs() }
-        enregistreur = EnregistreurPaquet(travail, plotId)
+        travail = File(cacheDir, "capture/" + CleProjet.chemin(projet.projetId, plotId)).apply { deleteRecursively(); mkdirs() }
+        enregistreur = EnregistreurPaquet(travail, projet.projetId, plotId)
         vue = findViewById(R.id.vue); etat = findViewById(R.id.etat); alerte = findViewById(R.id.alerte)
         vue.preserveEGLContextOnPause = true
         vue.setEGLContextClientVersion(2)
@@ -219,8 +220,10 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
                     CalculEmbarque.ecrire(projet, plotId, r.detections)
                     exporterJson(r.detections)
                 }
-                val paquet = enregistreur.terminer(manifeste(p), File(getExternalFilesDir("paquets"), "$plotId.groma.zip"))
-                Preferences.planifierEnvoi(this@CaptureActivity, paquet, plotId)
+                val sortie = File(getExternalFilesDir("paquets"), CleProjet.chemin(projet.projetId, plotId, ".groma.zip"))
+                sortie.parentFile!!.mkdirs()
+                val paquet = enregistreur.terminer(manifeste(p), sortie)
+                Preferences.planifierEnvoi(this@CaptureActivity, paquet, projet.projetId, plotId)
                 listOfNotNull("${r.detections.size} arbres provisoires.", r.message).joinToString("\n")
             }
             AlertDialog.Builder(this@CaptureActivity)
@@ -247,8 +250,9 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
 
     /** Provisional detections as JSON for the local endpoint read by the QField plugin. */
     private fun exporterJson(det: List<groma.core.Detection>) {
-        val dossier = File(filesDir, "detections").apply { mkdirs() }
-        File(dossier, "$plotId.json").writeText(JSONArray(det.map { d ->
+        val f = File(File(filesDir, "detections"), CleProjet.chemin(projet.projetId, plotId, ".json"))
+        f.parentFile!!.mkdirs()
+        f.writeText(JSONArray(det.map { d ->
             JSONObject(d.valeurs()).put("uuid", d.uuid).put("x", d.x).put("y", d.y)
         }).toString())
     }

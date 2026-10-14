@@ -3,15 +3,21 @@
 Upload protocol (resumable after a network cut, the phone resends from the
 offset the server reports):
 
-1. ``POST /televersements`` {plot_id, taille, sha256} -> {id, taille_morceau, recu}
+1. ``POST /televersements`` {projet_id?, plot_id, taille, sha256} -> {id, taille_morceau, recu}
 2. ``PUT /televersements/{id}?offset=N`` body = bytes from N; N must equal
    the number of bytes already received (409 otherwise, with the expected offset)
 3. ``GET /televersements/{id}`` -> {recu, taille}
 4. ``POST /televersements/{id}/terminer`` -> checks size and SHA-256, queues
    the task -> {tache_id}
 
-Results: ``GET /placettes`` (state of every plot), ``GET /taches/{id}``,
-``GET /placettes/{plot_id}/resultat.gpkg | rapport.json | rapport.html``.
+Results: ``GET /placettes[?projet_id=]`` (state of every plot),
+``GET /taches/{id}``,
+``GET /projets/{projet_id}/placettes/{plot_id}/resultat.gpkg | rapport.json | rapport.html``.
+
+Plots are keyed by (``projet_id``, ``plot_id``): two sampling plans may both
+have a ``P001``. Without ``projet_id`` (phones older than the project list),
+the default project ``""`` is used, which the routes without ``/projets/``
+keep serving.
 """
 
 from __future__ import annotations
@@ -34,6 +40,7 @@ SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
 class DemandeTeleversement(BaseModel):
+    projet_id: str = Field(default="", pattern=r"^(|[A-Za-z0-9_.-]{1,64})$")
     plot_id: str = Field(pattern=PLOT_ID.pattern)
     taille: int = Field(gt=0)
     sha256: str = Field(pattern=SHA256.pattern)
@@ -99,10 +106,12 @@ def creer_app(config: Config | None = None) -> FastAPI:
                 h.update(bloc)
         if h.hexdigest() != m["sha256"]:
             raise HTTPException(422, "Somme de contrôle SHA-256 incorrecte.")
-        cible = dossier_paquets / f"{m['plot_id']}_{tid}.groma.zip"
+        projet_id = m.get("projet_id", "")
+        cible = dossier_paquets / (projet_id or "_") / f"{m['plot_id']}_{tid}.groma.zip"
+        cible.parent.mkdir(exist_ok=True)
         part.replace(cible)
         (dossier_tel / f"{tid}.json").unlink()
-        return {"tache_id": file.ajouter(m["plot_id"], str(cible))}
+        return {"tache_id": file.ajouter(m["plot_id"], str(cible), projet_id)}
 
     @app.get("/taches/{tid}", dependencies=[Depends(auth)])
     def tache(tid: str):
@@ -112,28 +121,34 @@ def creer_app(config: Config | None = None) -> FastAPI:
         return _public(t)
 
     @app.get("/placettes", dependencies=[Depends(auth)])
-    def placettes():
-        return [_public(t) for t in file.lister()]
+    def placettes(projet_id: str | None = None):
+        return [_public(t) for t in file.lister(projet_id)]
 
-    def resultat(plot_id: str, champ: str, media: str):
-        if not PLOT_ID.match(plot_id):
+    def resultat(projet_id: str, plot_id: str, champ: str, media: str):
+        if not PLOT_ID.match(plot_id) or (projet_id and not PLOT_ID.match(projet_id)):
             raise HTTPException(404, "Placette inconnue.")
-        t = file.derniere(plot_id, "terminee")
+        t = file.derniere(plot_id, "terminee", projet_id)
         if not t or not t[champ]:
             raise HTTPException(404, "Aucun résultat définitif pour cette placette.")
         return FileResponse(t[champ], media_type=media, filename=Path(t[champ]).name)
 
-    @app.get("/placettes/{plot_id}/resultat.gpkg", dependencies=[Depends(auth)])
-    def gpkg(plot_id: str):
-        return resultat(plot_id, "gpkg", "application/geopackage+sqlite3")
+    fichiers = {
+        "resultat.gpkg": ("gpkg", "application/geopackage+sqlite3"),
+        "rapport.json": ("rapport_json", "application/json"),
+        "rapport.html": ("rapport_html", "text/html"),
+    }
 
-    @app.get("/placettes/{plot_id}/rapport.json", dependencies=[Depends(auth)])
-    def rapport_json(plot_id: str):
-        return resultat(plot_id, "rapport_json", "application/json")
+    @app.get("/projets/{projet_id}/placettes/{plot_id}/{fichier}", dependencies=[Depends(auth)])
+    def resultat_projet(projet_id: str, plot_id: str, fichier: str):
+        if fichier not in fichiers:
+            raise HTTPException(404, "Fichier inconnu.")
+        return resultat(projet_id, plot_id, *fichiers[fichier])
 
-    @app.get("/placettes/{plot_id}/rapport.html", dependencies=[Depends(auth)])
-    def rapport_html(plot_id: str):
-        return resultat(plot_id, "rapport_html", "text/html")
+    @app.get("/placettes/{plot_id}/{fichier}", dependencies=[Depends(auth)])
+    def resultat_defaut(plot_id: str, fichier: str):
+        if fichier not in fichiers:
+            raise HTTPException(404, "Fichier inconnu.")
+        return resultat("", plot_id, *fichiers[fichier])
 
     @app.get("/sante")
     def sante():
@@ -143,4 +158,4 @@ def creer_app(config: Config | None = None) -> FastAPI:
 
 
 def _public(t: dict) -> dict:
-    return {k: t[k] for k in ("id", "plot_id", "etat", "tentatives", "cree", "maj", "erreur", "verdict")}
+    return {k: t[k] for k in ("id", "projet_id", "plot_id", "etat", "tentatives", "cree", "maj", "erreur", "verdict")}

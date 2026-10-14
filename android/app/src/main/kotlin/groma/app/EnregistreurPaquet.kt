@@ -17,7 +17,7 @@ import java.util.zip.ZipOutputStream
  * server/src/groma_server/paquet.py (manifest.json + depth .u16 + JPEG key frames).
  * Frames are streamed to a working folder during the capture, zipped at the end.
  */
-class EnregistreurPaquet(private val dossier: File, private val plotId: String) {
+class EnregistreurPaquet(private val dossier: File, private val projetId: String, private val plotId: String) {
     private val images = JSONArray()
     private val detectionsCibles = JSONArray()
     private var n = 0
@@ -71,7 +71,7 @@ class EnregistreurPaquet(private val dossier: File, private val plotId: String) 
     }
 
     fun terminer(manifesteBase: JSONObject, sortie: File): File {
-        val m = manifesteBase.put("format", "groma-paquet").put("version", 1).put("plot_id", plotId)
+        val m = manifesteBase.put("format", "groma-paquet").put("version", 1).put("projet_id", projetId).put("plot_id", plotId)
             .put("images", images).put("detections_cibles", detectionsCibles)
         ZipOutputStream(sortie.outputStream().buffered()).use { z ->
             z.putNextEntry(ZipEntry("manifest.json")); z.write(m.toString().toByteArray()); z.closeEntry()

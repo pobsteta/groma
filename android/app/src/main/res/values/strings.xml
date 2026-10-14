@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Groma</string>
-    <string name="ouvrir_projet">Ouvrir le dossier du projet</string>
     <string name="choisir_placette">Choisir la placette</string>
     <string name="filmer">Filmer la placette</string>
     <string name="terminer">Terminer la prise de vue</string>
@@ -18,10 +17,8 @@
     <string name="couverture">Couverture : %1$d %%</string>
     <string name="camera_requise">La caméra est nécessaire pour filmer la placette.</string>
     <string name="menu">Menu</string>
-    <string name="menu_changer_projet">Changer de projet</string>
     <string name="menu_parametres">Paramètres</string>
     <string name="menu_apropos">À propos</string>
-    <string name="aucun_projet">Aucun projet ouvert.\nOuvre le dossier du projet préparé dans nemetonshiny.</string>
     <string name="aucune_placette">Ce projet ne contient aucune placette.</string>
     <string name="placettes_nombre">%1$d placettes · %2$d à faire</string>
     <string name="placette_rayon">Rayon %1$s m · seuil %2$s cm</string>
@@ -37,4 +34,41 @@
     <string name="apropos_titre">Groma %1$s</string>
     <string name="apropos_texte">Inventaire forestier par vidéo, plateforme Néméton.</string>
     <string name="fermer">Fermer</string>
+    <string name="menu_actualiser">Actualiser</string>
+    <string name="menu_dossier_projets">Dossier des projets…</string>
+    <string name="menu_importer">Importer un dossier…</string>
+    <string name="projets_recherche">Rechercher</string>
+    <string name="projets_termines">Terminés (%1$d)</string>
+    <string name="projets_autres_termines">Aussi %1$d projet(s) terminé(s) : puce « Terminés ».</string>
+    <string name="projets_autres_en_cours">Aussi %1$d projet(s) en cours : décocher « Terminés ».</string>
+    <string name="projets_aucun">Aucun projet sur le téléphone.
+Dépose chaque projet dans le dossier des projets, dans un sous-dossier qui porte l\'identifiant du projet nemetonshiny : Téléchargements/groma/&lt;identifiant&gt;/inventaire_video.gpkg.</string>
+    <string name="projets_choisir_racine">Choisis le dossier des projets (par exemple Téléchargements/groma) : chaque sous-dossier qui contient inventaire_video.gpkg devient un projet.</string>
+    <string name="projet_surface">%1$s ha</string>
+    <string name="projet_ug">%1$d UG</string>
+    <string name="projet_placettes">%1$d placettes (%2$d + %3$d rempl.)</string>
+    <string name="projet_avancement">%1$d faites · %2$d envoyées</string>
+    <string name="projet_inventorie">%1$s ha inventoriés</string>
+    <string name="projet_maj_disponible">Nouvelle version disponible dans le dossier des projets</string>
+    <string name="projet_ouvrir">Ouvrir</string>
+    <string name="projet_details">Détails</string>
+    <string name="projet_mettre_a_jour">Mettre à jour depuis le dossier</string>
+    <string name="projet_mis_a_jour">Projet mis à jour.</string>
+    <string name="retirer">Retirer du téléphone</string>
+    <string name="retirer_titre">Retirer le projet ?</string>
+    <string name="retirer_texte">« %1$s » sera supprimé du téléphone : copie de travail et dossier %2$s du dossier des projets.</string>
+    <string name="annuler">Annuler</string>
+    <string name="retour">Retour</string>
+    <string name="detail_identifiant">Identifiant : %1$s</string>
+    <string name="detail_proprietaire">Propriétaire : %1$s</string>
+    <string name="detail_communes">Communes : %1$s</string>
+    <string name="detail_surface_zone">Surface de la zone : %1$s ha</string>
+    <string name="detail_surface_cadastre">Surface cadastrale : %1$s ha</string>
+    <string name="detail_parcelles">Parcelles : %1$d</string>
+    <string name="detail_ug">Unités de gestion : %1$d</string>
+    <string name="detail_rayon">Rayon : %1$s m</string>
+    <string name="detail_avancement">Base faites : %1$d / %2$d · faites : %3$d · envoyées : %4$d · à envoyer : %5$d</string>
+    <string name="detail_plan">Plan tiré le %1$s</string>
+    <string name="detail_prepare">Préparé le %1$s (%2$s)</string>
+    <string name="detail_sans_table">Projet préparé avant la table « projet » : nom et surfaces inconnus.</string>
 </resources>

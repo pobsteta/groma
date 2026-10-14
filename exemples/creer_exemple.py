@@ -92,6 +92,18 @@ def main() -> None:
         houppiers=gpd.GeoDataFrame(houppiers, crs=2154),
         cibles=gpd.GeoDataFrame(cibles, crs=2154),
         centres_mesures=gpd.GeoDataFrame(centres, crs=2154),
+        projet={
+            "projet_id": "exemple_synthetique",
+            "projet_nom": "Forêt d'exemple (synthétique)",
+            "description": "Deux placettes du générateur synthétique",
+            "communes": "Exemple (00000)",
+            "surface_zone_ha": 12.5,
+            "nb_parcelles": 1,
+            "nb_ug": 1,
+            "plan_genere_le": "2026-10-12 08:00:00",
+            "prepare_le": "2026-10-12 09:00:00",
+            "prepare_par": "exemples/creer_exemple.py",
+        },
     )
 
     # --- P001: provisional pass on the phone -------------------------------
