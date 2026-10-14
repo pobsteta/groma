@@ -52,6 +52,11 @@ lues, sans rien y écrire, dans `metadata.json` et `data/parcels.gpkg` du
 projet nemetonshiny ; sans elles, la table ne garde que le nom et les
 nombres de placettes.
 
+La couche `parcelles` (schéma 1.2.0) reprend les parcelles cadastrales de
+`data/parcels.gpkg` (identifiant, commune, section, numéro, contenance), en
+Lambert 93, pour la carte de Groma. Elle reste vide quand le plan ne vient
+pas d'un projet nemetonshiny ; les GeoPackages préparés avant ne l'ont pas.
+
 ## Projets sur le téléphone
 
 Groma liste les projets du **dossier des projets**, choisi une fois par

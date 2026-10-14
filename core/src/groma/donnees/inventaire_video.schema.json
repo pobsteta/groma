@@ -1,6 +1,6 @@
 {
   "nom": "inventaire_video",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "crs": 2154,
   "description": "Schéma du GeoPackage inventaire_video.gpkg produit par nemeton (sous-onglet Terrain > Inventaire vidéo) et complété sur le terrain par QField (saisie) et Groma (détections). Source unique : Python (groma), Kotlin (application Groma) et brief nemeton.",
   "domaines": {
@@ -136,6 +136,20 @@
         {"nom": "houppier_id", "type": "INTEGER", "requis": true},
         {"nom": "h_max", "type": "REAL"},
         {"nom": "surface_m2", "type": "REAL"}
+      ]
+    },
+    {
+      "nom": "parcelles",
+      "geometrie": "MULTIPOLYGON",
+      "index_spatial": false,
+      "lecture_seule": true,
+      "remarque": "Parcelles cadastrales du projet nemetonshiny (data/parcels.gpkg), copiées par groma-preparer pour la carte de Groma (brief 2026-10-14 carte RTK). Vide quand le plan ne vient pas d'un projet nemetonshiny ; absente des GeoPackages préparés avant le schéma 1.2.0. Pas d'index spatial : le téléphone la lit en entier, sans fonction ST_*.",
+      "colonnes": [
+        {"nom": "idu", "type": "TEXT", "requis": true, "remarque": "Identifiant cadastral : code INSEE, préfixe, section, numéro (« 212000000A0036 »)."},
+        {"nom": "commune", "type": "TEXT", "remarque": "Code INSEE."},
+        {"nom": "section", "type": "TEXT"},
+        {"nom": "numero", "type": "TEXT"},
+        {"nom": "contenance_m2", "type": "REAL", "min": 0, "remarque": "Contenance cadastrale."}
       ]
     },
     {

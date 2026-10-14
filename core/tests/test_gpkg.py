@@ -39,7 +39,8 @@ def test_schema_noms_nmt():
 
 def test_couches_et_colonnes(gpkg):
     couches = dict(pyogrio.list_layers(gpkg))
-    assert set(couches) == {"placettes", "centres_mesures", "cibles", "arbres", "detections", "houppiers", "projet"}
+    assert set(couches) == {"placettes", "centres_mesures", "cibles", "arbres", "detections", "houppiers", "parcelles", "projet"}
+    assert couches["parcelles"] == "MultiPolygon"
     assert couches["projet"] is None  # non-spatial table
     p = gpd.read_file(gpkg, layer="placettes")
     assert list(p.columns[:-1]) == noms_colonnes("placettes")
@@ -84,6 +85,27 @@ def test_table_projet_invalide(tmp_path, projet):
     with pytest.raises(ValueError, match="projet"):
         creer_gpkg(tmp_path / "a.gpkg", placettes, projet=projet)
     assert not (tmp_path / "a.gpkg").exists()  # checked before anything is written
+
+
+def test_couche_parcelles(tmp_path):
+    from shapely.geometry import MultiPolygon, box
+
+    placettes = gpd.GeoDataFrame({"plot_id": ["P01"]}, geometry=[Point(925000, 6700000)], crs=2154)
+    parcelles = gpd.GeoDataFrame(
+        {"idu": ["212000000A0036", "212000000A0030"], "commune": ["21200", "21200"], "section": ["A", "A"],
+         "numero": ["36", "30"], "contenance_m2": [10000.0, 7500.0]},
+        geometry=[box(925000, 6700000, 925100, 6700100), MultiPolygon([box(925200, 6700000, 925250, 6700100), box(925300, 6700000, 925350, 6700100)])],
+        crs=2154,
+    ).to_crs(4326)
+    g = creer_gpkg(tmp_path / "a.gpkg", placettes, parcelles=parcelles)
+    lu = gpd.read_file(g, layer="parcelles")
+    assert list(lu.columns[:-1]) == noms_colonnes("parcelles")
+    assert lu.crs.to_epsg() == 2154 and set(lu.geom_type) == {"MultiPolygon"}
+    assert lu.loc[0, "idu"] == "212000000A0036" and lu.loc[1, "contenance_m2"] == 7500
+    assert lu.area.round().tolist() == [10000, 10000]
+    # Without parcels: empty layer, same columns.
+    g = creer_gpkg(tmp_path / "b.gpkg", placettes)
+    assert len(gpd.read_file(g, layer="parcelles")) == 0
 
 
 def test_geometrie_point_aller_retour():

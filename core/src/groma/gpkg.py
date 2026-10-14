@@ -115,7 +115,7 @@ def _ecrire(gdf, chemin: Path, nom_couche: str) -> None:
         chemin,
         layer=nom_couche,
         driver="GPKG",
-        geometry_type="Point" if spec["geometrie"] == "POINT" else "Polygon",
+        geometry_type={"POINT": "Point", "POLYGON": "Polygon", "MULTIPOLYGON": "MultiPolygon"}[spec["geometrie"]],
         layer_options={
             "SPATIAL_INDEX": "YES" if spec.get("index_spatial", True) else "NO",
             "GEOMETRY_NAME": GEOMETRIE,
@@ -149,6 +149,17 @@ def ligne_projet(placettes, projet: dict) -> dict:
     return calcule | {k: v for k, v in projet.items() if v is not None}
 
 
+def _parcelles(parcelles):
+    """``parcelles`` layer in Lambert-93, every geometry a MultiPolygon."""
+    from shapely.geometry import MultiPolygon, Polygon
+
+    if parcelles is None or not len(parcelles):
+        return _gdf_vide("parcelles")
+    p = parcelles.to_crs(SRS_ID)
+    p = p.set_geometry([MultiPolygon([g]) if isinstance(g, Polygon) else g for g in p.geometry], crs=SRS_ID)
+    return _completer(p, "parcelles")
+
+
 def _ecrire_projet(chemin: Path, ligne: dict | None) -> None:
     """Non-spatial ``projet`` table (GeoPackage "attributes"), empty without ``ligne``."""
     import pandas as pd
@@ -168,6 +179,7 @@ def creer_gpkg(
     cibles=None,
     centres_mesures=None,
     projet: dict | None = None,
+    parcelles=None,
 ) -> Path:
     """Create ``inventaire_video.gpkg``.
 
@@ -179,6 +191,9 @@ def creer_gpkg(
     ``projet``: values of the one-row ``projet`` table (``projet_id`` and
     ``projet_nom`` required), completed by :func:`ligne_projet`. Without
     it the table is created empty.
+
+    ``parcelles``: cadastral parcels (GeoDataFrame with the ``parcelles``
+    columns, any CRS), shown on the phone map; empty layer without it.
     """
     chemin = Path(chemin)
     if chemin.exists():
@@ -200,6 +215,7 @@ def creer_gpkg(
         _ecrire(_completer(houppiers, "houppiers"), chemin, "houppiers")
     else:
         _ecrire(_gdf_vide("houppiers"), chemin, "houppiers")
+    _ecrire(_parcelles(parcelles), chemin, "parcelles")
     _ecrire_projet(chemin, ligne)
     with sqlite3.connect(chemin) as cx:
         cx.executescript(sql_declencheurs())

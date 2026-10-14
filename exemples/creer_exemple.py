@@ -6,7 +6,8 @@ RTK centre and the three targets, then:
 
 * P001: provisional detections written with the phone protocol
   (``ecrire_detections``), and field attributes typed "in QField";
-* P002: still to do.
+* P002: still to do;
+* one cadastral parcel in two parts (the first with a hole) for the map.
 
 Also writes the definitive server result of P001
 (``resultats/P001_definitif.gpkg``), noisier positions removed, used by the
@@ -24,7 +25,7 @@ from pathlib import Path
 
 import geopandas as gpd
 import numpy as np
-from shapely.geometry import Point
+from shapely.geometry import MultiPolygon, Point, Polygon
 
 from groma.azimut import convergence_lambert93_deg
 from groma.gpkg import creer_gpkg, ecrire_detections, lire_points, mettre_a_jour_etat
@@ -92,6 +93,16 @@ def main() -> None:
         houppiers=gpd.GeoDataFrame(houppiers, crs=2154),
         cibles=gpd.GeoDataFrame(cibles, crs=2154),
         centres_mesures=gpd.GeoDataFrame(centres, crs=2154),
+        # One parcel of two parts around the plots, the first with a hole (map of the phone).
+        parcelles=gpd.GeoDataFrame(
+            {"idu": ["000000000A0001"], "commune": ["00000"], "section": ["A"], "numero": ["1"], "contenance_m2": [125000.0]},
+            geometry=[MultiPolygon([
+                Polygon([(924900, 6699900), (925100, 6699900), (925100, 6700200), (924900, 6700200)],
+                        [[(924950, 6700150), (924980, 6700150), (924980, 6700180), (924950, 6700180)]]),
+                Polygon([(925100, 6699950), (925300, 6699950), (925300, 6700200), (925100, 6700200)]),
+            ])],
+            crs=2154,
+        ),
         projet={
             "projet_id": "exemple_synthetique",
             "projet_nom": "Forêt d'exemple (synthétique)",

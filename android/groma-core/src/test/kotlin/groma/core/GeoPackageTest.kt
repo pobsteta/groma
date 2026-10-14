@@ -114,6 +114,36 @@ class GeoPackageTest {
     }
 
     @Test
+    fun parcellesDeLExemple() {
+        // Written by GDAL (envelope in the header): two parts, the first with a hole.
+        copieExemple().use { cx ->
+            val db = SqliteJdbc(cx)
+            val p = GeoPackage.lireParcelles(db).single()
+            assertEquals("000000000A0001", p.idu)
+            assertEquals(listOf("00000", "A", "1"), listOf(p.commune, p.section, p.numero))
+            assertEquals(125000.0, p.contenanceM2!!, 1e-9)
+            assertEquals(listOf(2, 1), p.polygones.map { it.size })
+            assertEquals(924900.0 to 6699900.0, p.polygones[0][0][0])
+            assertEquals(5, p.polygones[0][1].size) // closed ring
+            assertTrue((925300.0 to 6700200.0) in p.polygones[1][0])
+            // Older GeoPackage: no layer, no parcel.
+            db.executer("DROP TABLE parcelles")
+            assertEquals(emptyList(), GeoPackage.lireParcelles(db))
+        }
+    }
+
+    @Test
+    fun polygoneSimpleEtCoordonneesZ() {
+        // POLYGON Z, big endian, without envelope: Z skipped.
+        val b = java.nio.ByteBuffer.allocate(8 + 9 + 4 + 4 * 24)
+        b.put('G'.code.toByte()).put('P'.code.toByte()).put(0).put(0)
+        b.putInt(2154)
+        b.put(0).putInt(1003).putInt(1).putInt(4)
+        for ((x, y) in listOf(0.0 to 0.0, 10.0 to 0.0, 0.0 to 10.0, 0.0 to 0.0)) b.putDouble(x).putDouble(y).putDouble(250.0)
+        assertEquals(listOf(listOf(listOf(0.0 to 0.0, 10.0 to 0.0, 0.0 to 10.0, 0.0 to 0.0))), GeoPackage.decoderPolygones(b.array()))
+    }
+
+    @Test
     fun projetAbsentOuVide() {
         // GeoPackage prepared before schema 1.1.0, then an empty table: no project info, no crash.
         copieExemple().use { cx ->
