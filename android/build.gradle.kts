@@ -9,7 +9,7 @@ buildscript {
     }
     dependencies {
         if (rootProject.findProject(":app") != null) {
-            classpath("com.android.tools.build:gradle:8.7.3")
+            classpath("com.android.tools.build:gradle:9.4.1")
         }
     }
 }
