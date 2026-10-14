@@ -97,7 +97,7 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v6
         with:
-          gradle-version: "9.4.1"
+          gradle-version: "9.8.1"
       - name: APK signé (si le keystore est configuré) ou APK de debug
         working-directory: android
         env:

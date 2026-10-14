@@ -1,6 +1,5 @@
 plugins {
-    id("com.android.application")
-    kotlin("android")
+    id("com.android.application") // AGP 9: Kotlin built in, no kotlin("android")
     kotlin("plugin.compose")
 }
 
@@ -15,7 +14,7 @@ val keystoreGroma: String? = System.getenv("GROMA_KEYSTORE")
 
 android {
     namespace = "groma.app"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "fr.nemeton.groma"
@@ -54,17 +53,17 @@ dependencies {
     implementation("com.google.ar:core:1.56.0")                 // Apache-2.0 (client SDK)
     implementation("org.opencv:opencv:5.0.0.1")                  // Apache-2.0, ArUco + blur
     implementation("androidx.appcompat:appcompat:1.8.0")
-    implementation("androidx.activity:activity-ktx:1.9.3")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("androidx.activity:activity-ktx:1.13.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.11.0")
     implementation("androidx.work:work-runtime-ktx:2.12.0")      // queued upload, Wi-Fi by default
     implementation("androidx.documentfile:documentfile:1.1.0")
     // Main screen in Compose + Material 3, same look as Marculus (Apache-2.0).
-    implementation(platform("androidx.compose:compose-bom:2024.12.01"))
+    implementation(platform("androidx.compose:compose-bom:2026.09.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-core")
-    implementation("androidx.activity:activity-compose:1.9.3")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+    implementation("androidx.activity:activity-compose:1.13.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
 }
 
 kotlin {
