@@ -86,7 +86,8 @@ class MainActivity : AppCompatActivity() {
                     }
                     ouvert != null -> {
                         BackHandler { cle = null }
-                        val titre = remember(ouvert) { projets.firstOrNull { it.cle == cle }?.titre ?: ouvert.dossier.name }
+                        // The list may still be loading (activity recreated after a capture): follow it.
+                        val titre = projets.firstOrNull { it.cle == cle }?.titre ?: ouvert.dossier.name
                         val placettes = remember(ouvert, rafraichir) { lignes(ouvert) }
                         EcranPlacettes(
                             titre = titre,
