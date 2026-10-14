@@ -63,7 +63,7 @@ Détails : [`docs/architecture.md`](docs/architecture.md).
 
 ## Installation et tests
 
-Prérequis : Python ≥ 3.11, JDK ≥ 17 et Gradle 8.14 pour le Kotlin, R avec
+Prérequis : Python ≥ 3.11, JDK ≥ 17 et Gradle 9.4 pour le Kotlin, R avec
 `sf` et `testthat` pour les tests R, SDK Android pour l'application.
 
 ```bash
