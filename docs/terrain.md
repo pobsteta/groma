@@ -81,6 +81,42 @@ Téléchargements/groma/
 * **Retirer du téléphone** : supprime la copie de travail et le dossier
   source ; refusé tant qu'une placette faite n'est pas envoyée.
 * ⋮ → « Importer un dossier… » copie un dossier situé ailleurs.
+* Un GeoPackage préparé avant la table `projet` (Groma < 0.3) s'affiche
+  avec le nom de son dossier et ses seuls nombres de placettes.
+
+### Déposer les dossiers
+
+Par câble USB, avec `adb` :
+
+```bash
+adb push 20261008_212542_uywc 20261007_084614_qapz /sdcard/Download/groma/
+```
+
+ou en glissant les dossiers dans `Download/groma` depuis l'explorateur de
+fichiers de l'ordinateur (téléphone en mode « Transfert de fichiers »).
+
+Au premier lancement, ⋮ → « Dossier des projets… » ouvre le sélecteur
+d'Android sur `Download/groma` : toucher **Utiliser ce dossier**, puis
+**Autoriser**. Sur Samsung, cette seconde confirmation est indispensable :
+sans elle, Groma n'a pas accès au dossier et la liste reste vide.
+L'autorisation est gardée, même après un redémarrage.
+
+### Mettre à jour un projet
+
+Quand le plan change dans nemetonshiny (placettes ajoutées, rayon corrigé)
+avant le début du terrain :
+
+```bash
+groma-preparer ~/.local/share/nemeton/projects/<id>/data/samples.gpkg \
+    --rayon 15 --declinaison 2.1 --ecraser
+adb push <id> /sdcard/Download/groma/
+```
+
+Après « Actualiser », la carte signale « Nouvelle version disponible dans le dossier des
+projets » ; menu
+de la carte → **Mettre à jour**. Dès qu'une placette a été commencée sur
+le téléphone, la mise à jour est refusée : envoyer les placettes faites,
+puis préparer un nouveau projet nemetonshiny pour la suite.
 
 ## Déroulé sur une placette
 
