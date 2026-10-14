@@ -3,6 +3,7 @@ package groma.app
 import android.database.sqlite.SQLiteDatabase
 import groma.core.CibleMesuree
 import groma.core.CleProjet
+import groma.core.DonneesCarte
 import groma.core.GeoPackage
 import groma.core.GeoTiff
 import groma.core.Grille
@@ -27,6 +28,9 @@ class Projet(val dossier: File) {
 
     /** Key of the project's packages, uploads and detection exports (see [CleProjet]). */
     val projetId: String by lazy { CleProjet.projetId(infos(), dossier.name) }
+
+    /** Plots, measured centres and parcels for the map screen. */
+    fun donneesCarte(): DonneesCarte = SQLiteDatabase.openDatabase(gpkg.path, null, SQLiteDatabase.OPEN_READONLY).use { DonneesCarte.lire(SqliteAndroid(it)) }
 
     fun placettes(): List<Map<String, Any?>> = ouvrir().use { GeoPackage.lirePoints(SqliteAndroid(it), "placettes") }
 

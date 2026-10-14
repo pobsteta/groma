@@ -57,6 +57,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.11.0")
     implementation("androidx.work:work-runtime-ktx:2.12.0")      // queued upload, Wi-Fi by default
     implementation("androidx.documentfile:documentfile:1.1.0")
+    implementation("org.osmdroid:osmdroid-android:6.1.20")       // Apache-2.0, map screen (IGN / OSM tiles)
     // Main screen in Compose + Material 3, same look as Marculus (Apache-2.0).
     implementation(platform("androidx.compose:compose-bom:2026.09.00"))
     implementation("androidx.compose.ui:ui")

@@ -71,4 +71,17 @@ Dépose chaque projet dans le dossier des projets, dans un sous-dossier qui port
     <string name="detail_plan">Plan tiré le %1$s</string>
     <string name="detail_prepare">Préparé le %1$s (%2$s)</string>
     <string name="detail_sans_table">Projet préparé avant la table « projet » : nom et surfaces inconnus.</string>
+    <string name="carte">Carte</string>
+    <string name="carte_fond">Fond de carte</string>
+    <string name="carte_couches">Couches affichées</string>
+    <string name="carte_placettes">Placettes (%1$d)</string>
+    <string name="carte_parcours">Parcours (%1$d placettes)</string>
+    <string name="carte_centres">Centres mesurés (%1$d)</string>
+    <string name="carte_parcelles">Parcelles (%1$d)</string>
+    <string name="carte_cadastre">Cadastre IGN</string>
+    <string name="carte_cadrer">Cadrer le projet</string>
+    <string name="carte_type_base">Base</string>
+    <string name="carte_type_over">Remplacement</string>
+    <string name="carte_rang">Placette %1$d sur %2$d du parcours</string>
+    <string name="carte_centre_mesure">Centre mesuré à %1$s m du point prévu</string>
 </resources>

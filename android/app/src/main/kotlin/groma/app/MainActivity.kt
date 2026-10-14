@@ -17,17 +17,21 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import groma.app.carte.configurerOsmdroid
+import groma.app.ui.EcranCarte
 import groma.app.ui.EcranParametres
 import groma.app.ui.EcranPlacettes
 import groma.app.ui.EcranProjets
 import groma.app.ui.GromaTheme
 import groma.app.ui.LignePlacette
 import groma.app.ui.Reglages
+import groma.core.DonneesCarte
 import java.io.File
 import java.text.Collator
 import java.util.Locale
@@ -68,10 +72,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         ServeurLocal.demarrerUneFois(File(filesDir, "detections"))
         val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
+        configurerOsmdroid(this, version)
         setContent {
             GromaTheme {
                 var parametres by rememberSaveable { mutableStateOf(false) }
                 var cle by rememberSaveable { mutableStateOf<String?>(null) }
+                var carte by rememberSaveable { mutableStateOf(false) }
                 var reglages by remember { mutableStateOf(Preferences.reglages(this)) }
                 val ouvert = remember(cle) { cle?.let(depot::projet) }
                 SideEffect { projetOuvert = ouvert }
@@ -82,6 +88,22 @@ class MainActivity : AppCompatActivity() {
                             reglages = reglages,
                             onChange = { reglages = it; Preferences.memoriserReglages(this, it) },
                             onRetour = { parametres = false },
+                        )
+                    }
+                    ouvert != null && carte -> {
+                        BackHandler { carte = false }
+                        val titre = projets.firstOrNull { it.cle == cle }?.titre ?: ouvert.dossier.name
+                        // Reloaded on resume, so a plot filmed from the map changes colour.
+                        val donnees by produceState<DonneesCarte?>(null, ouvert, rafraichir) {
+                            value = withContext(Dispatchers.IO) {
+                                try { ouvert.donneesCarte() } catch (e: Exception) { null }
+                            }
+                        }
+                        EcranCarte(
+                            titre = titre,
+                            donnees = donnees,
+                            onRetour = { carte = false },
+                            onOuvrirPlacette = ::demanderPlacette,
                         )
                     }
                     ouvert != null -> {
@@ -95,6 +117,7 @@ class MainActivity : AppCompatActivity() {
                             version = version,
                             onRetour = { cle = null },
                             onPlacette = ::demanderPlacette,
+                            onCarte = { carte = true },
                             onParametres = { parametres = true },
                         )
                     }
@@ -103,7 +126,7 @@ class MainActivity : AppCompatActivity() {
                         racineChoisie = depot.racine != null,
                         chargement = chargement,
                         version = version,
-                        onOuvrir = { e -> depot.dernierOuvert = e.cle; cle = e.cle },
+                        onOuvrir = { e -> depot.dernierOuvert = e.cle; cle = e.cle; carte = false },
                         onActualiser = ::actualiser,
                         onChoisirRacine = { choisirRacine.launch(DOSSIER_PAR_DEFAUT) },
                         onImporter = { importer.launch(null) },
