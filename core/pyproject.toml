@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "groma"
-version = "0.2.0"
+version = "0.3.0"
 description = "Groma : fonctions pures de l'inventaire forestier par vidéo (numérotation, géoréférencement, cercles, houppiers, rapprochement)."
 readme = "README.md"
 requires-python = ">=3.11"
