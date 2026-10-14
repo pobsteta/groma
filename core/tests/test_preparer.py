@@ -8,7 +8,7 @@ pyogrio = pytest.importorskip("pyogrio")
 from shapely.geometry import Point
 
 from groma.gpkg import lire_points
-from groma.preparer import lire_metadonnees, lire_plan, main, preparer_projet
+from groma.preparer import lire_metadonnees, lire_parcelles, lire_plan, main, preparer_projet
 
 
 @pytest.fixture
@@ -109,7 +109,8 @@ def projet_nemetonshiny(plan, tmp_path):
     from shapely.geometry import box
 
     parcelles = gpd.GeoDataFrame(
-        {"commune": ["21200", "21200"], "contenance": [10000, 5000]},
+        {"id": ["212000000A0036", "212000000A0030"], "commune": ["21200", "21200"], "section": ["A", "A"],
+         "numero": ["36", "30"], "contenance": [10000, 5000], "arpente": [False, False]},
         geometry=[box(925000, 6700000, 925100, 6700100), box(925100, 6700000, 925150, 6700100)],
         crs=2154,
     ).to_crs(4326)  # nemetonshiny keeps parcels in WGS84
@@ -151,6 +152,18 @@ def test_ligne_de_commande_projet_nemetonshiny(projet_nemetonshiny, tmp_path, mo
     # --nom wins over the project name.
     main([str(projet_nemetonshiny), "--rayon", "15", "--declinaison", "2", "--nom", "Couchey 2026", "--ecraser"])
     assert _ligne_projet(gpkg)["projet_nom"] == "Couchey 2026"
+
+
+def test_parcelles_copiees(projet_nemetonshiny, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    main([str(projet_nemetonshiny), "--rayon", "15", "--declinaison", "2"])
+    p = gpd.read_file(tmp_path / "20261008_212542_uywc" / "inventaire_video.gpkg", layer="parcelles")
+    assert p["idu"].tolist() == ["212000000A0036", "212000000A0030"]
+    assert (p.loc[0, "section"], p.loc[0, "numero"], p.loc[0, "contenance_m2"]) == ("A", "36", 10000)
+    assert "arpente" not in p.columns and p.crs.to_epsg() == 2154
+    assert p.area.sum() == pytest.approx(15000, rel=1e-3)
+    # Outside a nemetonshiny project: no parcels, empty layer.
+    assert lire_parcelles(tmp_path / "ailleurs" / "samples.gpkg") is None
 
 
 def test_ligne_de_commande_hors_projet(plan, tmp_path):

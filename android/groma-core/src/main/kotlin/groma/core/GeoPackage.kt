@@ -69,6 +69,40 @@ object GeoPackage {
         return List(n) { Pair(b.getDouble(), b.getDouble()) }
     }
 
+    /**
+     * Every polygon of a GeoPackage POLYGON / MULTIPOLYGON, each as its rings
+     * (exterior first), for the parcels. Z and M values are skipped.
+     */
+    fun decoderPolygones(blob: ByteArray): List<List<List<Pair<Double, Double>>>> {
+        require(blob.size >= 8 && blob[0] == 'G'.code.toByte() && blob[1] == 'P'.code.toByte()) { "Géométrie GeoPackage invalide." }
+        val enveloppe = intArrayOf(0, 32, 48, 48, 64)[(blob[3].toInt() shr 1) and 0x07]
+        val b = ByteBuffer.wrap(blob)
+        b.position(8 + enveloppe)
+        // Reads one WKB header (byte order, type) at the current position: returns (type, coordinates per point).
+        fun entete(): Pair<Int, Int> {
+            b.order(if (b.get().toInt() == 1) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN)
+            val t = b.getInt()
+            return Pair(t % 1000, intArrayOf(2, 3, 3, 4)[t / 1000])
+        }
+        fun polygone(dims: Int) = List(b.getInt()) {
+            List(b.getInt()) {
+                val p = Pair(b.getDouble(), b.getDouble())
+                repeat(dims - 2) { b.getDouble() }
+                p
+            }
+        }
+        val (type, dims) = entete()
+        return when (type) {
+            3 -> listOf(polygone(dims))
+            6 -> List(b.getInt()) {
+                val (t, d) = entete()
+                require(t == 3) { "Polygone attendu dans le multipolygone." }
+                polygone(d)
+            }
+            else -> throw IllegalArgumentException("Polygone attendu.")
+        }
+    }
+
     fun maintenant(): String = Instant.now().truncatedTo(ChronoUnit.MILLIS).toString()
 
     /** Insert or update detections keyed by uuid. Returns (inserted, updated). */
@@ -132,11 +166,36 @@ object GeoPackage {
         )
     }
 
+    /**
+     * The `parcelles` layer (schema 1.2.0), Lambert-93: empty when the
+     * GeoPackage was prepared before it existed or holds no parcel.
+     */
+    fun lireParcelles(db: BaseSqlite): List<Parcelle> {
+        if (db.requete("SELECT 1 AS un FROM sqlite_master WHERE type = 'table' AND name = 'parcelles'").isEmpty()) return emptyList()
+        return db.requete("SELECT * FROM parcelles ORDER BY fid").mapNotNull { l ->
+            val g = l[GEOMETRIE] as? ByteArray ?: return@mapNotNull null
+            Parcelle(
+                idu = l["idu"]?.toString() ?: return@mapNotNull null,
+                commune = l["commune"] as? String,
+                section = l["section"] as? String,
+                numero = l["numero"] as? String,
+                contenanceM2 = (l["contenance_m2"] as? Number)?.toDouble(),
+                polygones = decoderPolygones(g),
+            )
+        }
+    }
+
     fun mettreAJourEtat(db: BaseSqlite, plotId: String, etat: String) {
         require(etat in setOf("a_faire", "provisoire", "envoye", "definitif"))
         db.transactionImmediate { db.executer("UPDATE placettes SET etat_traitement = ? WHERE plot_id = ?", listOf(etat, plotId)) }
     }
 }
+
+/** Cadastral parcel of the `parcelles` layer: polygons → rings → points, Lambert-93. */
+data class Parcelle(
+    val idu: String, val commune: String?, val section: String?, val numero: String?, val contenanceM2: Double?,
+    val polygones: List<List<List<Pair<Double, Double>>>>,
+)
 
 /** Row of the `projet` table: the nemetonshiny project the plan comes from. */
 data class InfosProjet(

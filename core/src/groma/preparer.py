@@ -9,8 +9,9 @@ DEM, CHM and crowns stay with nemeton.
 
 Inside a nemetonshiny project, ``metadata.json`` and ``data/parcels.gpkg``
 are read (never written) to fill the ``projet`` table shown by the phone's
-project list (brief 2026-10-13), and the output folder defaults to
-``./<projet_id>``, the name the folder must keep on the phone.
+project list (brief 2026-10-13) and the ``parcelles`` layer shown on its map
+(brief 2026-10-14), and the output folder defaults to ``./<projet_id>``, the
+name the folder must keep on the phone.
 
     groma-preparer ~/.local/share/nemeton/projects/<id>/data/samples.gpkg \\
         --rayon 15 --declinaison 2.1
@@ -106,6 +107,36 @@ def _parcelles(data: Path) -> dict:
     return out
 
 
+def lire_parcelles(chemin_plan: str | Path):
+    """``parcelles`` layer from ``<projet>/data/parcels.gpkg`` (nemetonshiny), or None.
+
+    None when the plan is not inside a nemetonshiny project or the parcels
+    cannot be read: the map then shows the plots alone.
+    """
+    import pyogrio
+
+    f = Path(chemin_plan).resolve().parent / "parcels.gpkg"
+    if not f.is_file():
+        return None
+    try:
+        p = pyogrio.read_dataframe(f)
+    except Exception as e:  # the parcels are a convenience, never a reason to fail
+        log.warning("Parcelles non lues (%s) : %s", f, e)
+        return None
+    if p.crs is None or p.empty:
+        return None
+    colonnes = {"id": "idu", "commune": "commune", "section": "section", "numero": "numero", "contenance": "contenance_m2"}
+    p = p.rename(columns=colonnes)
+    p = p[[c for c in colonnes.values() if c in p.columns] + [p.geometry.name]]
+    if "idu" not in p.columns:
+        log.warning("Parcelles sans colonne id (%s) : non copiées.", f)
+        return None
+    for c in ("idu", "commune", "section", "numero"):
+        if c in p.columns:
+            p[c] = p[c].astype("string").astype(object)
+    return p
+
+
 def preparer_projet(
     plan,
     sortie: str | Path,
@@ -117,6 +148,7 @@ def preparer_projet(
     base_seulement: bool = False,
     ecraser: bool = False,
     projet: dict | None = None,
+    parcelles=None,
 ) -> Path:
     """Write ``<sortie>/inventaire_video.gpkg`` from a plan GeoDataFrame.
 
@@ -127,6 +159,7 @@ def preparer_projet(
 
     ``projet``: row of the ``projet`` table (see :func:`lire_metadonnees`);
     ``projet_id`` and ``projet_nom`` default to the output folder name.
+    ``parcelles``: see :func:`lire_parcelles`.
     """
     for nom, valeur in (("rayon_m", rayon_m), ("seuil_diam_cm", seuil_diam_cm), ("declinaison_deg", declinaison_deg)):
         lo, hi = _bornes(nom)
@@ -167,7 +200,7 @@ def preparer_projet(
     if gpkg.exists() and not ecraser:
         raise FileExistsError(f"{gpkg} existe déjà (données terrain possibles) : choisir un autre dossier ou --ecraser.")
     sortie.mkdir(parents=True, exist_ok=True)
-    creer_gpkg(gpkg, p.reset_index(drop=True), projet=ligne)
+    creer_gpkg(gpkg, p.reset_index(drop=True), projet=ligne, parcelles=parcelles)
     log.info("%d placettes, rayon %s m : %s", len(p), rayon_m, gpkg)
     return gpkg
 
@@ -215,6 +248,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             base_seulement=args.base_seulement,
             ecraser=args.ecraser,
             projet=projet,
+            parcelles=lire_parcelles(args.plan),
         )
     except (ValueError, FileExistsError) as e:
         a.error(str(e))
