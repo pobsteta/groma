@@ -75,6 +75,7 @@ fun EcranParametres(reglages: Reglages, onChange: (Reglages) -> Unit, onRetour: 
                 }
                 Switch(checked = reglages.envoi4g, onCheckedChange = { onChange(reglages.copy(envoi4g = it)) })
             }
+            SectionRtk()
         }
     }
 }

@@ -218,6 +218,23 @@ de ce point.
 * Contrôle : `qualite_gnss` doit valoir `fix` ; un `float` est signalé dans
   le rapport de qualité.
 
+### Récepteur RTK dans Groma
+
+Groma peut aussi tenir le récepteur pour afficher la position sur sa carte :
+Paramètres → **Récepteur RTK** (Bluetooth : appareil appairé ; ou TCP),
+corrections NTRIP par Groma (Centipède par défaut : caster
+`caster.centipede.fr`, port `2101`, point de montage choisi par
+« Charger », identifiant et mot de passe `centipede`), **Tester** et
+diagnostic (trames NMEA reçues, statut du caster, octets GGA et RTCM). Le
+récepteur démarre à l'ouverture de la carte et s'arrête à la sortie du
+projet ; la notification « Groma — GNSS RTK » montre le fix et propose
+**Libérer le récepteur**. Sans récepteur, la carte se replie sur le GNSS du
+téléphone, signalé par le badge (« Position du téléphone, précision 4 m »).
+
+**Une liaison Bluetooth SPP ne sert qu'une application à la fois** : pendant
+que Groma tient le récepteur, QField n'y a pas accès, et inversement.
+Libérer le récepteur dans Groma avant de passer à QField.
+
 ## Unités et nords
 
 Les azimuts mesurés sont **magnétiques**, dans l'unité de la placette (degrés

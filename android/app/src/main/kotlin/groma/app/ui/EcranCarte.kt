@@ -1,6 +1,10 @@
 package groma.app.ui
 
+import android.Manifest
 import android.content.Context
+import android.view.MotionEvent
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -28,6 +33,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -49,13 +55,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import groma.app.R
+import groma.app.carte.Boussole
 import groma.app.carte.CoucheParcelles
+import groma.app.carte.CouchePosition
 import groma.app.carte.CouchePlacettes
 import groma.app.carte.Fond
 import groma.app.carte.SOURCE_CADASTRE
 import groma.app.carte.ZOOM_MAX
 import groma.app.carte.ZOOM_TUILES
+import groma.app.gnss.ConfigRtk
+import groma.app.gnss.ServiceGnssRtk
+import groma.app.gnss.SourcePosition
 import groma.core.DonneesCarte
 import groma.core.PlacetteCarte
 import org.osmdroid.tileprovider.MapTileProviderBasic
@@ -69,7 +81,8 @@ import org.osmdroid.views.overlay.TilesOverlay
 /**
  * Map of one project (brief 2026-10-14 carte RTK, § 3 and § 5.1): IGN or OSM
  * base map, IGN cadastre, parcels, visiting route, plots by state, measured
- * centres. A tap on a plot opens its sheet.
+ * centres. A tap on a plot opens its sheet. Position (RTK receiver or phone),
+ * fix badge and follow mode (§ 5.1, § 6).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,8 +103,13 @@ fun EcranCarte(
     var menu by remember { mutableStateOf(false) }
     var choisie by remember { mutableStateOf<PlacetteCarte?>(null) }
     val densite = ctx.resources.displayMetrics.density
+    var suivi by rememberSaveable { mutableStateOf(Suivi.AUCUN) }
+    var etatGnss by remember { mutableStateOf(false) }
+    val fix by SourcePosition.fix.collectAsStateWithLifecycle()
+    val etatRtk by ServiceGnssRtk.etat.collectAsStateWithLifecycle()
 
     val placettes = remember { CouchePlacettes(densite) { choisie = it } }
+    val position = remember { CouchePosition(densite) }
     val parcelles = remember { CoucheParcelles(densite) }
     val couchCadastre = remember {
         TilesOverlay(MapTileProviderBasic(ctx.applicationContext, SOURCE_CADASTRE), ctx.applicationContext).apply {
@@ -110,8 +128,39 @@ fun EcranCarte(
             overlays += couchCadastre
             overlays += parcelles
             overlays += placettes
+            overlays += position
             overlays += ScaleBarOverlay(this).apply { setAlignBottom(true) }
+            // Moving the map by hand ends the follow mode.
+            setOnTouchListener { _, e -> if (e.action == MotionEvent.ACTION_MOVE && suivi == Suivi.SUIVI) suivi = Suivi.CENTRE; false }
         }
+    }
+
+    // Location asked when the map opens (no background location); the phone's GNSS is
+    // listened to every second while the map is shown, and the RTK receiver started if set.
+    var localisation by remember { mutableStateOf(SourcePosition.localisationAutorisee(ctx)) }
+    val demander = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        localisation = SourcePosition.localisationAutorisee(ctx)
+    }
+    LaunchedEffect(Unit) {
+        if (!localisation) demander.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+        if (ConfigRtk.lire(ctx).actif && !ServiceGnssRtk.etat.value.enMarche) ServiceGnssRtk.demarrer(ctx)
+    }
+    DisposableEffect(localisation) {
+        val ecoute = SourcePosition.ecouterTelephone(ctx)
+        onDispose { ecoute.close() }
+    }
+    DisposableEffect(Unit) {
+        val boussole = Boussole(ctx, { position.fix?.position?.let { it.latitude to it.longitude } }) { cap ->
+            position.boussoleDeg = cap
+            mapView.postInvalidate()
+        }
+        onDispose { boussole.close() }
+    }
+    LaunchedEffect(fix) {
+        position.fix = fix
+        val f = fix
+        if (f != null && suivi == Suivi.SUIVI) mapView.controller.setCenter(GeoPoint(f.position.latitude, f.position.longitude))
+        mapView.invalidate()
     }
     // Scale bar kept above the attribution and the navigation bar (edge-to-edge).
     // In landscape the navigation bar is on the side: shift the scale bar too.
@@ -197,17 +246,37 @@ fun EcranCarte(
                 SmallFloatingActionButton(onClick = { donnees?.let { cadrer(mapView, it, anime = true) } }) {
                     Icon(Icons.Filled.Home, contentDescription = stringResource(R.string.carte_cadrer))
                 }
+                // First tap centres on the position, second follows it, third stops.
+                SmallFloatingActionButton(
+                    onClick = {
+                        val f = fix
+                        if (f == null) {
+                            if (!localisation) demander.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+                        } else {
+                            suivi = when (suivi) { Suivi.AUCUN -> Suivi.CENTRE; Suivi.CENTRE -> Suivi.SUIVI; Suivi.SUIVI -> Suivi.AUCUN }
+                            if (suivi != Suivi.AUCUN) {
+                                if (mapView.zoomLevelDouble < 17) mapView.controller.setZoom(17.0)
+                                mapView.controller.animateTo(GeoPoint(f.position.latitude, f.position.longitude))
+                            }
+                        }
+                    },
+                    containerColor = if (suivi == Suivi.SUIVI) MaterialTheme.colorScheme.primary else FloatingActionButtonDefaults.containerColor,
+                ) {
+                    Icon(Icons.Filled.LocationOn, contentDescription = stringResource(if (suivi == Suivi.SUIVI) R.string.carte_suivi else R.string.carte_ma_position))
+                }
             }
+            BadgeFix(fix, etatRtk, Modifier.align(Alignment.TopCenter).padding(top = 8.dp)) { etatGnss = true }
             Text(
                 fond.attribution + if (cadastre && fond == Fond.OSM) " · cadastre © IGN" else "",
                 fontSize = 10.sp,
                 color = Color(0xFF212121),
-                modifier = Modifier.align(Alignment.TopStart).padding(6.dp)
+                modifier = Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(6.dp)
                     .background(Color(0xCCFFFFFF), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp),
             )
         }
     }
 
+    if (etatGnss) DialogueEtatGnss(fix, etatRtk) { etatGnss = false }
     choisie?.let { pl ->
         ModalBottomSheet(onDismissRequest = { choisie = null }) {
             FeuillePlacette(pl, donnees, onOuvrir = { choisie = null; onOuvrirPlacette(pl.plotId) })
@@ -262,6 +331,9 @@ private fun cadrer(mapView: MapView, d: DonneesCarte, anime: Boolean) {
 }
 
 private fun nombreCarte(x: Double): String = if (x % 1.0 == 0.0) x.toInt().toString() else x.toString().replace('.', ',')
+
+/** « Ma position » button: off, centred once, following the position. */
+private enum class Suivi { AUCUN, CENTRE, SUIVI }
 
 private const val PREF_FOND = "carte_fond"
 private const val PREF_CADASTRE = "carte_cadastre"
