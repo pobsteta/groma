@@ -3,6 +3,8 @@
     android:layout_width="match_parent" android:layout_height="match_parent">
     <android.opengl.GLSurfaceView android:id="@+id/vue" android:layout_width="match_parent"
         android:layout_height="match_parent" />
+    <!-- Overlays: padded by the system bars and cut-out insets (edge-to-edge since targetSdk 35). -->
+    <FrameLayout android:id="@+id/surcouche" android:layout_width="match_parent" android:layout_height="match_parent">
     <TextView android:id="@+id/etat" android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:layout_margin="12dp" android:background="@color/voile_marculus" android:padding="10dp"
         android:textColor="@color/creme" android:textSize="14sp" />
@@ -13,4 +15,5 @@
     <Button android:id="@+id/terminer" android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:layout_gravity="bottom|end" android:layout_margin="16dp" android:text="@string/terminer"
         android:backgroundTint="@color/vert_vif" android:textColor="#FFFFFF" />
+    </FrameLayout>
 </FrameLayout>

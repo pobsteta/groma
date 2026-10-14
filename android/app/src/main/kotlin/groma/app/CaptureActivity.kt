@@ -9,6 +9,8 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.ar.core.Config
 import com.google.ar.core.Frame
@@ -67,6 +69,12 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         travail = File(cacheDir, "capture/" + CleProjet.chemin(projet.projetId, plotId)).apply { deleteRecursively(); mkdirs() }
         enregistreur = EnregistreurPaquet(travail, projet.projetId, plotId)
         vue = findViewById(R.id.vue); etat = findViewById(R.id.etat); alerte = findViewById(R.id.alerte)
+        // The camera fills the screen; the overlays stay clear of the system bars.
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.surcouche)) { v, insets ->
+            val b = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            v.setPadding(b.left, b.top, b.right, b.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
         vue.preserveEGLContextOnPause = true
         vue.setEGLContextClientVersion(2)
         vue.setRenderer(this)
@@ -195,12 +203,17 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         val m = Mat(h, l, CvType.CV_8UC1).apply { put(0, 0, gris) }
         val coins = ArrayList<Mat>(); val ids = Mat()
         aruco.detectMarkers(m, coins, ids)
+        // OpenCV 5 may return the ids as a row or a column, and the corners as 1x4 or 4x1:
+        // read both as flat arrays, whatever their shape.
+        val n = ids.total().toInt()
+        if (n == 0 || coins.size != n) return emptyList()
+        val tab = IntArray(n).also { Mat().apply { ids.convertTo(this, CvType.CV_32S) }.get(0, 0, it) }
         val out = ArrayList<Triple<String, Double, Double>>()
-        for (i in 0 until ids.rows()) {
-            val id = ids.get(i, 0)[0].toInt()
+        for (i in 0 until n) {
+            val id = tab[i]
             if (id !in 0..3) continue // identity always from the ArUco decoding
-            val c = coins[i]
-            val u = (0 until 4).sumOf { c.get(0, it)[0] } / 4; val v = (0 until 4).sumOf { c.get(0, it)[1] } / 4
+            val xy = FloatArray(8).also { coins[i].get(0, 0, it) }
+            val u = (0 until 4).sumOf { xy[2 * it].toDouble() } / 4; val v = (0 until 4).sumOf { xy[2 * it + 1].toDouble() } / 4
             out += Triple("C$id", u, v)
         }
         return out
