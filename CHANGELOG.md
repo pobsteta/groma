@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/pobsteta/groma/compare/v0.4.0...v0.4.1) (2026-10-15)
+
+
+### Corrections
+
+* **carte:** flèche de navigation pour « Aller à la prochaine placette », distincte de « Ma position » ([#29](https://github.com/pobsteta/groma/issues/29)) ([076c5db](https://github.com/pobsteta/groma/commit/076c5db1dddac02cc1816eab401b95f5dba21369))
+
 ## [0.4.0](https://github.com/pobsteta/groma/compare/v0.3.0...v0.4.0) (2026-10-15)
 
 
