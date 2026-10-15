@@ -20,6 +20,7 @@ par GeoPackage et GeoTIFF : ce dépôt n'importe pas son code R.
 | AndroidX, WorkManager | Android | Apache-2.0 | |
 | Jetpack Compose, Material 3, icônes Material (core) | Android (écran principal, style Marculus) | Apache-2.0 | |
 | osmdroid | Android (écran Carte) | Apache-2.0 | |
+| Code GNSS / NTRIP repris de Marculus | `groma-core` (NMEA, NTRIP), Android (transports, service RTK, position sur la carte) | même auteur (pobsteta) | Marculus n'a pas de fichier `LICENSE` ; repris par son auteur, adapté aux conventions de Groma, aucune dépendance ajoutée |
 | Tuiles IGN Géoplateforme (Plan IGN, ortho, cadastre) | Android (écran Carte), service web | Licence Ouverte Etalab 2.0 | sans clé ; attribution affichée sur la carte ; User-Agent `Groma/<version>` |
 | Tuiles OpenStreetMap | Android (écran Carte), service web | ODbL (données) | attribution « © contributeurs OpenStreetMap » affichée ; usage modéré selon la politique des tuiles OSM |
 | kotlinx-serialization, JUnit 5, sqlite-jdbc | tests Kotlin | Apache-2.0 / EPL-2.0 / Apache-2.0 | tests seulement |

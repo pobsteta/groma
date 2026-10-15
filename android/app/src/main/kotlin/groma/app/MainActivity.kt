@@ -13,6 +13,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -24,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import groma.app.carte.configurerOsmdroid
+import groma.app.gnss.ServiceGnssRtk
 import groma.app.ui.EcranCarte
 import groma.app.ui.EcranParametres
 import groma.app.ui.EcranPlacettes
@@ -78,6 +80,8 @@ class MainActivity : AppCompatActivity() {
                 var parametres by rememberSaveable { mutableStateOf(false) }
                 var cle by rememberSaveable { mutableStateOf<String?>(null) }
                 var carte by rememberSaveable { mutableStateOf(false) }
+                // Leaving the project releases the RTK receiver (for QField, and the battery).
+                LaunchedEffect(cle) { if (cle == null) ServiceGnssRtk.arreter(this@MainActivity) }
                 var reglages by remember { mutableStateOf(Preferences.reglages(this)) }
                 val ouvert = remember(cle) { cle?.let(depot::projet) }
                 SideEffect { projetOuvert = ouvert }
