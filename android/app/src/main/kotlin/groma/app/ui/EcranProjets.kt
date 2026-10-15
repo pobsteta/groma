@@ -177,6 +177,13 @@ fun EcranProjets(
     }
 }
 
+/** "350 m", "8,2 km", "27 km". */
+private fun distanceTexte(m: Double): String = when {
+    m < 1000 -> "${(Math.round(m / 10) * 10)} m"
+    m < 10_000 -> decimal(m / 1000, 1) + " km"
+    else -> "${Math.round(m / 1000)} km"
+}
+
 @Composable
 private fun CarteProjet(e: EntreeProjet, onOuvrir: () -> Unit, onDetails: () -> Unit, onMettreAJour: () -> Unit, onRetirer: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
@@ -193,6 +200,7 @@ private fun CarteProjet(e: EntreeProjet, onOuvrir: () -> Unit, onDetails: () -> 
                     Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 listOfNotNull(
+                    e.distanceM?.let { stringResource(R.string.projet_distance, distanceTexte(it)) },
                     i?.communes,
                     i?.surfaceZoneHa?.let { stringResource(R.string.projet_surface, decimal(it, 1)) },
                     i?.nbUg?.let { stringResource(R.string.projet_ug, it) },

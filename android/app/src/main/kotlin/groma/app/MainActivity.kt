@@ -26,6 +26,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import groma.app.carte.configurerOsmdroid
 import groma.app.gnss.ServiceGnssRtk
+import groma.app.gnss.SourcePosition
 import groma.app.ui.EcranCarte
 import groma.app.ui.EcranParametres
 import groma.app.ui.EcranPlacettes
@@ -34,6 +35,7 @@ import groma.app.ui.GromaTheme
 import groma.app.ui.LignePlacette
 import groma.app.ui.Reglages
 import groma.core.DonneesCarte
+import groma.core.TriProjets
 import java.io.File
 import java.text.Collator
 import java.util.Locale
@@ -180,11 +182,17 @@ class MainActivity : AppCompatActivity() {
         runOnUiThread { Toast.makeText(this, texte, Toast.LENGTH_LONG).show() }
     }
 
-    /** Last opened project first, then by name (French collation). */
+    /**
+     * Last opened project first, then by distance to the phone when a position
+     * is known (location allowed on the map), else by name (French collation).
+     */
     private fun trier(liste: List<EntreeProjet>): List<EntreeProjet> {
-        val dernier = depot.dernierOuvert
         val collator = Collator.getInstance(Locale.FRENCH)
-        return liste.sortedWith(compareBy<EntreeProjet> { it.cle != dernier }.thenComparator { a, b -> collator.compare(a.titre, b.titre) })
+        val position = SourcePosition.positionApprochee(this)
+        return TriProjets.trier(
+            liste, depot.dernierOuvert, position, { it.cle }, { it.infos?.emprise },
+            Comparator { a, b -> collator.compare(a.titre, b.titre) },
+        ).map { it.copy(distanceM = TriProjets.distanceM(position, it.infos?.emprise)) }
     }
 
     private fun lignes(pr: Projet): List<LignePlacette> = try {
