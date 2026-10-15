@@ -22,12 +22,33 @@ data class ParcelleCarte(
     /** Label: "A 36", else the cadastral id. */
     val etiquette: String get() = listOfNotNull(section, numero).joinToString(" ").ifBlank { idu }
 
-    /** Label position: centre of the bounding box of the largest exterior ring. */
-    val centreEtiquette: Pair<Double, Double>
-        get() {
-            val anneau = polygones.maxBy { p -> p.first().let { r -> (r.maxOf { it.first } - r.minOf { it.first }) * (r.maxOf { it.second } - r.minOf { it.second }) } }.first()
-            return Pair((anneau.minOf { it.first } + anneau.maxOf { it.first }) / 2, (anneau.minOf { it.second } + anneau.maxOf { it.second }) / 2)
-        }
+    val centreEtiquette: Pair<Double, Double> get() = centreEtiquette(polygones)
+}
+
+/** Forest management unit in WGS 84, same nesting as [ParcelleCarte]. */
+data class UgfCarte(
+    val ugId: String, val libelle: String?, val parcelleOnf: String?,
+    val polygones: List<List<List<Pair<Double, Double>>>>,
+) {
+    /**
+     * Label: the ONF parcel number, else the unit's label (a cadastral id
+     * shortened to "A 577", as nemetonshiny names a unit after its parcel), else its id.
+     */
+    val etiquette: String
+        get() = parcelleOnf?.takeIf { it.isNotBlank() }
+            ?: libelle?.takeIf { it.isNotBlank() }?.let { l -> IDU.matchEntire(l)?.let { "${it.groupValues[1].trimStart('0')} ${it.groupValues[2].trimStart('0')}" } ?: l }
+            ?: ugId
+
+    val centreEtiquette: Pair<Double, Double> get() = centreEtiquette(polygones)
+}
+
+/** Cadastral id: INSEE code (5), prefix (3), section (2), number (4). */
+private val IDU = Regex("""\d[0-9AB]\d{3}\d{3}([0-9A-Z]{2})(\d{4})""")
+
+/** Label position: centre of the bounding box of the largest exterior ring. */
+private fun centreEtiquette(polygones: List<List<List<Pair<Double, Double>>>>): Pair<Double, Double> {
+    val anneau = polygones.maxBy { p -> p.first().let { r -> (r.maxOf { it.first } - r.minOf { it.first }) * (r.maxOf { it.second } - r.minOf { it.second }) } }.first()
+    return Pair((anneau.minOf { it.first } + anneau.maxOf { it.first }) / 2, (anneau.minOf { it.second } + anneau.maxOf { it.second }) / 2)
 }
 
 /** Bounding box in WGS 84 degrees. */
@@ -38,20 +59,22 @@ data class DonneesCarte(
     val placettes: List<PlacetteCarte>,
     val centres: List<CentreCarte>,
     val parcelles: List<ParcelleCarte>,
+    val ugf: List<UgfCarte> = emptyList(),
 ) {
     /** Visiting route: Base plots in `visit_order` (nemeton's TSP tour); Over plots are not on it. */
     val parcours: List<PlacetteCarte> = placettes.filter { !it.remplacement && it.ordre != null }.sortedBy { it.ordre }
 
-    /** Extent of the plots and parcels, null when there is nothing to show. */
+    /** Extent of the plots, parcels and management units, null when there is nothing to show. */
     val emprise: Emprise?
         get() {
-            val pts = placettes.map { it.lon to it.lat } + parcelles.flatMap { p -> p.polygones.flatMap { it.first() } }
+            val pts = placettes.map { it.lon to it.lat } + parcelles.flatMap { p -> p.polygones.flatMap { it.first() } } +
+                ugf.flatMap { u -> u.polygones.flatMap { it.first() } }
             if (pts.isEmpty()) return null
             return Emprise(pts.minOf { it.first }, pts.minOf { it.second }, pts.maxOf { it.first }, pts.maxOf { it.second })
         }
 
     companion object {
-        /** Reads plots, measured centres and parcels; absent layers (older GeoPackages) are empty. */
+        /** Reads plots, measured centres, parcels and management units; absent layers (older GeoPackages) are empty. */
         fun lire(db: BaseSqlite): DonneesCarte {
             val prevus = HashMap<String, Pair<Double, Double>>()
             val placettes = GeoPackage.lirePoints(db, "placettes").mapNotNull { l ->
@@ -77,7 +100,12 @@ data class DonneesCarte(
                     anneaux.map { anneau -> anneau.map { (x, y) -> Projections.versWgs84(x, y) } }
                 })
             }
-            return DonneesCarte(placettes, centres, parcelles)
+            val ugf = GeoPackage.lireUgf(db).map { u ->
+                UgfCarte(u.ugId, u.libelle, u.parcelleOnf, u.polygones.map { anneaux ->
+                    anneaux.map { anneau -> anneau.map { (x, y) -> Projections.versWgs84(x, y) } }
+                })
+            }
+            return DonneesCarte(placettes, centres, parcelles, ugf)
         }
 
         private fun table(db: BaseSqlite, nom: String) =

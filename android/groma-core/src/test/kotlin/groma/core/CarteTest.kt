@@ -32,6 +32,9 @@ class CarteTest {
         val parcelle = d.parcelles.single()
         assertEquals("A 1", parcelle.etiquette)
         assertEquals(2, parcelle.polygones.size)
+        // Two management units, labelled with their ONF number.
+        assertEquals(listOf("1", "2"), d.ugf.map { it.etiquette })
+        assertEquals("ug_001", d.ugf.first().ugId)
         val e = assertNotNull(d.emprise)
         assertTrue(e.ouest < p1.lon && p1.lon < e.est && e.sud < p1.lat && p1.lat < e.nord)
     }
@@ -40,10 +43,12 @@ class CarteTest {
     fun ancienGeoPackage() = exemple { db ->
         // Prepared before schema 1.2.0, no measured centre table: plots only, no error.
         db.executer("DROP TABLE parcelles")
+        db.executer("DROP TABLE ugf")
         db.executer("DROP TABLE centres_mesures")
         val d = DonneesCarte.lire(db)
         assertEquals(2, d.placettes.size)
         assertEquals(emptyList(), d.parcelles)
+        assertEquals(emptyList(), d.ugf)
         assertEquals(emptyList(), d.centres)
     }
 
@@ -65,5 +70,17 @@ class CarteTest {
         val p = ParcelleCarte("212000000A0036", null, null, listOf(petit, grand))
         assertEquals("212000000A0036", p.etiquette)
         assertEquals(2.0 to 1.0, p.centreEtiquette)
+    }
+
+    @Test
+    fun etiquetteDUgf() {
+        val carre = listOf(listOf(0.0 to 0.0, 2.0 to 0.0, 2.0 to 2.0, 0.0 to 2.0, 0.0 to 0.0))
+        assertEquals("10", UgfCarte("ug_1", "Forêt — parcelle 10", "10", listOf(carre)).etiquette)
+        assertEquals("Forêt — parcelle 10", UgfCarte("ug_1", "Forêt — parcelle 10", " ", listOf(carre)).etiquette)
+        assertEquals("ug_1", UgfCarte("ug_1", null, null, listOf(carre)).etiquette)
+        // nemetonshiny names a unit outside ONF forests after its parcel.
+        assertEquals("A 577", UgfCarte("ug_1", "451880000A0577", null, listOf(carre)).etiquette)
+        assertEquals("B 12", UgfCarte("ug_1", "2A0040000B0012", null, listOf(carre)).etiquette)
+        assertEquals(1.0 to 1.0, UgfCarte("ug_1", null, null, listOf(carre)).centreEtiquette)
     }
 }

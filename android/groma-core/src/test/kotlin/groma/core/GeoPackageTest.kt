@@ -133,6 +133,22 @@ class GeoPackageTest {
     }
 
     @Test
+    fun ugfDeLExemple() {
+        copieExemple().use { cx ->
+            val db = SqliteJdbc(cx)
+            val u = GeoPackage.lireUgf(db)
+            assertEquals(listOf("ug_001", "ug_002"), u.map { it.ugId })
+            val (a, b) = u
+            assertEquals(listOf("Forêt d'exemple — parcelle 1", "Forêt d'exemple", "1"), listOf(a.libelle, a.foret, a.parcelleOnf))
+            assertEquals(60000.0, a.surfaceM2!!, 1e-9)
+            assertEquals(listOf(1), b.polygones.map { it.size })
+            assertTrue((925300.0 to 6700200.0) in b.polygones[0][0])
+            db.executer("DROP TABLE ugf")
+            assertEquals(emptyList(), GeoPackage.lireUgf(db))
+        }
+    }
+
+    @Test
     fun polygoneSimpleEtCoordonneesZ() {
         // POLYGON Z, big endian, without envelope: Z skipped.
         val b = java.nio.ByteBuffer.allocate(8 + 9 + 4 + 4 * 24)

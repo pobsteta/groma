@@ -57,6 +57,12 @@ La couche `parcelles` (schéma 1.2.0) reprend les parcelles cadastrales de
 Lambert 93, pour la carte de Groma. Elle reste vide quand le plan ne vient
 pas d'un projet nemetonshiny ; les GeoPackages préparés avant ne l'ont pas.
 
+La couche `ugf` (même schéma) donne le parcellaire des unités de gestion
+forestière : les ténements de `data/tenements.gpkg` fusionnés par UG, avec
+le libellé, la forêt et le numéro de parcelle ONF de `data/ugs.json`. La
+carte les trace en vert, numéro ONF au centre. Sans `ugs.json`, les
+contours viennent sans libellé.
+
 ## Projets sur le téléphone
 
 Groma liste les projets du **dossier des projets**, choisi une fois par

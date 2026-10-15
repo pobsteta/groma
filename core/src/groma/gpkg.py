@@ -149,15 +149,15 @@ def ligne_projet(placettes, projet: dict) -> dict:
     return calcule | {k: v for k, v in projet.items() if v is not None}
 
 
-def _parcelles(parcelles):
-    """``parcelles`` layer in Lambert-93, every geometry a MultiPolygon."""
+def _multipolygones(gdf, nom: str):
+    """Polygon layer ``nom`` (``parcelles``, ``ugf``) in Lambert-93, every geometry a MultiPolygon."""
     from shapely.geometry import MultiPolygon, Polygon
 
-    if parcelles is None or not len(parcelles):
-        return _gdf_vide("parcelles")
-    p = parcelles.to_crs(SRS_ID)
+    if gdf is None or not len(gdf):
+        return _gdf_vide(nom)
+    p = gdf.to_crs(SRS_ID)
     p = p.set_geometry([MultiPolygon([g]) if isinstance(g, Polygon) else g for g in p.geometry], crs=SRS_ID)
-    return _completer(p, "parcelles")
+    return _completer(p, nom)
 
 
 def _ecrire_projet(chemin: Path, ligne: dict | None) -> None:
@@ -180,6 +180,7 @@ def creer_gpkg(
     centres_mesures=None,
     projet: dict | None = None,
     parcelles=None,
+    ugf=None,
 ) -> Path:
     """Create ``inventaire_video.gpkg``.
 
@@ -194,6 +195,7 @@ def creer_gpkg(
 
     ``parcelles``: cadastral parcels (GeoDataFrame with the ``parcelles``
     columns, any CRS), shown on the phone map; empty layer without it.
+    ``ugf``: forest management units, likewise (``ugf`` columns).
     """
     chemin = Path(chemin)
     if chemin.exists():
@@ -215,7 +217,8 @@ def creer_gpkg(
         _ecrire(_completer(houppiers, "houppiers"), chemin, "houppiers")
     else:
         _ecrire(_gdf_vide("houppiers"), chemin, "houppiers")
-    _ecrire(_parcelles(parcelles), chemin, "parcelles")
+    _ecrire(_multipolygones(parcelles, "parcelles"), chemin, "parcelles")
+    _ecrire(_multipolygones(ugf, "ugf"), chemin, "ugf")
     _ecrire_projet(chemin, ligne)
     with sqlite3.connect(chemin) as cx:
         cx.executescript(sql_declencheurs())
