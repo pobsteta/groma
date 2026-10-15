@@ -2,6 +2,7 @@ package groma.app.carte
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.DashPathEffect
 import android.graphics.Paint
 import android.graphics.Point
 import android.graphics.RadialGradient
@@ -12,6 +13,7 @@ import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import groma.core.FixGnss
+import groma.core.PlacetteCarte
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Overlay
@@ -112,4 +114,37 @@ class Boussole(ctx: Context, private val position: () -> Pair<Double, Double>?, 
     override fun close() = sm.unregisterListener(auditeur)
 
     private companion object { const val LISSAGE = 0.15 }
+}
+
+/**
+ * « Y aller » (brief § 5.3): straight line from the position to the target
+ * plot, which is ringed. Without a fix, only the ring.
+ */
+class CoucheGuidage(private val densite: Float) : Overlay() {
+    var fix: FixGnss? = null
+    var cible: PlacetteCarte? = null
+
+    private val ligne = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE; strokeWidth = 3f * densite; color = CYAN; strokeCap = Paint.Cap.ROUND
+        pathEffect = DashPathEffect(floatArrayOf(10f * densite, 6f * densite), 0f)
+    }
+    private val bordLigne = Paint(ligne).apply { strokeWidth = 5.5f * densite; color = 0xCC000000.toInt(); pathEffect = ligne.pathEffect }
+    private val anneauCible = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 3.5f * densite; color = CYAN }
+    private val p = Point()
+    private val q = Point()
+
+    override fun draw(c: Canvas, mapView: MapView, shadow: Boolean) {
+        if (shadow) return
+        val pl = cible ?: return
+        val proj = mapView.projection
+        proj.toPixels(GeoPoint(pl.lat, pl.lon), q)
+        fix?.let { f ->
+            proj.toPixels(GeoPoint(f.position.latitude, f.position.longitude), p)
+            c.drawLine(p.x.toFloat(), p.y.toFloat(), q.x.toFloat(), q.y.toFloat(), bordLigne)
+            c.drawLine(p.x.toFloat(), p.y.toFloat(), q.x.toFloat(), q.y.toFloat(), ligne)
+        }
+        c.drawCircle(q.x.toFloat(), q.y.toFloat(), 15f * densite, anneauCible)
+    }
+
+    private companion object { const val CYAN = 0xFF00E5FF.toInt() }
 }
