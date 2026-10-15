@@ -24,6 +24,8 @@ data class ConfigRtk(
     val pointMontage: String = "",
     val utilisateur: String = "centipede",
     val motDePasse: String = "centipede",
+    /** Length of « Mesurer le centre » (s), brief § 5.4. */
+    val dureeCentreS: Int = 10,
 ) {
     companion object {
         private fun prefs(ctx: Context) = ctx.getSharedPreferences("groma", Context.MODE_PRIVATE)
@@ -43,6 +45,7 @@ data class ConfigRtk(
                 pointMontage = p.getString("rtk_point_montage", d.pointMontage)!!,
                 utilisateur = p.getString("rtk_utilisateur", d.utilisateur)!!,
                 motDePasse = p.getString("rtk_mot_de_passe", d.motDePasse)!!,
+                dureeCentreS = p.getInt("rtk_duree_centre", d.dureeCentreS),
             )
         }
 
@@ -52,7 +55,7 @@ data class ConfigRtk(
             .putString("rtk_hote_tcp", c.hoteTcp).putInt("rtk_port_tcp", c.portTcp)
             .putBoolean("rtk_ntrip", c.ntrip).putString("rtk_caster", c.casterHote).putInt("rtk_caster_port", c.casterPort)
             .putString("rtk_point_montage", c.pointMontage).putString("rtk_utilisateur", c.utilisateur)
-            .putString("rtk_mot_de_passe", c.motDePasse)
+            .putString("rtk_mot_de_passe", c.motDePasse).putInt("rtk_duree_centre", c.dureeCentreS)
             .apply()
     }
 }

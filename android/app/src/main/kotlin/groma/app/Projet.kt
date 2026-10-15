@@ -1,6 +1,7 @@
 package groma.app
 
 import android.database.sqlite.SQLiteDatabase
+import groma.core.CentreMesure
 import groma.core.CibleMesuree
 import groma.core.CleProjet
 import groma.core.DonneesCarte
@@ -37,8 +38,8 @@ class Projet(val dossier: File) {
     fun parametres(plotId: String): ParametresPlacette = ouvrir().use { db ->
         val s = SqliteAndroid(db)
         val p = GeoPackage.lirePoints(s, "placettes", plotId).single()
-        // Measured RTK centre when present, else the planned point.
-        val c = GeoPackage.lirePoints(s, "centres_mesures", plotId).firstOrNull() ?: p
+        // Latest measured RTK centre when present, else the planned point.
+        val c = GeoPackage.dernierCentreParPlacette(s, plotId).firstOrNull() ?: p
         ParametresPlacette(
             plotId, c["x"] as Double, c["y"] as Double,
             (p["rayon_m"] as? Number)?.toDouble() ?: 20.0,
@@ -47,6 +48,19 @@ class Projet(val dossier: File) {
             (p["declinaison_deg"] as? Number)?.toDouble() ?: 0.0,
             (p["convergence_deg"] as? Number)?.toDouble() ?: 0.0,
         )
+    }
+
+    /**
+     * Appends a centre measured on the map (brief carte RTK, § 5.4), never
+     * rewriting an earlier one. Returns its distance to the planned point (m).
+     */
+    fun ajouterCentre(plotId: String, c: CentreMesure): Double? = ouvrir().use { db ->
+        val s = SqliteAndroid(db)
+        val p = GeoPackage.lirePoints(s, "placettes", plotId).singleOrNull()
+        val ecart = p?.let { c.ecartPrevuM(it["x"] as Double, it["y"] as Double) }?.let { Math.round(it * 1000) / 1000.0 }
+        val (x, y) = c.lambert93
+        GeoPackage.ajouterCentreMesure(s, plotId, x, y, c.qualite, Math.round(c.precisionM * 1000) / 1000.0, ecart)
+        ecart
     }
 
     fun cibles(plotId: String): List<CibleMesuree> = ouvrir().use { db ->

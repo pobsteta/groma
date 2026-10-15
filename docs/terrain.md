@@ -131,10 +131,15 @@ puis préparer un nouveau projet nemetonshiny pour la suite.
 
 ## Déroulé sur une placette
 
-1. Planter la canne au point prévu (QField guide jusqu'au point GRTS).
-   Attendre le fix RTK, enregistrer le centre dans la couche
-   `centres_mesures` (QField remplit la géométrie, `qualite_gnss`,
-   `precision_h_m`).
+1. Planter la canne au point prévu. Dans Groma, carte du projet → **Y
+   aller** (ou l'épingle « prochaine placette à faire ») : distance et
+   azimut magnétique dans l'unité de la placette. À moins de 5 m, attendre
+   le fix RTK, caler la bulle et toucher **Mesurer le centre** : moyenne des
+   positions RTK fixes pendant 10 s (Paramètres → Récepteur RTK), écrite
+   dans `centres_mesures` avec `qualite_gnss`, `precision_h_m`,
+   `ecart_prevu_m` et `date_mesure`. En RTK flottant, Groma demande
+   confirmation ; la position du téléphone est refusée. Le centre peut
+   aussi être saisi dans QField, comme avant.
 2. Poser C1-C3 sur trois arbres bien répartis (idéalement à 120° les uns des
    autres, entre 5 et 15 m). Pour chacune, saisir dans `cibles` : azimut lu à
    la boussole de visée **dans l'unité de la placette**, distance horizontale
@@ -157,8 +162,14 @@ puis préparer un nouveau projet nemetonshiny pour la suite.
 
 ## Échange entre Groma et QField (décision 3)
 
-Groma n'écrit **que** dans la couche `detections`, en transaction SQLite
-courte (`BEGIN IMMEDIATE`, attente de verrou de 5 s). Les déclencheurs du
+Groma n'écrit que dans deux couches, en transaction SQLite courte
+(`BEGIN IMMEDIATE`, attente de verrou de 5 s) : `detections`, et
+`centres_mesures` pour un centre mesuré sur sa carte. Un centre n'est jamais
+réécrit : une nouvelle mesure ajoute une ligne, et c'est la plus récente
+(`fid` le plus grand) qui compte. Comme `centres_mesures` a l'index spatial
+de GDAL, Groma retire ses déclencheurs R*Tree le temps de l'insertion, écrit
+lui-même la ligne d'index, puis les remet à l'identique, dans la même
+transaction (`GeoPackage.ajouterCentreMesure`, testé). Les déclencheurs du
 GeoPackage (`core/src/groma/donnees/declencheurs.sql`) créent la ligne
 `arbres` d'une détection nouvelle et ne mettent à jour que les colonnes de
 mesure d'un arbre encore provisoire. Les attributs saisis dans QField ne

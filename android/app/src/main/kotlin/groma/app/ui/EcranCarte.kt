@@ -2,6 +2,7 @@ package groma.app.ui
 
 import android.Manifest
 import android.content.Context
+import android.os.SystemClock
 import android.view.MotionEvent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
@@ -38,6 +40,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -47,6 +50,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -86,8 +91,12 @@ import groma.app.gnss.SourcePosition
 import groma.core.DonneesCarte
 import groma.core.FixGnss
 import groma.core.Guidage
+import groma.core.CentreMesure
+import groma.core.MesureCentre
 import groma.core.OrigineFix
 import groma.core.PlacetteCarte
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.osmdroid.tileprovider.MapTileProviderBasic
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
@@ -101,7 +110,9 @@ import org.osmdroid.views.overlay.TilesOverlay
  * base map, IGN cadastre, parcels, management units (UGF), visiting route,
  * plots by state, measured centres. A tap on a plot opens its sheet. Position (RTK receiver or phone),
  * fix badge and follow mode (§ 5.1, § 6). « Y aller »: distance and azimuth
- * to a plot, line on the map and arrow relative to the phone (§ 5.3).
+ * to a plot, line on the map and arrow relative to the phone (§ 5.3);
+ * on arrival, « Mesurer le centre » averages the RTK fixes and hands the
+ * centre to [onEnregistrerCentre], which returns its distance to the planned point (§ 5.4).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,6 +121,7 @@ fun EcranCarte(
     donnees: DonneesCarte?,
     onRetour: () -> Unit,
     onOuvrirPlacette: (String) -> Unit,
+    onEnregistrerCentre: suspend (String, CentreMesure) -> Double?,
 ) {
     val ctx = LocalContext.current
     val prefs = remember { ctx.getSharedPreferences("groma", Context.MODE_PRIVATE) }
@@ -131,6 +143,8 @@ fun EcranCarte(
     val cible = cibleId?.let { id -> donnees?.placettes?.firstOrNull { it.plotId == id } }
     // Heading shown (GNSS course when moving, else the compass), for the guidance arrow.
     var cap by remember { mutableStateOf<Float?>(null) }
+    var dialogueCentre by remember { mutableStateOf<EtapeCentre?>(null) }
+    val scope = rememberCoroutineScope()
 
     val placettes = remember { CouchePlacettes(densite) { choisie = it } }
     val position = remember { CouchePosition(densite) }
@@ -208,6 +222,35 @@ fun EcranCarte(
         choisie = null
         montrer(mapView, fix, pl)
     }
+    // « Mesurer le centre »: refused without the RTK receiver, confirmed in float or
+    // when the plot already has a centre, then measured (brief § 5.4).
+    fun mesurer(plotId: String, flottant: Boolean) {
+        val ancien = donnees?.centres?.firstOrNull { it.plotId == plotId }
+        dialogueCentre = if (ancien != null) EtapeCentre.Deja(plotId, ancien.ecartM, flottant) else EtapeCentre.Mesure(plotId, flottant)
+    }
+    fun demanderMesure(plotId: String) {
+        val f = fix
+        dialogueCentre = when (MesureCentre.autorisation(f)) {
+            MesureCentre.Autorisation.OUI -> { mesurer(plotId, false); return }
+            MesureCentre.Autorisation.CONFIRMER_FLOTTANT -> EtapeCentre.Flottant(plotId, f?.precisionHorizontaleM)
+            MesureCentre.Autorisation.TELEPHONE -> EtapeCentre.Message(plotId, ctx.getString(R.string.centre_telephone))
+            MesureCentre.Autorisation.SANS_RTK -> EtapeCentre.Message(plotId, ctx.getString(R.string.centre_sans_rtk, f?.qualite?.libelle ?: ""))
+            MesureCentre.Autorisation.SANS_POSITION -> EtapeCentre.Message(plotId, ctx.getString(R.string.centre_sans_position))
+        }
+    }
+    fun terminerMesure(plotId: String, c: CentreMesure?) {
+        if (c == null) { dialogueCentre = EtapeCentre.Message(plotId, ctx.getString(R.string.centre_aucun)); return }
+        scope.launch {
+            dialogueCentre = try {
+                val ecart = onEnregistrerCentre(plotId, c)
+                val qualite = ctx.getString(if (c.qualite == "fix") R.string.centre_qualite_fix else R.string.centre_qualite_float)
+                EtapeCentre.Message(plotId, ctx.getString(R.string.centre_enregistre, qualite, metres(c.precisionM), ecart?.let(::metres) ?: "?", c.nbFixes))
+            } catch (e: Exception) {
+                EtapeCentre.Message(plotId, ctx.getString(R.string.centre_erreur, e.message ?: e.javaClass.simpleName))
+            }
+        }
+    }
+
     // Under guidance the banner below the map takes the navigation bar inset.
     val basCarte = if (cible != null) Modifier else Modifier.navigationBarsPadding()
 
@@ -341,11 +384,40 @@ fun EcranCarte(
                 suivante = donnees?.prochaine(pl.plotId),
                 onSuivante = ::allerA,
                 onArreter = { cibleId = null },
+                onMesurer = { demanderMesure(pl.plotId) },
             )
         }
     }
 
     if (etatGnss) DialogueEtatGnss(fix, etatRtk) { etatGnss = false }
+    when (val d = dialogueCentre) {
+        null -> {}
+        is EtapeCentre.Message -> AlertDialog(
+            onDismissRequest = { dialogueCentre = null },
+            confirmButton = { TextButton(onClick = { dialogueCentre = null }) { Text(stringResource(R.string.fermer)) } },
+            title = { Text(stringResource(R.string.centre_titre, d.plotId)) },
+            text = { Text(d.texte) },
+        )
+        is EtapeCentre.Flottant -> AlertDialog(
+            onDismissRequest = { dialogueCentre = null },
+            confirmButton = { TextButton(onClick = { mesurer(d.plotId, true) }) { Text(stringResource(R.string.centre_enregistrer_flottant)) } },
+            dismissButton = { TextButton(onClick = { dialogueCentre = null }) { Text(stringResource(R.string.annuler)) } },
+            title = { Text(stringResource(R.string.centre_titre, d.plotId)) },
+            text = { Text(stringResource(R.string.centre_flottant, d.precisionM?.let(::metres) ?: "?")) },
+        )
+        is EtapeCentre.Deja -> AlertDialog(
+            onDismissRequest = { dialogueCentre = null },
+            confirmButton = { TextButton(onClick = { dialogueCentre = EtapeCentre.Mesure(d.plotId, d.flottant) }) { Text(stringResource(R.string.centre_mesurer_quand_meme)) } },
+            dismissButton = { TextButton(onClick = { dialogueCentre = null }) { Text(stringResource(R.string.annuler)) } },
+            title = { Text(stringResource(R.string.centre_titre, d.plotId)) },
+            text = { Text(stringResource(R.string.centre_deja, d.plotId, d.ecartM?.let(::metres) ?: "?")) },
+        )
+        is EtapeCentre.Mesure -> DialogueMesure(
+            d.plotId, d.flottant, remember { ConfigRtk.lire(ctx).dureeCentreS },
+            onFini = { c -> terminerMesure(d.plotId, c) },
+            onAnnuler = { dialogueCentre = null },
+        )
+    }
     choisie?.let { pl ->
         ModalBottomSheet(onDismissRequest = { choisie = null }) {
             FeuillePlacette(
@@ -404,7 +476,7 @@ private fun FeuillePlacette(p: PlacetteCarte, donnees: DonneesCarte?, guide: Gui
 @Composable
 private fun BandeauGuidage(
     plotId: String, guide: Guidage?, fix: FixGnss?, capDeg: Float?, suivante: PlacetteCarte?,
-    onSuivante: (PlacetteCarte) -> Unit, onArreter: () -> Unit,
+    onSuivante: (PlacetteCarte) -> Unit, onArreter: () -> Unit, onMesurer: () -> Unit,
 ) {
     Surface(tonalElevation = 3.dp, shadowElevation = 6.dp, modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -423,6 +495,7 @@ private fun BandeauGuidage(
                     guide.arrive -> {
                         Text(stringResource(R.string.carte_arrive, plotId), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
                         Text(stringResource(R.string.carte_distance, distance(guide.distanceM)) + " · " + texteAzimut(guide))
+                        Button(onClick = onMesurer, modifier = Modifier.padding(top = 4.dp)) { Text(stringResource(R.string.carte_mesurer_centre)) }
                     }
                     else -> {
                         Text("$plotId · " + stringResource(R.string.carte_distance, distance(guide.distanceM)), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
@@ -444,6 +517,61 @@ private fun BandeauGuidage(
         }
     }
 }
+
+/**
+ * Centre measurement in progress: the receiver's fixes are averaged for
+ * [dureeS] seconds (RTK fixed only, or float too when confirmed); the pole
+ * must stay still. Cancelling writes nothing.
+ */
+@Composable
+private fun DialogueMesure(plotId: String, flottant: Boolean, dureeS: Int, onFini: (CentreMesure?) -> Unit, onAnnuler: () -> Unit) {
+    val mesure = remember { MesureCentre(flottant) }
+    var ecoule by remember { mutableIntStateOf(0) }
+    var retenus by remember { mutableIntStateOf(0) }
+    var ecartes by remember { mutableIntStateOf(0) }
+    var precision by remember { mutableStateOf<Double?>(null) }
+    LaunchedEffect(Unit) {
+        val debut = SystemClock.elapsedRealtime()
+        val ecoute = launch {
+            SourcePosition.fix.collect { f ->
+                if (f == null) return@collect
+                if (mesure.ajouter(f)) { retenus = mesure.nombre; precision = mesure.resultat()?.precisionM } else ecartes++
+            }
+        }
+        while (ecoule < dureeS) {
+            delay(200)
+            ecoule = ((SystemClock.elapsedRealtime() - debut) / 1000).toInt().coerceAtMost(dureeS)
+        }
+        ecoute.cancel()
+        onFini(mesure.resultat())
+    }
+    AlertDialog(
+        onDismissRequest = {},
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onAnnuler) { Text(stringResource(R.string.annuler)) } },
+        title = { Text(stringResource(R.string.centre_titre, plotId)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.centre_en_cours, ecoule, dureeS))
+                LinearProgressIndicator(progress = { ecoule.toFloat() / dureeS }, modifier = Modifier.fillMaxWidth())
+                Text(stringResource(R.string.centre_fixes, retenus, precision?.let { metres(it) + " m" } ?: "—"))
+                if (ecartes > 0) Text(stringResource(R.string.centre_ignores, ecartes), color = MaterialTheme.colorScheme.error)
+            }
+        },
+    )
+}
+
+/** Steps of « Mesurer le centre ». */
+private sealed interface EtapeCentre {
+    val plotId: String
+    data class Message(override val plotId: String, val texte: String) : EtapeCentre
+    data class Flottant(override val plotId: String, val precisionM: Double?) : EtapeCentre
+    data class Deja(override val plotId: String, val ecartM: Double?, val flottant: Boolean) : EtapeCentre
+    data class Mesure(override val plotId: String, val flottant: Boolean) : EtapeCentre
+}
+
+/** Metres to the centimetre, French decimal comma. */
+private fun metres(m: Double): String = nombreCarte(Math.round(m * 100) / 100.0)
 
 /** Arrow towards the plot, relative to the top of the phone; grey and upright without a heading. */
 @Composable
