@@ -30,11 +30,20 @@ data class UgfCarte(
     val ugId: String, val libelle: String?, val parcelleOnf: String?,
     val polygones: List<List<List<Pair<Double, Double>>>>,
 ) {
-    /** Label: the ONF parcel number, else the unit's label or id. */
-    val etiquette: String get() = parcelleOnf?.takeIf { it.isNotBlank() } ?: libelle?.takeIf { it.isNotBlank() } ?: ugId
+    /**
+     * Label: the ONF parcel number, else the unit's label (a cadastral id
+     * shortened to "A 577", as nemetonshiny names a unit after its parcel), else its id.
+     */
+    val etiquette: String
+        get() = parcelleOnf?.takeIf { it.isNotBlank() }
+            ?: libelle?.takeIf { it.isNotBlank() }?.let { l -> IDU.matchEntire(l)?.let { "${it.groupValues[1].trimStart('0')} ${it.groupValues[2].trimStart('0')}" } ?: l }
+            ?: ugId
 
     val centreEtiquette: Pair<Double, Double> get() = centreEtiquette(polygones)
 }
+
+/** Cadastral id: INSEE code (5), prefix (3), section (2), number (4). */
+private val IDU = Regex("""\d[0-9AB]\d{3}\d{3}([0-9A-Z]{2})(\d{4})""")
 
 /** Label position: centre of the bounding box of the largest exterior ring. */
 private fun centreEtiquette(polygones: List<List<List<Pair<Double, Double>>>>): Pair<Double, Double> {

@@ -176,10 +176,10 @@ def lire_ugf(chemin_plan: str | Path):
     for c in ("ug_id", *noms.values()):
         if c in ug.columns:
             ug[c] = ug[c].astype("string").astype(object)
-    # Natural order of the ONF numbers: 1, 2, 10 rather than 1, 10, 2.
-    if "parcelle_onf" in ug.columns:
-        cle = pd.to_numeric(ug["parcelle_onf"], errors="coerce")
-        ug = ug.assign(_n=cle).sort_values(["_n", "ug_id"]).drop(columns="_n")
+    # Natural order of the ONF numbers, else of the ids: 1, 2, 10 rather than 1, 10, 2.
+    onf = pd.to_numeric(ug["parcelle_onf"], errors="coerce") if "parcelle_onf" in ug.columns else pd.Series(float("nan"), index=ug.index)
+    rang = pd.to_numeric(ug["ug_id"].str.extract(r"(\d+)$")[0], errors="coerce")
+    ug = ug.assign(_n=onf, _r=rang).sort_values(["_n", "_r", "ug_id"]).drop(columns=["_n", "_r"])
     return gpd.GeoDataFrame(ug.reset_index(drop=True), geometry="geometry", crs=2154)
 
 

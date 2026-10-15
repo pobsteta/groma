@@ -78,6 +78,9 @@ class CarteTest {
         assertEquals("10", UgfCarte("ug_1", "Forêt — parcelle 10", "10", listOf(carre)).etiquette)
         assertEquals("Forêt — parcelle 10", UgfCarte("ug_1", "Forêt — parcelle 10", " ", listOf(carre)).etiquette)
         assertEquals("ug_1", UgfCarte("ug_1", null, null, listOf(carre)).etiquette)
+        // nemetonshiny names a unit outside ONF forests after its parcel.
+        assertEquals("A 577", UgfCarte("ug_1", "451880000A0577", null, listOf(carre)).etiquette)
+        assertEquals("B 12", UgfCarte("ug_1", "2A0040000B0012", null, listOf(carre)).etiquette)
         assertEquals(1.0 to 1.0, UgfCarte("ug_1", null, null, listOf(carre)).centreEtiquette)
     }
 }
