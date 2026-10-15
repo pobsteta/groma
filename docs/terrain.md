@@ -85,6 +85,11 @@ Téléchargements/groma/
   l'avancement (placettes Base faites, envoyées) et la surface inventoriée
   (Σ π·r² des placettes faites). La puce « Terminés » bascule vers les
   projets dont toutes les placettes Base sont faites.
+* Ordre de la liste : le dernier projet ouvert en tête, puis les autres du
+  plus proche au plus éloigné (distance au centre de l'emprise, depuis la
+  dernière position connue du téléphone, affichée sur la carte du projet :
+  « à 3,2 km »), sinon par nom. L'écran Projets n'écoute pas le GNSS : la
+  position vient de la dernière connue d'Android ou de la carte.
 * **Mettre à jour** (menu de la carte) : quand le dossier contient une
   préparation plus récente que la copie de travail. Refusé dès que la copie
   contient des données de terrain (centre, cibles, détections, placette
@@ -129,6 +134,74 @@ de la carte → **Mettre à jour**. Dès qu'une placette a été commencée sur
 le téléphone, la mise à jour est refusée : envoyer les placettes faites,
 puis préparer un nouveau projet nemetonshiny pour la suite.
 
+## Carte du projet
+
+Dans la liste des placettes d'un projet, l'icône **Carte** ouvre la carte.
+Groma demande la localisation précise à la première ouverture (jamais en
+arrière-plan) et la notification du service RTK si un récepteur est
+réglé.
+
+* **Fonds** (bouton des couches) : Plan IGN, Ortho IGN, OpenStreetMap ;
+  cadastre IGN en superposition. Tuiles IGN de la Géoplateforme, sans clé,
+  attribution affichée.
+* **Couches**, chacune masquable : UGF (vert, numéro ONF), parcelles
+  (jaune), parcours (ligne dans l'ordre `visit_order`, ▲ rouge au départ,
+  ◎ à l'arrivée), placettes (pastille blanche à faire, orange provisoire,
+  bleue envoyée, verte définitive ; plus petite pour une placette de
+  remplacement ; cercle au rayon réel à partir du zoom 18), centres
+  mesurés (croix violette, reliée au point prévu au-delà de 1 m d'écart). Le nombre d'objets est indiqué à côté
+  de chaque couche ; une couche absente du GeoPackage (projet ancien) est
+  simplement vide.
+* **Boutons** : zoom, **Ma position** (premier appui : recentre ; second :
+  **suivi**, la carte se déplace avec l'opérateur), **Cadrer le projet**.
+* **Badge du fix** en haut (RTK fixe, flottant, DGPS, autonome, sans
+  position ; ou « Position du téléphone, précision 4 m ») : il ouvre
+  **État GNSS** (source, fix, précision horizontale, coordonnées, satellites
+  utilisés et en vue, HDOP/PDOP, âge des corrections, station de
+  référence).
+* **Feuille de placette** (toucher une placette) : identifiant, type, état,
+  rayon, rang dans le parcours, écart du centre mesuré au point prévu,
+  distance et azimut depuis la position ; boutons **Y aller** et **Filmer
+  la placette**.
+
+### Aller à une placette
+
+**Y aller** (feuille de placette), ou **Aller à la prochaine placette à
+faire** (première placette du parcours encore à faire) ouvre un bandeau
+en bas de la carte :
+
+* distance à vol d'oiseau, et **azimut magnétique dans l'unité de la
+  placette** (degrés ou grades, avec `declinaison_deg`) à viser à la
+  boussole, l'azimut géographique entre parenthèses (« Azimut 358°
+  magnétique (0° géographique) ») ; sans déclinaison connue, l'azimut est
+  donné en géographique et signalé ;
+* flèche relative au cap du téléphone (« Pas de boussole : suivre
+  l'azimut » si le téléphone n'en a pas) et ligne de la position à la
+  placette ;
+* à moins de 5 m, « Arrivé à P012 » et **Mesurer le centre** ;
+  **Suivante** passe à la placette suivante du parcours, **Arrêter le
+  guidage** ferme le bandeau. L'écran reste allumé pendant le guidage.
+
+### Mesurer le centre
+
+Canne immobile sur le point, bulle calée : **Mesurer le centre** fait la
+moyenne des positions **RTK fixes** pendant la durée réglée (10 s par
+défaut, Paramètres → Récepteur RTK) ; les positions non fixes sont
+écartées et comptées. Le résultat (« Centre enregistré : RTK fixe,
+précision 0,02 m, à 1,3 m du point prévu ») est ajouté à
+`centres_mesures`.
+
+* En RTK flottant, Groma demande confirmation (« Enregistrer en
+  flottant ») ; `qualite_gnss` vaut alors `float`.
+* Avec la position du téléphone, ou sans correction, la mesure est
+  refusée.
+* Si la placette a déjà un centre, le nouveau est **ajouté** (l'ancien est
+  conservé) et c'est lui qui compte, pour la carte comme pour la capture.
+* La capture reprend ce centre (le plus récent) à la place du point prévu.
+  Tant que le transport vers QField n'est pas réglé (point ouvert
+  ci-dessous), il reste dans la copie de travail de Groma et n'apparaît
+  pas dans la copie QField.
+
 ### Carte hors ligne
 
 La forêt est souvent sans réseau : avant de partir, sur le Wi-Fi, ouvrir la
@@ -144,14 +217,13 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
 ## Déroulé sur une placette
 
 1. Planter la canne au point prévu. Dans Groma, carte du projet → **Y
-   aller** (ou l'épingle « prochaine placette à faire ») : distance et
+   aller** (ou « Aller à la prochaine placette à faire ») : distance et
    azimut magnétique dans l'unité de la placette. À moins de 5 m, attendre
-   le fix RTK, caler la bulle et toucher **Mesurer le centre** : moyenne des
-   positions RTK fixes pendant 10 s (Paramètres → Récepteur RTK), écrite
-   dans `centres_mesures` avec `qualite_gnss`, `precision_h_m`,
-   `ecart_prevu_m` et `date_mesure`. En RTK flottant, Groma demande
-   confirmation ; la position du téléphone est refusée. Le centre peut
-   aussi être saisi dans QField, comme avant.
+   le fix RTK, caler la bulle et toucher **Mesurer le centre** (voir
+   « Carte du projet ») : ligne ajoutée à `centres_mesures` avec
+   `qualite_gnss`, `precision_h_m`, `ecart_prevu_m` et `date_mesure`.
+   **Libérer le récepteur** avant de passer à QField. Le centre peut aussi
+   être saisi dans QField, comme avant.
 2. Poser C1-C3 sur trois arbres bien répartis (idéalement à 120° les uns des
    autres, entre 5 et 15 m). Pour chacune, saisir dans `cibles` : azimut lu à
    la boussole de visée **dans l'unité de la placette**, distance horizontale
