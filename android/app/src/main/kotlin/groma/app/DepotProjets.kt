@@ -20,6 +20,8 @@ data class EntreeProjet(
     val resume: ResumeProjet,
     /** The source folder holds a newer preparation than the working copy. */
     val majDisponible: Boolean,
+    /** Distance (m) from the phone to the centre of the project's extent, when both are known. */
+    val distanceM: Double? = null,
 ) {
     val titre: String get() = infos?.projetNom ?: cle
 }

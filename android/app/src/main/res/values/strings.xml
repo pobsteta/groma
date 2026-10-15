@@ -134,6 +134,7 @@ Dépose chaque projet dans le dossier des projets, dans un sous-dossier qui port
     <string name="hl_fini">Zone téléchargée : la carte s’affiche sans réseau.</string>
     <string name="hl_echec">Le téléchargement s’est arrêté. Relancer pour reprendre là où il s’est arrêté.</string>
     <string name="hl_badge">Tuiles %1$d %%</string>
+    <string name="projet_distance">à %1$s</string>
     <string name="carte_sans_boussole">Pas de boussole : suivre l’azimut</string>
     <string name="gnss_sans_position">Sans position</string>
     <string name="gnss_telephone">Position du téléphone, précision %1$s</string>

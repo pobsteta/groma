@@ -63,6 +63,23 @@ object SourcePosition {
         }
     }
 
+    /**
+     * Rough position for sorting the projects by distance, without listening:
+     * the current fix, else the phone's last known location (any provider,
+     * less than a day old). Null without the location permission.
+     */
+    @SuppressLint("MissingPermission")
+    fun positionApprochee(ctx: Context): Position? {
+        fix.value?.let { return it.position }
+        val lm = ctx.getSystemService(LocationManager::class.java) ?: return null
+        if (!localisationAutorisee(ctx)) return null
+        return runCatching {
+            lm.allProviders.mapNotNull { lm.getLastKnownLocation(it) }
+                .filter { System.currentTimeMillis() - it.time < 24 * 3600_000L }
+                .maxByOrNull { it.time }?.let { Position(it.latitude, it.longitude) }
+        }.getOrNull()
+    }
+
     private fun fixDepuis(l: Location): FixGnss {
         val precision = if (l.hasAccuracy()) l.accuracy.toDouble() else null
         return FixGnss(
