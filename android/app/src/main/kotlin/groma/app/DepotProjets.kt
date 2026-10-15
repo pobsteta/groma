@@ -121,6 +121,9 @@ class DepotProjets(private val ctx: Context) {
         val tmp = File(copies, ".maj_${e.cle}").apply { deleteRecursively() }
         importerDepuis(source, tmp)
         val ancien = File(copies, e.cle)
+        // Downloaded tiles do not depend on the plan: kept across the update.
+        val tuiles = File(ancien, "tuiles")
+        if (tuiles.isDirectory) tuiles.renameTo(File(tmp, "tuiles"))
         ancien.deleteRecursively()
         check(tmp.renameTo(ancien)) { "Remplacement impossible." }
         return Resultat.Fait
@@ -135,6 +138,7 @@ class DepotProjets(private val ctx: Context) {
             "${e.resume.nonEnvoyees} placette(s) faite(s) pas encore envoyée(s) : le projet reste sur le téléphone.",
         )
         sources()[e.cle]?.let { if (!it.delete()) return Resultat.Refuse("Le dossier source n'a pas pu être supprimé.") }
+        TelechargementTuiles.annuler(ctx, File(copies, e.cle))
         File(copies, e.cle).deleteRecursively()
         if (dernierOuvert == e.cle) dernierOuvert = null
         return Resultat.Fait

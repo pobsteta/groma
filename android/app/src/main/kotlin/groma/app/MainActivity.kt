@@ -106,6 +106,7 @@ class MainActivity : AppCompatActivity() {
                         EcranCarte(
                             titre = titre,
                             donnees = donnees,
+                            dossierProjet = ouvert.dossier,
                             onRetour = { carte = false },
                             onOuvrirPlacette = ::demanderPlacette,
                             onEnregistrerCentre = { plotId, centre ->

@@ -21,8 +21,8 @@ par GeoPackage et GeoTIFF : ce dépôt n'importe pas son code R.
 | Jetpack Compose, Material 3, icônes Material (core) | Android (écran principal, style Marculus) | Apache-2.0 | |
 | osmdroid | Android (écran Carte) | Apache-2.0 | |
 | Code GNSS / NTRIP repris de Marculus | `groma-core` (NMEA, NTRIP), Android (transports, service RTK, position sur la carte) | même auteur (pobsteta) | Marculus n'a pas de fichier `LICENSE` ; repris par son auteur, adapté aux conventions de Groma, aucune dépendance ajoutée |
-| Tuiles IGN Géoplateforme (Plan IGN, ortho, cadastre) | Android (écran Carte), service web | Licence Ouverte Etalab 2.0 | sans clé ; attribution affichée sur la carte ; User-Agent `Groma/<version>` |
-| Tuiles OpenStreetMap | Android (écran Carte), service web | ODbL (données) | attribution « © contributeurs OpenStreetMap » affichée ; usage modéré selon la politique des tuiles OSM |
+| Tuiles IGN Géoplateforme (Plan IGN, ortho, cadastre) | Android (écran Carte), service web | Licence Ouverte Etalab 2.0 | sans clé ; attribution affichée sur la carte ; User-Agent `Groma/<version>` ; téléchargement hors ligne limité à l'emprise du projet + 200 m, zooms 12 à 18, 30 000 tuiles au plus, une requête à la fois |
+| Tuiles OpenStreetMap | Android (écran Carte), service web | ODbL (données) | attribution « © contributeurs OpenStreetMap » affichée ; usage modéré selon la politique des tuiles OSM ; **pas de téléchargement hors ligne** (interdit par cette politique) |
 | kotlinx-serialization, JUnit 5, sqlite-jdbc | tests Kotlin | Apache-2.0 / EPL-2.0 / Apache-2.0 | tests seulement |
 | boto3 | serveur (option S3) | Apache-2.0 | |
 | Police UnifrakturCook Bold | icône Android (rendue en PNG) | OFL-1.1 | téléchargée par `android/app/icone/generer_icone.py`, non versionnée ; seul le rendu est distribué |
