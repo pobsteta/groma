@@ -26,7 +26,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.materialIcon
+import androidx.compose.material.icons.materialPath
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -361,7 +362,7 @@ fun EcranCarte(
                 // Guidance to the next plot to do on the route.
                 if (cible == null && donnees?.prochaine() != null) {
                     SmallFloatingActionButton(onClick = { donnees.prochaine()?.let(::allerA) }) {
-                        Icon(Icons.Filled.Place, contentDescription = stringResource(R.string.carte_prochaine))
+                        Icon(IconeYAller, contentDescription = stringResource(R.string.carte_prochaine))
                     }
                 }
                 SmallFloatingActionButton(onClick = { mapView.controller.zoomIn() }) { Text("+", fontSize = 22.sp) }
@@ -757,3 +758,16 @@ private enum class Suivi { AUCUN, CENTRE, SUIVI }
 
 private const val PREF_FOND = "carte_fond"
 private const val PREF_CADASTRE = "carte_cadastre"
+
+/** Material "Navigation" arrow, distinct from the position pin (material-icons-extended not needed). */
+private val IconeYAller = materialIcon(name = "Groma.YAller") {
+    materialPath {
+        moveTo(12f, 2f)
+        lineTo(4.5f, 20.29f)
+        lineToRelative(0.71f, 0.71f)
+        lineTo(12f, 18f)
+        lineToRelative(6.79f, 3f)
+        lineToRelative(0.71f, -0.71f)
+        close()
+    }
+}
