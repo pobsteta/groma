@@ -97,7 +97,8 @@ data class DonneesCarte(
                 PlacetteCarte(
                     id, l["type"] as? String, l["etat_traitement"] as? String ?: "a_faire", lon, lat, x, y,
                     (l["rayon_m"] as? Number)?.toDouble(), (l["visit_order"] as? Number)?.toInt(),
-                    l["unite_azimut"] as? String ?: "deg", (l["declinaison_deg"] as? Number)?.toDouble(),
+                    // Declination left empty in the GeoPackage: WMM2025 at the plot, today (never written back).
+                    l["unite_azimut"] as? String ?: "deg", (l["declinaison_deg"] as? Number)?.toDouble() ?: Declinaison.ouNull(lat, lon),
                 )
             }
             // A plot measured again has several centres: the latest (highest fid) counts.

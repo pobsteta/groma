@@ -21,15 +21,19 @@ En attendant l'onglet « Inventaire vidéo » de nemetonshiny (brief du
 pip install -e "core[geo]"
 cd ~/terrain
 groma-preparer ~/.local/share/nemeton/projects/<id>/data/samples.gpkg \
-    --rayon 15 --declinaison 2.1
+    --rayon 15
 adb push <id> /sdcard/Download/groma/
 ```
 
 * `--rayon` (obligatoire) : rayon de la placette en mètres. Reprendre celui
   du plan (15 m par défaut dans nemetonshiny), pour filmer la surface qui a
   servi au tirage.
-* `--declinaison` (obligatoire) : déclinaison magnétique en degrés, positive
-  vers l'est (calculateurs IGN ou NOAA).
+* `--declinaison` (facultatif) : déclinaison magnétique en degrés, positive
+  vers l'est. Sans elle, `declinaison_deg` est calculée **pour chaque
+  placette** par le modèle WMM2025 de la NOAA (embarqué, valable de 2025 à
+  2030), à sa position et à la date du jour : environ 2 à 3° est en France
+  en 2026, + 0,1 à 0,2° par an. Une valeur saisie est prioritaire ; un
+  avertissement s'affiche si elle s'écarte du modèle de plus de 1°.
 * `--sortie` : dossier produit. Par défaut `./<id>`, l'identifiant du projet
   nemetonshiny : **le dossier garde ce nom sur le téléphone**, Groma s'en
   sert pour reconnaître le projet.
@@ -124,7 +128,7 @@ avant le début du terrain :
 
 ```bash
 groma-preparer ~/.local/share/nemeton/projects/<id>/data/samples.gpkg \
-    --rayon 15 --declinaison 2.1 --ecraser
+    --rayon 15 --ecraser
 adb push <id> /sdcard/Download/groma/
 ```
 
@@ -372,3 +376,17 @@ Les azimuts mesurés sont **magnétiques**, dans l'unité de la placette (degré
 ou grades). Groma applique `declinaison_deg` (positive vers l'est), puis la
 convergence des méridiens Lambert-93 (`convergence_deg`, jusqu'à ±3° en
 France). La numérotation se fait par rapport au **nord géographique**.
+
+* `declinaison_deg` vient de `groma-preparer` : saisie, ou calculée par
+  WMM2025 (`groma.declinaison`, `groma.core.Declinaison` en Kotlin, testés
+  sur les 100 valeurs officielles de la NOAA, `fixtures/declinaison/`).
+  Pour un GeoPackage où elle est vide, Groma la calcule à la volée au point
+  de la placette et à la date du jour, pour la capture et pour « Y aller »,
+  sans l'écrire dans le GeoPackage. Après 2030, le modèle n'est plus
+  valable : la valeur est alors à saisir (un nouveau modèle WMM sort tous
+  les cinq ans).
+* La flèche de « Y aller » suit la **boussole du téléphone**, ramenée au
+  nord géographique par le modèle géomagnétique d'Android
+  (`GeomagneticField`) ; elle ne dépend pas de `declinaison_deg`. La
+  boussole est perturbée près d'un véhicule, d'une canne métallique ou d'un
+  récepteur : s'en écarter d'un mètre pour viser.

@@ -1,0 +1,729 @@
+{
+ "id": "wmm2025",
+ "description": "Déclinaison magnétique attendue du modèle WMM2025 (NOAA/NCEI, domaine public). Altitude au-dessus de l'ellipsoïde WGS84, latitude et longitude géodésiques, année décimale = année + (jour de l'année - 1) / nombre de jours de l'année.",
+ "tolerance_deg": 0.01,
+ "sources": {
+  "points": "WMM2025COF.zip, fichier WMM2025_TestValues.txt (NOAA/NCEI, décembre 2024, https://www.ncei.noaa.gov/products/world-magnetic-model), champs 1 à 5 ; déclinaison arrondie au centième par la NOAA",
+  "france": "calculateur en ligne de la NOAA (https://www.ngdc.noaa.gov/geomag-web/, modèle WMM-2025), interrogé le 2026-10-15"
+ },
+ "points": [
+  {
+   "annee": 2025.0,
+   "altitude_km": 28.0,
+   "lat": 89.0,
+   "lon": -121.0,
+   "declinaison_deg": -99.77
+  },
+  {
+   "annee": 2025.0,
+   "altitude_km": 48.0,
+   "lat": 80.0,
+   "lon": -96.0,
+   "declinaison_deg": -29.91
+  },
+  {
+   "annee": 2025.0,
+   "altitude_km": 54.0,
+   "lat": 82.0,
+   "lon": 87.0,
+   "declinaison_deg": 54.89
+  },
+  {
+   "annee": 2025.0,
+   "altitude_km": 65.0,
+   "lat": 43.0,
+   "lon": 93.0,
+   "declinaison_deg": 0.5
+  },
+  {
+   "annee": 2025.0,
+   "altitude_km": 51.0,
+   "lat": -33.0,
+   "lon": 109.0,
+   "declinaison_deg": -5.49
+  },
+  {
+   "annee": 2025.0,
+   "altitude_km": 39.0,
+   "lat": -59.0,
+   "lon": -8.0,
+   "declinaison_deg": -15.75
+  },
+  {
+   "annee": 2025.0,
+   "altitude_km": 3.0,
+   "lat": -50.0,
+   "lon": -103.0,
+   "declinaison_deg": 27.96
+  },
+  {
+   "annee": 2025.0,
+   "altitude_km": 94.0,
+   "lat": -29.0,
+   "lon": -110.0,
+   "declinaison_deg": 15.74
+  },
+  {
+   "annee": 2025.0,
+   "altitude_km": 66.0,
+   "lat": 14.0,
+   "lon": 143.0,
+   "declinaison_deg": -0.19
+  },
+  {
+   "annee": 2025.0,
+   "altitude_km": 18.0,
+   "lat": 0.0,
+   "lon": 21.0,
+   "declinaison_deg": 1.29
+  },
+  {
+   "annee": 2025.5,
+   "altitude_km": 6.0,
+   "lat": -36.0,
+   "lon": -137.0,
+   "declinaison_deg": 20.28
+  },
+  {
+   "annee": 2025.5,
+   "altitude_km": 63.0,
+   "lat": 26.0,
+   "lon": 81.0,
+   "declinaison_deg": 0.51
+  },
+  {
+   "annee": 2025.5,
+   "altitude_km": 69.0,
+   "lat": 38.0,
+   "lon": -144.0,
+   "declinaison_deg": 12.93
+  },
+  {
+   "annee": 2025.5,
+   "altitude_km": 50.0,
+   "lat": -70.0,
+   "lon": -133.0,
+   "declinaison_deg": 57.21
+  },
+  {
+   "annee": 2025.5,
+   "altitude_km": 8.0,
+   "lat": -52.0,
+   "lon": -75.0,
+   "declinaison_deg": 14.91
+  },
+  {
+   "annee": 2025.5,
+   "altitude_km": 8.0,
+   "lat": -66.0,
+   "lon": 17.0,
+   "declinaison_deg": -33.14
+  },
+  {
+   "annee": 2025.5,
+   "altitude_km": 22.0,
+   "lat": -37.0,
+   "lon": 140.0,
+   "declinaison_deg": 9.28
+  },
+  {
+   "annee": 2025.5,
+   "altitude_km": 40.0,
+   "lat": -12.0,
+   "lon": -129.0,
+   "declinaison_deg": 10.76
+  },
+  {
+   "annee": 2025.5,
+   "altitude_km": 44.0,
+   "lat": 33.0,
+   "lon": -118.0,
+   "declinaison_deg": 11.1
+  },
+  {
+   "annee": 2025.5,
+   "altitude_km": 50.0,
+   "lat": -81.0,
+   "lon": -67.0,
+   "declinaison_deg": 28.13
+  },
+  {
+   "annee": 2026.0,
+   "altitude_km": 74.0,
+   "lat": -57.0,
+   "lon": 3.0,
+   "declinaison_deg": -22.51
+  },
+  {
+   "annee": 2026.0,
+   "altitude_km": 46.0,
+   "lat": -24.0,
+   "lon": -122.0,
+   "declinaison_deg": 14.01
+  },
+  {
+   "annee": 2026.0,
+   "altitude_km": 69.0,
+   "lat": 23.0,
+   "lon": 63.0,
+   "declinaison_deg": 1.17
+  },
+  {
+   "annee": 2026.0,
+   "altitude_km": 33.0,
+   "lat": -3.0,
+   "lon": -147.0,
+   "declinaison_deg": 9.71
+  },
+  {
+   "annee": 2026.0,
+   "altitude_km": 47.0,
+   "lat": -72.0,
+   "lon": -22.0,
+   "declinaison_deg": -6.32
+  },
+  {
+   "annee": 2026.0,
+   "altitude_km": 62.0,
+   "lat": -14.0,
+   "lon": 99.0,
+   "declinaison_deg": -1.43
+  },
+  {
+   "annee": 2026.0,
+   "altitude_km": 83.0,
+   "lat": 86.0,
+   "lon": -46.0,
+   "declinaison_deg": -30.61
+  },
+  {
+   "annee": 2026.0,
+   "altitude_km": 82.0,
+   "lat": -64.0,
+   "lon": 87.0,
+   "declinaison_deg": -81.74
+  },
+  {
+   "annee": 2026.0,
+   "altitude_km": 34.0,
+   "lat": -19.0,
+   "lon": 43.0,
+   "declinaison_deg": -14.98
+  },
+  {
+   "annee": 2026.0,
+   "altitude_km": 56.0,
+   "lat": -81.0,
+   "lon": 40.0,
+   "declinaison_deg": -59.77
+  },
+  {
+   "annee": 2026.5,
+   "altitude_km": 14.0,
+   "lat": 0.0,
+   "lon": 80.0,
+   "declinaison_deg": -3.1
+  },
+  {
+   "annee": 2026.5,
+   "altitude_km": 12.0,
+   "lat": -82.0,
+   "lon": -68.0,
+   "declinaison_deg": 29.79
+  },
+  {
+   "annee": 2026.5,
+   "altitude_km": 44.0,
+   "lat": -46.0,
+   "lon": -42.0,
+   "declinaison_deg": -11.36
+  },
+  {
+   "annee": 2026.5,
+   "altitude_km": 43.0,
+   "lat": 17.0,
+   "lon": 52.0,
+   "declinaison_deg": 1.19
+  },
+  {
+   "annee": 2026.5,
+   "altitude_km": 64.0,
+   "lat": 10.0,
+   "lon": 78.0,
+   "declinaison_deg": -1.53
+  },
+  {
+   "annee": 2026.5,
+   "altitude_km": 12.0,
+   "lat": 33.0,
+   "lon": -145.0,
+   "declinaison_deg": 11.96
+  },
+  {
+   "annee": 2026.5,
+   "altitude_km": 12.0,
+   "lat": -79.0,
+   "lon": 115.0,
+   "declinaison_deg": -137.58
+  },
+  {
+   "annee": 2026.5,
+   "altitude_km": 14.0,
+   "lat": -33.0,
+   "lon": -114.0,
+   "declinaison_deg": 18.12
+  },
+  {
+   "annee": 2026.5,
+   "altitude_km": 19.0,
+   "lat": 29.0,
+   "lon": 66.0,
+   "declinaison_deg": 2.24
+  },
+  {
+   "annee": 2026.5,
+   "altitude_km": 86.0,
+   "lat": -11.0,
+   "lon": 167.0,
+   "declinaison_deg": 10.24
+  },
+  {
+   "annee": 2027.0,
+   "altitude_km": 37.0,
+   "lat": -66.0,
+   "lon": -5.0,
+   "declinaison_deg": -17.22
+  },
+  {
+   "annee": 2027.0,
+   "altitude_km": 67.0,
+   "lat": 72.0,
+   "lon": -115.0,
+   "declinaison_deg": 13.73
+  },
+  {
+   "annee": 2027.0,
+   "altitude_km": 44.0,
+   "lat": 22.0,
+   "lon": 174.0,
+   "declinaison_deg": 6.46
+  },
+  {
+   "annee": 2027.0,
+   "altitude_km": 54.0,
+   "lat": 54.0,
+   "lon": 178.0,
+   "declinaison_deg": 0.63
+  },
+  {
+   "annee": 2027.0,
+   "altitude_km": 57.0,
+   "lat": -43.0,
+   "lon": 50.0,
+   "declinaison_deg": -48.27
+  },
+  {
+   "annee": 2027.0,
+   "altitude_km": 44.0,
+   "lat": -43.0,
+   "lon": -111.0,
+   "declinaison_deg": 24.31
+  },
+  {
+   "annee": 2027.0,
+   "altitude_km": 12.0,
+   "lat": -63.0,
+   "lon": 178.0,
+   "declinaison_deg": 57.87
+  },
+  {
+   "annee": 2027.0,
+   "altitude_km": 38.0,
+   "lat": 27.0,
+   "lon": -169.0,
+   "declinaison_deg": 8.48
+  },
+  {
+   "annee": 2027.0,
+   "altitude_km": 61.0,
+   "lat": 59.0,
+   "lon": -77.0,
+   "declinaison_deg": -16.48
+  },
+  {
+   "annee": 2027.0,
+   "altitude_km": 67.0,
+   "lat": -47.0,
+   "lon": -32.0,
+   "declinaison_deg": -13.52
+  },
+  {
+   "annee": 2027.5,
+   "altitude_km": 8.0,
+   "lat": 62.0,
+   "lon": 53.0,
+   "declinaison_deg": 19.39
+  },
+  {
+   "annee": 2027.5,
+   "altitude_km": 77.0,
+   "lat": -68.0,
+   "lon": -7.0,
+   "declinaison_deg": -16.19
+  },
+  {
+   "annee": 2027.5,
+   "altitude_km": 98.0,
+   "lat": -5.0,
+   "lon": 159.0,
+   "declinaison_deg": 7.79
+  },
+  {
+   "annee": 2027.5,
+   "altitude_km": 34.0,
+   "lat": -29.0,
+   "lon": -107.0,
+   "declinaison_deg": 15.64
+  },
+  {
+   "annee": 2027.5,
+   "altitude_km": 60.0,
+   "lat": 27.0,
+   "lon": 65.0,
+   "declinaison_deg": 1.85
+  },
+  {
+   "annee": 2027.5,
+   "altitude_km": 73.0,
+   "lat": -72.0,
+   "lon": 95.0,
+   "declinaison_deg": -102.64
+  },
+  {
+   "annee": 2027.5,
+   "altitude_km": 96.0,
+   "lat": -46.0,
+   "lon": -85.0,
+   "declinaison_deg": 17.93
+  },
+  {
+   "annee": 2027.5,
+   "altitude_km": 0.0,
+   "lat": -13.0,
+   "lon": -59.0,
+   "declinaison_deg": -17.49
+  },
+  {
+   "annee": 2027.5,
+   "altitude_km": 16.0,
+   "lat": 66.0,
+   "lon": -178.0,
+   "declinaison_deg": 0.37
+  },
+  {
+   "annee": 2027.5,
+   "altitude_km": 72.0,
+   "lat": -87.0,
+   "lon": 38.0,
+   "declinaison_deg": -65.44
+  },
+  {
+   "annee": 2028.0,
+   "altitude_km": 49.0,
+   "lat": 20.0,
+   "lon": 167.0,
+   "declinaison_deg": 5.1
+  },
+  {
+   "annee": 2028.0,
+   "altitude_km": 71.0,
+   "lat": 5.0,
+   "lon": -13.0,
+   "declinaison_deg": -6.47
+  },
+  {
+   "annee": 2028.0,
+   "altitude_km": 95.0,
+   "lat": 14.0,
+   "lon": 65.0,
+   "declinaison_deg": -0.51
+  },
+  {
+   "annee": 2028.0,
+   "altitude_km": 86.0,
+   "lat": -85.0,
+   "lon": -79.0,
+   "declinaison_deg": 41.09
+  },
+  {
+   "annee": 2028.0,
+   "altitude_km": 30.0,
+   "lat": -36.0,
+   "lon": -64.0,
+   "declinaison_deg": -4.65
+  },
+  {
+   "annee": 2028.0,
+   "altitude_km": 75.0,
+   "lat": 79.0,
+   "lon": 125.0,
+   "declinaison_deg": -18.59
+  },
+  {
+   "annee": 2028.0,
+   "altitude_km": 21.0,
+   "lat": 6.0,
+   "lon": -32.0,
+   "declinaison_deg": -14.34
+  },
+  {
+   "annee": 2028.0,
+   "altitude_km": 1.0,
+   "lat": -76.0,
+   "lon": -75.0,
+   "declinaison_deg": 29.87
+  },
+  {
+   "annee": 2028.0,
+   "altitude_km": 45.0,
+   "lat": -46.0,
+   "lon": -41.0,
+   "declinaison_deg": -11.68
+  },
+  {
+   "annee": 2028.0,
+   "altitude_km": 11.0,
+   "lat": -22.0,
+   "lon": -21.0,
+   "declinaison_deg": -23.24
+  },
+  {
+   "annee": 2028.5,
+   "altitude_km": 28.0,
+   "lat": 54.0,
+   "lon": -120.0,
+   "declinaison_deg": 15.43
+  },
+  {
+   "annee": 2028.5,
+   "altitude_km": 68.0,
+   "lat": -58.0,
+   "lon": 156.0,
+   "declinaison_deg": 41.57
+  },
+  {
+   "annee": 2028.5,
+   "altitude_km": 39.0,
+   "lat": -65.0,
+   "lon": -88.0,
+   "declinaison_deg": 29.45
+  },
+  {
+   "annee": 2028.5,
+   "altitude_km": 27.0,
+   "lat": -23.0,
+   "lon": 81.0,
+   "declinaison_deg": -13.27
+  },
+  {
+   "annee": 2028.5,
+   "altitude_km": 11.0,
+   "lat": 34.0,
+   "lon": 0.0,
+   "declinaison_deg": 1.57
+  },
+  {
+   "annee": 2028.5,
+   "altitude_km": 72.0,
+   "lat": -62.0,
+   "lon": 65.0,
+   "declinaison_deg": -67.87
+  },
+  {
+   "annee": 2028.5,
+   "altitude_km": 55.0,
+   "lat": 86.0,
+   "lon": 70.0,
+   "declinaison_deg": 67.64
+  },
+  {
+   "annee": 2028.5,
+   "altitude_km": 59.0,
+   "lat": 32.0,
+   "lon": 163.0,
+   "declinaison_deg": 0.15
+  },
+  {
+   "annee": 2028.5,
+   "altitude_km": 65.0,
+   "lat": 48.0,
+   "lon": 148.0,
+   "declinaison_deg": -9.55
+  },
+  {
+   "annee": 2028.5,
+   "altitude_km": 95.0,
+   "lat": 30.0,
+   "lon": 28.0,
+   "declinaison_deg": 4.56
+  },
+  {
+   "annee": 2029.0,
+   "altitude_km": 95.0,
+   "lat": -60.0,
+   "lon": -59.0,
+   "declinaison_deg": 8.58
+  },
+  {
+   "annee": 2029.0,
+   "altitude_km": 95.0,
+   "lat": -70.0,
+   "lon": 42.0,
+   "declinaison_deg": -55.06
+  },
+  {
+   "annee": 2029.0,
+   "altitude_km": 50.0,
+   "lat": 87.0,
+   "lon": -154.0,
+   "declinaison_deg": -73.48
+  },
+  {
+   "annee": 2029.0,
+   "altitude_km": 58.0,
+   "lat": 32.0,
+   "lon": 19.0,
+   "declinaison_deg": 4.11
+  },
+  {
+   "annee": 2029.0,
+   "altitude_km": 57.0,
+   "lat": 34.0,
+   "lon": -13.0,
+   "declinaison_deg": -1.89
+  },
+  {
+   "annee": 2029.0,
+   "altitude_km": 38.0,
+   "lat": -76.0,
+   "lon": 49.0,
+   "declinaison_deg": -64.28
+  },
+  {
+   "annee": 2029.0,
+   "altitude_km": 49.0,
+   "lat": -50.0,
+   "lon": -179.0,
+   "declinaison_deg": 32.11
+  },
+  {
+   "annee": 2029.0,
+   "altitude_km": 90.0,
+   "lat": -55.0,
+   "lon": -171.0,
+   "declinaison_deg": 38.65
+  },
+  {
+   "annee": 2029.0,
+   "altitude_km": 41.0,
+   "lat": 42.0,
+   "lon": -19.0,
+   "declinaison_deg": -4.13
+  },
+  {
+   "annee": 2029.0,
+   "altitude_km": 19.0,
+   "lat": 46.0,
+   "lon": -22.0,
+   "declinaison_deg": -5.65
+  },
+  {
+   "annee": 2029.5,
+   "altitude_km": 31.0,
+   "lat": 13.0,
+   "lon": -132.0,
+   "declinaison_deg": 9.04
+  },
+  {
+   "annee": 2029.5,
+   "altitude_km": 93.0,
+   "lat": -2.0,
+   "lon": 158.0,
+   "declinaison_deg": 7.09
+  },
+  {
+   "annee": 2029.5,
+   "altitude_km": 51.0,
+   "lat": -76.0,
+   "lon": 40.0,
+   "declinaison_deg": -56.34
+  },
+  {
+   "annee": 2029.5,
+   "altitude_km": 64.0,
+   "lat": 22.0,
+   "lon": -132.0,
+   "declinaison_deg": 10.23
+  },
+  {
+   "annee": 2029.5,
+   "altitude_km": 26.0,
+   "lat": -65.0,
+   "lon": 55.0,
+   "declinaison_deg": -63.48
+  },
+  {
+   "annee": 2029.5,
+   "altitude_km": 66.0,
+   "lat": -21.0,
+   "lon": 32.0,
+   "declinaison_deg": -14.63
+  },
+  {
+   "annee": 2029.5,
+   "altitude_km": 18.0,
+   "lat": 9.0,
+   "lon": -172.0,
+   "declinaison_deg": 9.24
+  },
+  {
+   "annee": 2029.5,
+   "altitude_km": 63.0,
+   "lat": 88.0,
+   "lon": 26.0,
+   "declinaison_deg": 36.52
+  },
+  {
+   "annee": 2029.5,
+   "altitude_km": 33.0,
+   "lat": 17.0,
+   "lon": 5.0,
+   "declinaison_deg": 0.89
+  },
+  {
+   "annee": 2029.5,
+   "altitude_km": 77.0,
+   "lat": -18.0,
+   "lon": 138.0,
+   "declinaison_deg": 4.45
+  }
+ ],
+ "france": [
+  {
+   "nom": "Couchey (21)",
+   "annee": 2026.0,
+   "altitude_km": 0.0,
+   "lat": 47.26,
+   "lon": 4.97,
+   "declinaison_deg": 2.68895
+  },
+  {
+   "nom": "Landes, 2 juillet 2028",
+   "annee": 2028.5,
+   "altitude_km": 0.5,
+   "lat": 43.6,
+   "lon": -1.45,
+   "declinaison_deg": 1.4479
+  }
+ ]
+}
