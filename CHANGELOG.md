@@ -1,5 +1,29 @@
 # Changelog
 
+## [0.4.0](https://github.com/pobsteta/groma/compare/v0.3.0...v0.4.0) (2026-10-15)
+
+
+### Nouveautés
+
+* **android:** écran Carte des placettes, du parcours et des parcelles ([#21](https://github.com/pobsteta/groma/issues/21)) ([afc1b56](https://github.com/pobsteta/groma/commit/afc1b565cc849aae5bb8ccdee88778f9431fd8d7))
+* **android:** GNSS et RTK sur la carte, récepteur et corrections NTRIP ([#22](https://github.com/pobsteta/groma/issues/22)) ([49c3dd8](https://github.com/pobsteta/groma/commit/49c3dd8bef8684d539c0700bde9ca7d44c68d70d))
+* **carte:** « Mesurer le centre » au RTK, écrit dans centres_mesures ([#25](https://github.com/pobsteta/groma/issues/25)) ([f2779c8](https://github.com/pobsteta/groma/commit/f2779c839ab1136da7dd95e2d42e31e1b0ce2fbb))
+* **carte:** « Y aller » vers une placette, distance, azimut magnétique et flèche ([#24](https://github.com/pobsteta/groma/issues/24)) ([0cc19f5](https://github.com/pobsteta/groma/commit/0cc19f56c5ea30dd70362202a9c6a884154711fe))
+* **carte:** parcellaire des UGF du projet sur la carte ([#23](https://github.com/pobsteta/groma/issues/23)) ([af551dc](https://github.com/pobsteta/groma/commit/af551dc29e5e092ed71100aa117f8fc5e9e2096f))
+* **carte:** téléchargement de la zone du projet pour la carte hors ligne ([#26](https://github.com/pobsteta/groma/issues/26)) ([73bc8ae](https://github.com/pobsteta/groma/commit/73bc8ae11412f42d65b4935da51321094984098a))
+* **core:** couche parcelles et projections pour la carte du téléphone ([#19](https://github.com/pobsteta/groma/issues/19)) ([eca8c87](https://github.com/pobsteta/groma/commit/eca8c8734ad5c1020c68bcf6a67376c5e383f762))
+* **projets:** tri des projets par distance au téléphone ([#27](https://github.com/pobsteta/groma/issues/27)) ([dbdfa6b](https://github.com/pobsteta/groma/commit/dbdfa6b6a988cc3896654a7b6434a8fd0b5f7828))
+
+
+### Corrections
+
+* **app:** plantage de la prise de vue avec OpenCV 5, bouton sous la barre système ([#18](https://github.com/pobsteta/groma/issues/18)) ([5b35299](https://github.com/pobsteta/groma/commit/5b352998d934194bcb32c43a1ec32da65a072975))
+
+
+### Documentation
+
+* **terrain:** carte du projet, guidage et mesure du centre au RTK ([#28](https://github.com/pobsteta/groma/issues/28)) ([91396d0](https://github.com/pobsteta/groma/commit/91396d079f505eaffdc40567bb01a84136bd128c))
+
 ## [0.3.0](https://github.com/pobsteta/groma/compare/v0.2.0...v0.3.0) (2026-10-14)
 
 
