@@ -44,6 +44,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -113,9 +114,11 @@ fun EcranCarte(
         }
     }
     // Scale bar kept above the attribution and the navigation bar (edge-to-edge).
+    // In landscape the navigation bar is on the side: shift the scale bar too.
     val basNav = WindowInsets.navigationBars.getBottom(LocalDensity.current)
-    LaunchedEffect(basNav) {
-        mapView.overlays.filterIsInstance<ScaleBarOverlay>().forEach { it.setScaleBarOffset((16 * densite).toInt(), basNav + (36 * densite).toInt()) }
+    val gaucheNav = WindowInsets.navigationBars.getLeft(LocalDensity.current, LocalLayoutDirection.current)
+    LaunchedEffect(basNav, gaucheNav) {
+        mapView.overlays.filterIsInstance<ScaleBarOverlay>().forEach { it.setScaleBarOffset(gaucheNav + (16 * densite).toInt(), basNav + (36 * densite).toInt()) }
         mapView.invalidate()
     }
     DisposableEffect(Unit) {
