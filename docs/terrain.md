@@ -129,6 +129,18 @@ de la carte → **Mettre à jour**. Dès qu'une placette a été commencée sur
 le téléphone, la mise à jour est refusée : envoyer les placettes faites,
 puis préparer un nouveau projet nemetonshiny pour la suite.
 
+### Carte hors ligne
+
+La forêt est souvent sans réseau : avant de partir, sur le Wi-Fi, ouvrir la
+carte du projet → menu → **Hors ligne…**. Choisir Plan IGN ou Ortho IGN
+(et le cadastre si besoin) : Groma annonce le nombre de tuiles et le volume
+(emprise du projet plus 200 m, zooms 12 à 18), puis télécharge en tâche de
+fond. La progression s'affiche sous le badge GNSS ; un téléchargement
+interrompu reprend là où il s'est arrêté. Les tuiles vont dans le dossier
+du projet (`tuiles/`), sont gardées à la mise à jour du projet et
+supprimées avec lui. OpenStreetMap ne se télécharge pas (politique des
+tuiles OSM). Vérifier en mode avion que le fond s'affiche.
+
 ## Déroulé sur une placette
 
 1. Planter la canne au point prévu. Dans Groma, carte du projet → **Y

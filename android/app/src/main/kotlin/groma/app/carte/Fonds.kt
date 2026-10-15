@@ -40,6 +40,13 @@ private val ORTHO_IGN_SOURCE: OnlineTileSourceBase = SourceGeoplateforme("OrthoI
 /** IGN cadastral parcels, drawn over the base map. */
 val SOURCE_CADASTRE: OnlineTileSourceBase = SourceGeoplateforme("CadastreIGN", "CADASTRALPARCELS.PARCELLAIRE_EXPRESS", "PCI vecteur", "image/png")
 
+/** Base map whose tiles may be downloaded: IGN only (OSM's tile policy forbids bulk downloads). */
+val Fond.telechargeable: Boolean get() = this != Fond.OSM
+
+/** Tile source of a downloaded folder, by its name (IGN base maps and cadastre). */
+fun sourceParNom(nom: String): OnlineTileSourceBase? =
+    (Fond.entries.filter { it.telechargeable }.map { it.source } + SOURCE_CADASTRE).firstOrNull { it.name() == nom }
+
 /** Highest zoom with tiles; the map over-zooms them up to [ZOOM_MAX]. */
 const val ZOOM_TUILES = 19
 const val ZOOM_MAX = 22.0

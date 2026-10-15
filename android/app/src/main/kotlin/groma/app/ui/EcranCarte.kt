@@ -76,6 +76,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import groma.app.R
 import groma.app.carte.Boussole
 import groma.app.carte.CoucheGuidage
+import groma.app.carte.FournisseurTuiles
+import groma.app.carte.TuilesHorsLigne
+import groma.app.carte.telechargeable
+import groma.app.TelechargementTuiles
 import groma.app.carte.Forme
 import groma.app.carte.coucheParcelles
 import groma.app.carte.coucheUgf
@@ -93,6 +97,12 @@ import groma.core.FixGnss
 import groma.core.Guidage
 import groma.core.CentreMesure
 import groma.core.MesureCentre
+import groma.core.ZoneTuiles
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
 import groma.core.OrigineFix
 import groma.core.PlacetteCarte
 import kotlinx.coroutines.delay
@@ -119,6 +129,7 @@ import org.osmdroid.views.overlay.TilesOverlay
 fun EcranCarte(
     titre: String,
     donnees: DonneesCarte?,
+    dossierProjet: File?,
     onRetour: () -> Unit,
     onOuvrirPlacette: (String) -> Unit,
     onEnregistrerCentre: suspend (String, CentreMesure) -> Double?,
@@ -143,6 +154,12 @@ fun EcranCarte(
     val cible = cibleId?.let { id -> donnees?.placettes?.firstOrNull { it.plotId == id } }
     // Heading shown (GNSS course when moving, else the compass), for the guidance arrow.
     var cap by remember { mutableStateOf<Float?>(null) }
+    var horsLigne by remember { mutableStateOf(false) }
+    val racineTuiles = remember(dossierProjet) { dossierProjet?.let(TuilesHorsLigne::racine) }
+    val travailTuiles = remember(dossierProjet) {
+        dossierProjet?.let { WorkManager.getInstance(ctx).getWorkInfosForUniqueWorkFlow(TelechargementTuiles.nomTravail(it)) }
+    }
+    val infoTuiles = travailTuiles?.collectAsStateWithLifecycle(emptyList())?.value?.firstOrNull()
     var dialogueCentre by remember { mutableStateOf<EtapeCentre?>(null) }
     val scope = rememberCoroutineScope()
 
@@ -152,13 +169,14 @@ fun EcranCarte(
     val parcelles = remember { coucheParcelles(densite) }
     val ugf = remember { coucheUgf(densite) }
     val couchCadastre = remember {
-        TilesOverlay(MapTileProviderBasic(ctx.applicationContext, SOURCE_CADASTRE), ctx.applicationContext).apply {
+        TilesOverlay(FournisseurTuiles(ctx.applicationContext, SOURCE_CADASTRE, racineTuiles), ctx.applicationContext).apply {
             loadingBackgroundColor = android.graphics.Color.TRANSPARENT
             loadingLineColor = android.graphics.Color.TRANSPARENT
         }
     }
     val mapView = remember {
-        MapView(ctx).apply {
+        // Tiles downloaded in the project folder first, then cache and network (§ 5.2).
+        MapView(ctx, FournisseurTuiles(ctx.applicationContext, fond.source, racineTuiles)).apply {
             setMultiTouchControls(true)
             zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
             isTilesScaledToDpi = true
@@ -324,6 +342,10 @@ fun EcranCarte(
                         Case(stringResource(R.string.carte_parcelles, n?.parcelles?.size ?: 0), coucheParcelles) { coucheParcelles = it }
                         Case(stringResource(R.string.carte_ugf, n?.ugf?.size ?: 0), coucheUgf) { coucheUgf = it }
                         Case(stringResource(R.string.carte_cadastre), cadastre) { cadastre = it }
+                        if (dossierProjet != null) {
+                            HorizontalDivider()
+                            DropdownMenuItem(text = { Text(stringResource(R.string.hl_menu)) }, onClick = { menu = false; horsLigne = true })
+                        }
                     }
                 }
             },
@@ -366,7 +388,18 @@ fun EcranCarte(
                     Icon(Icons.Filled.LocationOn, contentDescription = stringResource(if (suivi == Suivi.SUIVI) R.string.carte_suivi else R.string.carte_ma_position))
                 }
             }
-            BadgeFix(fix, etatRtk, Modifier.align(Alignment.TopCenter).padding(top = 8.dp)) { etatGnss = true }
+            Column(Modifier.align(Alignment.TopCenter).padding(top = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                BadgeFix(fix, etatRtk) { etatGnss = true }
+                // Tile download running: progress under the badge, the dialog may be closed.
+                avancement(infoTuiles)?.let { (faites, total) ->
+                    Text(
+                        stringResource(R.string.hl_badge, if (total > 0) (faites * 100 / total).toInt() else 0),
+                        fontSize = 11.sp, color = Color.White,
+                        modifier = Modifier.padding(top = 4.dp).background(Color(0xCC37474F), RoundedCornerShape(10.dp))
+                            .padding(horizontal = 8.dp, vertical = 2.dp),
+                    )
+                }
+            }
             Text(
                 fond.attribution + if (cadastre && fond == Fond.OSM) " · cadastre © IGN" else "",
                 fontSize = 10.sp,
@@ -390,6 +423,9 @@ fun EcranCarte(
     }
 
     if (etatGnss) DialogueEtatGnss(fix, etatRtk) { etatGnss = false }
+    if (horsLigne && dossierProjet != null && racineTuiles != null) {
+        DialogueHorsLigne(dossierProjet, racineTuiles, donnees, fond, cadastre, infoTuiles) { horsLigne = false }
+    }
     when (val d = dialogueCentre) {
         null -> {}
         is EtapeCentre.Message -> AlertDialog(
@@ -560,6 +596,99 @@ private fun DialogueMesure(plotId: String, flottant: Boolean, dureeS: Int, onFin
         },
     )
 }
+
+/** (done, total) of a running or queued tile download, else null. */
+private fun avancement(info: WorkInfo?): Pair<Long, Long>? {
+    if (info == null || info.state.isFinished) return null
+    return info.progress.getLong(TelechargementTuiles.CLE_FAITES, 0) to info.progress.getLong(TelechargementTuiles.CLE_TOTAL, 0)
+}
+
+/**
+ * « Hors ligne… » (brief § 5.2): IGN base map (and cadastre) over the
+ * project's extent plus 200 m, zooms 12 to 18; estimate before, progress,
+ * stop, delete.
+ */
+@Composable
+private fun DialogueHorsLigne(
+    dossierProjet: File, racine: File, donnees: DonneesCarte?, fondAffiche: Fond, cadastreAffiche: Boolean, info: WorkInfo?,
+    onFermer: () -> Unit,
+) {
+    val ctx = LocalContext.current
+    var choix by remember { mutableStateOf(if (fondAffiche.telechargeable) fondAffiche else Fond.PLAN_IGN) }
+    var avecCadastre by remember { mutableStateOf(cadastreAffiche) }
+    val zone = remember(donnees) { donnees?.emprise?.let { ZoneTuiles.projet(it) } }
+    val sources = listOfNotNull(choix.source, SOURCE_CADASTRE.takeIf { avecCadastre })
+    val nombre = (zone?.nombre ?: 0L) * sources.size
+    // Rough tile sizes: IGN plan PNG, orthophoto JPEG, mostly transparent cadastre.
+    val octets = (zone?.nombre ?: 0L) * ((if (choix == Fond.ORTHO_IGN) 22_000L else 18_000L) + (if (avecCadastre) 6_000L else 0L))
+    var stocke by remember { mutableStateOf<Pair<Int, Long>?>(null) }
+    var versionStock by remember { mutableIntStateOf(0) }
+    LaunchedEffect(choix, avecCadastre, versionStock, info?.state) {
+        stocke = withContext(Dispatchers.IO) {
+            sources.map { TuilesHorsLigne.volume(racine, it) }.fold(0 to 0L) { a, b -> (a.first + b.first) to (a.second + b.second) }
+        }
+    }
+    val enCours = info != null && !info.state.isFinished
+    AlertDialog(
+        onDismissRequest = onFermer,
+        title = { Text(stringResource(R.string.hl_titre)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(stringResource(R.string.hl_desc), style = MaterialTheme.typography.bodySmall)
+                Fond.entries.filter { it.telechargeable }.forEach { f ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(selected = choix == f, onClick = { if (!enCours) choix = f })
+                        Text(f.libelle)
+                    }
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = avecCadastre, onCheckedChange = { if (!enCours) avecCadastre = it })
+                    Text(stringResource(R.string.hl_cadastre))
+                }
+                if (fondAffiche == Fond.OSM) Text(stringResource(R.string.hl_osm), style = MaterialTheme.typography.bodySmall)
+                if (nombre > ZoneTuiles.NOMBRE_MAX) {
+                    Text(stringResource(R.string.hl_trop, milliers(nombre), milliers(ZoneTuiles.NOMBRE_MAX)), color = MaterialTheme.colorScheme.error)
+                } else {
+                    Text(stringResource(R.string.hl_estimation, milliers(nombre), maxOf(1L, octets / 1_000_000)))
+                }
+                stocke?.takeIf { it.first > 0 }?.let { (n, o) ->
+                    Text(stringResource(R.string.hl_stocke, milliers(n.toLong()), maxOf(1L, o / 1_000_000)), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                when {
+                    info == null -> {}
+                    info.state == WorkInfo.State.ENQUEUED && info.runAttemptCount == 0 -> Text(stringResource(R.string.hl_attente))
+                    enCours -> avancement(info)?.let { (faites, total) ->
+                        Text(stringResource(R.string.hl_progression, milliers(faites), milliers(total)))
+                        LinearProgressIndicator(progress = { if (total > 0) faites.toFloat() / total else 0f }, modifier = Modifier.fillMaxWidth())
+                    }
+                    info.state == WorkInfo.State.SUCCEEDED -> Text(stringResource(R.string.hl_fini), color = Color(0xFF2E7D32))
+                    else -> Text(stringResource(R.string.hl_echec), color = MaterialTheme.colorScheme.error)
+                }
+            }
+        },
+        confirmButton = {
+            if (enCours) {
+                TextButton(onClick = { TelechargementTuiles.annuler(ctx, dossierProjet) }) { Text(stringResource(R.string.hl_arreter)) }
+            } else {
+                TextButton(
+                    enabled = zone != null && nombre in 1..ZoneTuiles.NOMBRE_MAX,
+                    onClick = { zone?.let { TelechargementTuiles.planifier(ctx, dossierProjet, sources.map { it.name() }, it) } },
+                ) { Text(stringResource(R.string.hl_telecharger)) }
+            }
+        },
+        dismissButton = {
+            Row {
+                if (!enCours && (stocke?.first ?: 0) > 0) {
+                    TextButton(onClick = { sources.forEach { TuilesHorsLigne.supprimer(racine, it) }; versionStock++ }) { Text(stringResource(R.string.hl_supprimer)) }
+                }
+                TextButton(onClick = onFermer) { Text(stringResource(R.string.fermer)) }
+            }
+        },
+    )
+}
+
+/** 1850 → "1 850" (narrow no-break space, as in French). */
+private fun milliers(n: Long): String = "%,d".format(java.util.Locale.FRANCE, n)
 
 /** Steps of « Mesurer le centre ». */
 private sealed interface EtapeCentre {
