@@ -6,6 +6,8 @@ import kotlin.math.hypot
 data class PlacetteCarte(
     val plotId: String, val type: String?, val etat: String, val lon: Double, val lat: Double,
     val x: Double, val y: Double, val rayonM: Double?, val ordre: Int?,
+    /** Unit of the plot's azimuths ("deg" or "gr") and magnetic declination (°, east positive). */
+    val uniteAzimut: String = "deg", val declinaisonDeg: Double? = null,
 ) {
     /** Replacement plot (Over): drawn smaller, outside the route. */
     val remplacement: Boolean get() = type == "Over"
@@ -64,6 +66,15 @@ data class DonneesCarte(
     /** Visiting route: Base plots in `visit_order` (nemeton's TSP tour); Over plots are not on it. */
     val parcours: List<PlacetteCarte> = placettes.filter { !it.remplacement && it.ordre != null }.sortedBy { it.ordre }
 
+    /**
+     * Next plot to do on the route after [apres] (from the start when null or
+     * off the route), wrapping round; null when every plot of the route is done.
+     */
+    fun prochaine(apres: String? = null): PlacetteCarte? {
+        val i = parcours.indexOfFirst { it.plotId == apres }
+        return (parcours.drop(i + 1) + parcours.take(i + 1)).firstOrNull { it.etat == "a_faire" && it.plotId != apres }
+    }
+
     /** Extent of the plots, parcels and management units, null when there is nothing to show. */
     val emprise: Emprise?
         get() {
@@ -86,6 +97,7 @@ data class DonneesCarte(
                 PlacetteCarte(
                     id, l["type"] as? String, l["etat_traitement"] as? String ?: "a_faire", lon, lat, x, y,
                     (l["rayon_m"] as? Number)?.toDouble(), (l["visit_order"] as? Number)?.toInt(),
+                    l["unite_azimut"] as? String ?: "deg", (l["declinaison_deg"] as? Number)?.toDouble(),
                 )
             }
             val centres = if (!table(db, "centres_mesures")) emptyList() else GeoPackage.lirePoints(db, "centres_mesures").mapNotNull { l ->

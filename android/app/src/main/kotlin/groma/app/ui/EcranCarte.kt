@@ -5,6 +5,7 @@ import android.content.Context
 import android.view.MotionEvent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,15 +14,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
@@ -31,6 +35,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -47,10 +54,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,6 +70,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import groma.app.R
 import groma.app.carte.Boussole
+import groma.app.carte.CoucheGuidage
 import groma.app.carte.Forme
 import groma.app.carte.coucheParcelles
 import groma.app.carte.coucheUgf
@@ -71,6 +84,9 @@ import groma.app.gnss.ConfigRtk
 import groma.app.gnss.ServiceGnssRtk
 import groma.app.gnss.SourcePosition
 import groma.core.DonneesCarte
+import groma.core.FixGnss
+import groma.core.Guidage
+import groma.core.OrigineFix
 import groma.core.PlacetteCarte
 import org.osmdroid.tileprovider.MapTileProviderBasic
 import org.osmdroid.util.BoundingBox
@@ -84,7 +100,8 @@ import org.osmdroid.views.overlay.TilesOverlay
  * Map of one project (brief 2026-10-14 carte RTK, § 3 and § 5.1): IGN or OSM
  * base map, IGN cadastre, parcels, management units (UGF), visiting route,
  * plots by state, measured centres. A tap on a plot opens its sheet. Position (RTK receiver or phone),
- * fix badge and follow mode (§ 5.1, § 6).
+ * fix badge and follow mode (§ 5.1, § 6). « Y aller »: distance and azimuth
+ * to a plot, line on the map and arrow relative to the phone (§ 5.3).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -110,9 +127,14 @@ fun EcranCarte(
     var etatGnss by remember { mutableStateOf(false) }
     val fix by SourcePosition.fix.collectAsStateWithLifecycle()
     val etatRtk by ServiceGnssRtk.etat.collectAsStateWithLifecycle()
+    var cibleId by rememberSaveable { mutableStateOf<String?>(null) }
+    val cible = cibleId?.let { id -> donnees?.placettes?.firstOrNull { it.plotId == id } }
+    // Heading shown (GNSS course when moving, else the compass), for the guidance arrow.
+    var cap by remember { mutableStateOf<Float?>(null) }
 
     val placettes = remember { CouchePlacettes(densite) { choisie = it } }
     val position = remember { CouchePosition(densite) }
+    val guidage = remember { CoucheGuidage(densite) }
     val parcelles = remember { coucheParcelles(densite) }
     val ugf = remember { coucheUgf(densite) }
     val couchCadastre = remember {
@@ -133,6 +155,7 @@ fun EcranCarte(
             overlays += parcelles
             overlays += ugf
             overlays += placettes
+            overlays += guidage
             overlays += position
             overlays += ScaleBarOverlay(this).apply { setAlignBottom(true) }
             // Moving the map by hand ends the follow mode.
@@ -155,21 +178,42 @@ fun EcranCarte(
         onDispose { ecoute.close() }
     }
     DisposableEffect(Unit) {
-        val boussole = Boussole(ctx, { position.fix?.position?.let { it.latitude to it.longitude } }) { cap ->
-            position.boussoleDeg = cap
+        val boussole = Boussole(ctx, { position.fix?.position?.let { it.latitude to it.longitude } }) { capBoussole ->
+            position.boussoleDeg = capBoussole
+            cap = position.capDeg
             mapView.postInvalidate()
         }
         onDispose { boussole.close() }
     }
     LaunchedEffect(fix) {
         position.fix = fix
+        guidage.fix = fix
+        cap = position.capDeg
         val f = fix
         if (f != null && suivi == Suivi.SUIVI) mapView.controller.setCenter(GeoPoint(f.position.latitude, f.position.longitude))
         mapView.invalidate()
     }
+    LaunchedEffect(cible) {
+        guidage.cible = cible
+        mapView.invalidate()
+    }
+    // The screen stays on while guiding (brief § 7).
+    val vue = LocalView.current
+    DisposableEffect(cible != null) {
+        vue.keepScreenOn = cible != null
+        onDispose { vue.keepScreenOn = false }
+    }
+    fun allerA(pl: PlacetteCarte) {
+        cibleId = pl.plotId
+        choisie = null
+        montrer(mapView, fix, pl)
+    }
+    // Under guidance the banner below the map takes the navigation bar inset.
+    val basCarte = if (cible != null) Modifier else Modifier.navigationBarsPadding()
+
     // Scale bar kept above the attribution and the navigation bar (edge-to-edge).
     // In landscape the navigation bar is on the side: shift the scale bar too.
-    val basNav = WindowInsets.navigationBars.getBottom(LocalDensity.current)
+    val basNav = if (cible != null) 0 else WindowInsets.navigationBars.getBottom(LocalDensity.current)
     val gaucheNav = WindowInsets.navigationBars.getLeft(LocalDensity.current, LocalLayoutDirection.current)
     LaunchedEffect(basNav, gaucheNav) {
         mapView.overlays.filterIsInstance<ScaleBarOverlay>().forEach { it.setScaleBarOffset(gaucheNav + (16 * densite).toInt(), basNav + (36 * densite).toInt()) }
@@ -245,10 +289,16 @@ fun EcranCarte(
             // osmdroid draws tiles beyond its bounds: clipped, or they cover the title bar.
             AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize().clipToBounds())
             Column(
-                Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(12.dp),
+                Modifier.align(Alignment.BottomEnd).then(basCarte).padding(12.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.End,
             ) {
+                // Guidance to the next plot to do on the route.
+                if (cible == null && donnees?.prochaine() != null) {
+                    SmallFloatingActionButton(onClick = { donnees.prochaine()?.let(::allerA) }) {
+                        Icon(Icons.Filled.Place, contentDescription = stringResource(R.string.carte_prochaine))
+                    }
+                }
                 SmallFloatingActionButton(onClick = { mapView.controller.zoomIn() }) { Text("+", fontSize = 22.sp) }
                 SmallFloatingActionButton(onClick = { mapView.controller.zoomOut() }) { Text("−", fontSize = 22.sp) }
                 SmallFloatingActionButton(onClick = { donnees?.let { cadrer(mapView, it, anime = true) } }) {
@@ -278,8 +328,19 @@ fun EcranCarte(
                 fond.attribution + if (cadastre && fond == Fond.OSM) " · cadastre © IGN" else "",
                 fontSize = 10.sp,
                 color = Color(0xFF212121),
-                modifier = Modifier.align(Alignment.BottomStart).navigationBarsPadding().padding(6.dp)
+                modifier = Modifier.align(Alignment.BottomStart).then(basCarte).padding(6.dp)
                     .background(Color(0xCCFFFFFF), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp),
+            )
+        }
+        cible?.let { pl ->
+            BandeauGuidage(
+                plotId = pl.plotId,
+                guide = fix?.let { Guidage.calculer(it.position, pl) },
+                fix = fix,
+                capDeg = cap,
+                suivante = donnees?.prochaine(pl.plotId),
+                onSuivante = ::allerA,
+                onArreter = { cibleId = null },
             )
         }
     }
@@ -287,7 +348,11 @@ fun EcranCarte(
     if (etatGnss) DialogueEtatGnss(fix, etatRtk) { etatGnss = false }
     choisie?.let { pl ->
         ModalBottomSheet(onDismissRequest = { choisie = null }) {
-            FeuillePlacette(pl, donnees, onOuvrir = { choisie = null; onOuvrirPlacette(pl.plotId) })
+            FeuillePlacette(
+                pl, donnees, fix?.let { Guidage.calculer(it.position, pl) },
+                onYAller = { allerA(pl) },
+                onOuvrir = { choisie = null; onOuvrirPlacette(pl.plotId) },
+            )
         }
     }
 }
@@ -301,9 +366,9 @@ private fun Case(libelle: String, coche: Boolean, onChange: (Boolean) -> Unit) {
     )
 }
 
-/** Sheet of a tapped plot. Distance, azimuth and "Y aller" come with the GNSS (brief § 5.3). */
+/** Sheet of a tapped plot, with distance and azimuth from the position and « Y aller » (brief § 3, § 5.3). */
 @Composable
-private fun FeuillePlacette(p: PlacetteCarte, donnees: DonneesCarte?, onOuvrir: () -> Unit) {
+private fun FeuillePlacette(p: PlacetteCarte, donnees: DonneesCarte?, guide: Guidage?, onYAller: () -> Unit, onOuvrir: () -> Unit) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(p.plotId, style = MaterialTheme.typography.headlineSmall)
         val etat = stringResource(
@@ -321,10 +386,100 @@ private fun FeuillePlacette(p: PlacetteCarte, donnees: DonneesCarte?, onOuvrir: 
         donnees?.centres?.firstOrNull { it.plotId == p.plotId }?.let { c ->
             Text(stringResource(R.string.carte_centre_mesure, nombreCarte(Math.round((c.ecartM ?: 0.0) * 100) / 100.0)), color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.End) {
+        guide?.let { g ->
+            Text(stringResource(R.string.carte_distance, distance(g.distanceM)) + " · " + texteAzimut(g))
+        }
+        Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+            OutlinedButton(onClick = onYAller) { Text(stringResource(R.string.carte_y_aller)) }
             Button(onClick = onOuvrir) { Text(stringResource(R.string.filmer)) }
         }
     }
+}
+
+/**
+ * Guidance banner under the map (brief § 5.3): arrow relative to the phone,
+ * distance, azimuth to sight (magnetic, in the plot's unit) and geographic;
+ * « Arrivé » within 5 m. Updated at each fix and compass reading.
+ */
+@Composable
+private fun BandeauGuidage(
+    plotId: String, guide: Guidage?, fix: FixGnss?, capDeg: Float?, suivante: PlacetteCarte?,
+    onSuivante: (PlacetteCarte) -> Unit, onArreter: () -> Unit,
+) {
+    Surface(tonalElevation = 3.dp, shadowElevation = 6.dp, modifier = Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.navigationBarsPadding().padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            val relatif = guide?.relatifDeg(capDeg?.toDouble())
+            if (guide != null && !guide.arrive) Fleche(relatif)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                when {
+                    guide == null -> {
+                        Text(plotId, style = MaterialTheme.typography.titleLarge)
+                        Text(stringResource(R.string.carte_attente_position), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    guide.arrive -> {
+                        Text(stringResource(R.string.carte_arrive, plotId), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Color(0xFF2E7D32))
+                        Text(stringResource(R.string.carte_distance, distance(guide.distanceM)) + " · " + texteAzimut(guide))
+                    }
+                    else -> {
+                        Text("$plotId · " + stringResource(R.string.carte_distance, distance(guide.distanceM)), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        Text(texteAzimut(guide))
+                    }
+                }
+                fix?.precisionHorizontaleM?.takeIf { it >= 1.0 }?.let { m ->
+                    val texte = if (fix.origine == OrigineFix.TELEPHONE) R.string.carte_precision_telephone else R.string.carte_precision
+                    Text(stringResource(texte, nombreCarte(Math.round(m * 10) / 10.0)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (guide != null && !guide.arrive && relatif == null) {
+                    Text(stringResource(R.string.carte_sans_boussole), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                IconButton(onClick = onArreter) { Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.carte_arreter_guidage)) }
+                suivante?.let { s -> TextButton(onClick = { onSuivante(s) }) { Text(stringResource(R.string.carte_suivante) + " · " + s.plotId) } }
+            }
+        }
+    }
+}
+
+/** Arrow towards the plot, relative to the top of the phone; grey and upright without a heading. */
+@Composable
+private fun Fleche(relatifDeg: Double?) {
+    val couleur = if (relatifDeg == null) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.primary
+    Canvas(Modifier.size(52.dp).rotate((relatifDeg ?: 0.0).toFloat())) {
+        val w = size.width; val h = size.height
+        val fleche = Path().apply {
+            moveTo(w / 2, 0f); lineTo(w * 0.9f, h * 0.9f); lineTo(w / 2, h * 0.68f); lineTo(w * 0.1f, h * 0.9f); close()
+        }
+        drawPath(fleche, couleur)
+        drawCircle(couleur.copy(alpha = 0.15f), radius = w / 2, center = Offset(w / 2, h / 2))
+    }
+}
+
+/** "Azimut 358° magnétique (0° géographique)", in the plot's unit. */
+@Composable
+private fun texteAzimut(g: Guidage): String {
+    fun u(v: Int) = if (g.unite == "gr") "$v gr" else "$v°"
+    return if (g.azimutMagDeg != null) stringResource(R.string.carte_azimut_mag, u(g.azimutVise), u(g.azimutGeo))
+    else stringResource(R.string.carte_azimut_geo, u(g.azimutGeo))
+}
+
+/** Distance rounded to the decimetre under 10 m, to the metre beyond. */
+private fun distance(m: Double): String = if (m < 10) nombreCarte(Math.round(m * 10) / 10.0) else Math.round(m).toString()
+
+/** Starting the guidance: the position and the plot both in view, else the plot alone. */
+private fun montrer(mapView: MapView, fix: FixGnss?, pl: PlacetteCarte) {
+    if (fix == null) {
+        if (mapView.zoomLevelDouble < 17) mapView.controller.setZoom(17.0)
+        mapView.controller.animateTo(GeoPoint(pl.lat, pl.lon))
+        return
+    }
+    val lat = fix.position.latitude; val lon = fix.position.longitude
+    val m = 0.0004
+    mapView.zoomToBoundingBox(BoundingBox(maxOf(lat, pl.lat) + m, maxOf(lon, pl.lon) + m, minOf(lat, pl.lat) - m, minOf(lon, pl.lon) - m), true)
 }
 
 private fun cadrer(mapView: MapView, d: DonneesCarte, anime: Boolean) {

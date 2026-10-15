@@ -22,6 +22,8 @@ class CarteTest {
         val p1 = d.placettes.first()
         assertEquals("provisoire", p1.etat)
         assertEquals(20.0, p1.rayonM)
+        assertEquals("deg", p1.uniteAzimut)
+        assertEquals(2.4, p1.declinaisonDeg)
         val (lon, lat) = Projections.versWgs84(p1.x, p1.y)
         assertEquals(lon to lat, p1.lon to p1.lat)
         assertEquals(listOf("P001", "P002"), d.parcours.map { it.plotId })
