@@ -56,10 +56,12 @@ reconstruction en sous-bois.
 ## Points ouverts
 
 1. **Android 11+ et QField** : QField travaille sur sa copie privée
-   importée, que Groma ne peut pas ouvrir. Voie proposée : un plugin de
-   projet QField lit les détections que Groma expose sur 127.0.0.1 et les
-   écrit lui-même (voir `docs/terrain.md`). **À prototyper sur appareil**
-   (API d'ajout d'entités et accès réseau d'un plugin non vérifiés).
+   importée, que Groma ne peut pas ouvrir. Prototype écrit : plugin de
+   projet `qfield/inventaire_video.qml` (détections et centres mesurés lus
+   sur `127.0.0.1:8765/inventaire/<projet_id>`, ajoutés par QField),
+   projet de test `qfield/creer_projet_test.py` ; API vérifiées dans le
+   source de QField. **Reste à l'essayer sur appareil** (QField à installer
+   sur le S23).
 2. **NTRIP en forêt** : client NTRIP intégré à QField ≥ 4.2 ; sans 4G, il
    faut un repli PPK (UBX brut + RTKLIB). Les identifiants Centipède sont à
    vérifier.

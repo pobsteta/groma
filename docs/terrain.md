@@ -277,14 +277,42 @@ fichiers. Groma ne peut donc pas écrire directement dans le GeoPackage que
 QField édite. Le protocole ci-dessus reste valable, mais il faut un
 transport entre les deux bacs à sable. Options, par ordre de préférence :
 
-1. **Plugin de projet QField** (`inventaire_video.qml`, livré dans le `.qgz`
-   à côté du `.qgs` : QField le charge après accord de l'utilisateur). Il lit
-   les détections provisoires exposées par Groma sur `http://127.0.0.1:8765/detections/<projet_id>/<plot_id>`
-   (`/detections/<plot_id>` reste servi quand un seul projet a cette placette)
-   (`ServeurLocal.kt`) et les écrit dans la couche `detections` **par QField
-   lui-même**, ce qui déclenche les mêmes déclencheurs. Un seul processus
-   écrit alors dans le fichier. **À valider sur appareil** : accès réseau
-   local et API d'ajout d'entités depuis un plugin.
+1. **Plugin de projet QField** (`qfield/inventaire_video.qml`, prototype).
+   Copié à côté du projet sous le nom `<projet>.qml` (pas *dans* le
+   `.qgz` : QField le cherche sur le disque ; dans un `.zip` importé, le
+   mettre à côté du `.qgz`), il est chargé à l'ouverture du projet après
+   accord de l'utilisateur (« Remember my choice » ; l'accord est à
+   redonner si le projet est réimporté ailleurs). Il ajoute un bouton à la
+   barre des plugins. Un appui :
+   * lit `projet_id` dans la couche `projet` ;
+   * appelle `http://127.0.0.1:8765/inventaire/<projet_id>`
+     (`ServeurLocal.kt`) : détections provisoires de toutes les placettes
+     (exports des captures) et dernier centre mesuré de chaque placette (copie
+     de travail de Groma), en Lambert-93 ;
+   * ajoute **par QField lui-même** les détections absentes (clé `uuid`) à
+     `detections` et les centres absents (clé `plot_id` + `date_mesure`) à
+     `centres_mesures`, en une édition validée par couche : les
+     déclencheurs du GeoPackage créent les lignes `arbres` comme pour une
+     écriture directe, et un seul processus écrit dans le fichier ;
+   * n'écrit rien si la couche est déjà en cours d'édition (il ne valide
+     jamais les modifications de quelqu'un d'autre), et affiche un bilan.
+
+   Groma doit être ouvert sur le téléphone (son serveur local vit avec
+   l'application). API vérifiées dans le source de QField 3.7 à 4.3
+   (`FeatureUtils.createFeature`, `LayerUtils.addFeature`,
+   `iface.createHttpRequest` à partir de 4.1, sinon `XMLHttpRequest` ;
+   trafic HTTP en clair autorisé par QField). **À valider sur appareil.**
+
+   Projet de test, en attendant celui de nemeton
+   (`creer_projet_inventaire_video()`) :
+
+   ```bash
+   python3 qfield/creer_projet_test.py <dossier du projet>   # PyQGIS requis
+   adb push <dossier du projet> /sdcard/Download/qfield-test/
+   ```
+
+   puis, dans QField, « Ouvrir un projet local » → « Importer un projet
+   depuis un dossier ».
 2. Groma écrit dans sa propre copie, puis l'utilisateur exporte vers QField.
    À écarter : QField réimporte et écrase sa copie, donc la saisie en cours.
 3. Android ≤ 10, ou QField configuré sur un dossier partagé : écriture

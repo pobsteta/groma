@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        ServeurLocal.demarrerUneFois(File(filesDir, "detections"))
+        ServeurLocal.demarrerUneFois(File(filesDir, "detections"), File(getExternalFilesDir(null), "projets"))
         val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
         configurerOsmdroid(this, version)
         setContent {
