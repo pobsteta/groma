@@ -169,6 +169,12 @@ fun SectionRtk() {
         Text(stringResource(R.string.rtk_diag_flux, etat.ggaEnvoye, etat.rtcmEnvoye), style = MaterialTheme.typography.bodySmall)
     }
 
+    // Length of the centre measurement (averaged RTK fixed fixes).
+    Text(stringResource(R.string.rtk_duree_centre), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        listOf(5, 10, 30, 60).forEach { s -> Choix("$s s", rtk.dureeCentreS == s) { maj(rtk.copy(dureeCentreS = s)) } }
+    }
+
     if (choixAppareil) {
         val appareils = remember { appareilsAppaires(ctx) }
         AlertDialog(

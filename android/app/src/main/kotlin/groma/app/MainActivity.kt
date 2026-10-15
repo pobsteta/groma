@@ -108,6 +108,9 @@ class MainActivity : AppCompatActivity() {
                             donnees = donnees,
                             onRetour = { carte = false },
                             onOuvrirPlacette = ::demanderPlacette,
+                            onEnregistrerCentre = { plotId, centre ->
+                                withContext(Dispatchers.IO) { ouvert.ajouterCentre(plotId, centre) }.also { rafraichir++ }
+                            },
                         )
                     }
                     ouvert != null -> {

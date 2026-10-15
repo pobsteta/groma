@@ -100,7 +100,8 @@ data class DonneesCarte(
                     l["unite_azimut"] as? String ?: "deg", (l["declinaison_deg"] as? Number)?.toDouble(),
                 )
             }
-            val centres = if (!table(db, "centres_mesures")) emptyList() else GeoPackage.lirePoints(db, "centres_mesures").mapNotNull { l ->
+            // A plot measured again has several centres: the latest (highest fid) counts.
+            val centres = if (!table(db, "centres_mesures")) emptyList() else GeoPackage.dernierCentreParPlacette(db).mapNotNull { l ->
                 val x = l["x"] as? Double ?: return@mapNotNull null
                 val y = l["y"] as? Double ?: return@mapNotNull null
                 val id = l["plot_id"]?.toString() ?: return@mapNotNull null

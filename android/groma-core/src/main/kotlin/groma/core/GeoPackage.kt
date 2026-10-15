@@ -105,6 +105,41 @@ object GeoPackage {
 
     fun maintenant(): String = Instant.now().truncatedTo(ChronoUnit.MILLIS).toString()
 
+    /**
+     * Appends an RTK centre measured in Groma to `centres_mesures` (brief carte
+     * RTK, § 5.4). A centre is never rewritten: a new measurement adds a row,
+     * and the latest one counts. The layer has GDAL's R*Tree index, whose
+     * triggers call ST_IsEmpty, missing from Android's SQLite: they are set
+     * aside for the insert, the index row written here, and the triggers put
+     * back unchanged, all in one transaction. Returns the new fid.
+     */
+    fun ajouterCentreMesure(
+        db: BaseSqlite, plotId: String, x: Double, y: Double, qualite: String, precisionM: Double,
+        ecartPrevuM: Double?, date: String = maintenant(),
+    ): Long = db.transactionImmediate {
+        val declencheurs = db.requete(
+            "SELECT name, sql FROM sqlite_master WHERE type = 'trigger' AND tbl_name = 'centres_mesures' AND name LIKE 'rtree_%'",
+        )
+        for (d in declencheurs) db.executer("DROP TRIGGER \"${d["name"]}\"")
+        db.executer(
+            "INSERT INTO centres_mesures ($GEOMETRIE, plot_id, qualite_gnss, precision_h_m, ecart_prevu_m, date_mesure) VALUES (?, ?, ?, ?, ?, ?)",
+            listOf(encoderPoint(x, y), plotId, qualite, precisionM, ecartPrevuM, date),
+        )
+        val fid = (db.requete("SELECT last_insert_rowid() AS fid").single()["fid"] as Number).toLong()
+        val rtree = "rtree_centres_mesures_$GEOMETRIE"
+        if (db.requete("SELECT 1 AS un FROM sqlite_master WHERE name = ?", listOf(rtree)).isNotEmpty()) {
+            db.executer("INSERT OR REPLACE INTO $rtree VALUES (?, ?, ?, ?, ?)", listOf(fid, x, x, y, y))
+        }
+        for (d in declencheurs) db.executer(d["sql"] as String)
+        fid
+    }
+
+    /** Latest row of `centres_mesures` for each plot (or for [plotId] only): highest fid. */
+    fun dernierCentreParPlacette(db: BaseSqlite, plotId: String? = null): List<Map<String, Any?>> =
+        lirePoints(db, "centres_mesures", plotId)
+            .groupBy { it["plot_id"]?.toString() }
+            .mapNotNull { (_, lignes) -> lignes.maxByOrNull { (it["fid"] as Number).toLong() } }
+
     /** Insert or update detections keyed by uuid. Returns (inserted, updated). */
     fun ecrireDetections(db: BaseSqlite, detections: List<Detection>): Pair<Int, Int> = db.transactionImmediate {
         var inseres = 0
