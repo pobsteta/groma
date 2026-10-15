@@ -8,7 +8,7 @@ pyogrio = pytest.importorskip("pyogrio")
 from shapely.geometry import Point
 
 from groma.gpkg import lire_points
-from groma.preparer import lire_metadonnees, lire_parcelles, lire_plan, main, preparer_projet
+from groma.preparer import lire_metadonnees, lire_parcelles, lire_plan, lire_ugf, main, preparer_projet
 
 
 @pytest.fixture
@@ -117,6 +117,18 @@ def projet_nemetonshiny(plan, tmp_path):
     pyogrio.write_dataframe(parcelles, racine / "data" / "parcels.gpkg", layer="parcels", driver="GPKG")
     communes = gpd.GeoDataFrame({"code": ["21200"], "nom": ["Couchey"]}, geometry=[box(924000, 6699000, 926000, 6701000)], crs=2154)
     pyogrio.write_dataframe(communes, racine / "data" / "commune.gpkg", layer="commune", driver="GPKG")
+    # Two UGs: parcel 30 alone (ONF number 10), parcel 36 split in two tenements (ONF number 2).
+    tenements = gpd.GeoDataFrame(
+        {"tenement_id": ["t1", "t2", "t3"], "parent_parcelle_id": ["212000000A0036", "212000000A0036", "212000000A0030"],
+         "ug_id": ["ug_b", "ug_b", "ug_a"], "surface_m2": [6000.0, 4000.0, 5000.0]},
+        geometry=[box(925000, 6700000, 925060, 6700100), box(925060, 6700000, 925100, 6700100), box(925100, 6700000, 925150, 6700100)],
+        crs=2154,
+    ).to_crs(4326)
+    pyogrio.write_dataframe(tenements, racine / "data" / "tenements.gpkg", layer="tenements", driver="GPKG")
+    (racine / "data" / "ugs.json").write_text(json.dumps({
+        "ug_id": ["ug_a", "ug_b"], "label": ["Forêt communale de Couchey — parcelle 10", "Forêt communale de Couchey — parcelle 2"],
+        "groupe": [None, None], "onf_foret_nom": ["Forêt communale de Couchey"] * 2, "onf_parcelle": ["10", "2"],
+    }), "utf-8")
     return racine / "data" / "samples.gpkg"
 
 
@@ -164,6 +176,25 @@ def test_parcelles_copiees(projet_nemetonshiny, tmp_path, monkeypatch):
     assert p.area.sum() == pytest.approx(15000, rel=1e-3)
     # Outside a nemetonshiny project: no parcels, empty layer.
     assert lire_parcelles(tmp_path / "ailleurs" / "samples.gpkg") is None
+
+
+def test_ugf_copiees(projet_nemetonshiny, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    main([str(projet_nemetonshiny), "--rayon", "15", "--declinaison", "2"])
+    u = gpd.read_file(tmp_path / "20261008_212542_uywc" / "inventaire_video.gpkg", layer="ugf")
+    # Tenements merged by UG, ONF numbers in natural order (2 before 10).
+    assert u["ug_id"].tolist() == ["ug_b", "ug_a"] and u["parcelle_onf"].tolist() == ["2", "10"]
+    assert u.loc[0, "libelle"] == "Forêt communale de Couchey — parcelle 2" and u.loc[0, "foret"] == "Forêt communale de Couchey"
+    assert u.loc[0, "surface_m2"] == 10000 and u.crs.to_epsg() == 2154 and set(u.geom_type) == {"MultiPolygon"}
+    assert u.area.round().tolist() == [10000, 5000]
+    assert lire_ugf(tmp_path / "ailleurs" / "samples.gpkg") is None
+
+
+def test_ugf_sans_attributs(projet_nemetonshiny):
+    # Without ugs.json the outlines still come, without labels.
+    (projet_nemetonshiny.parent / "ugs.json").unlink()
+    u = lire_ugf(projet_nemetonshiny)
+    assert sorted(u["ug_id"]) == ["ug_a", "ug_b"] and "libelle" not in u.columns
 
 
 def test_ligne_de_commande_hors_projet(plan, tmp_path):

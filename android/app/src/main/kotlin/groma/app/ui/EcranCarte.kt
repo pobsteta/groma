@@ -58,7 +58,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import groma.app.R
 import groma.app.carte.Boussole
-import groma.app.carte.CoucheParcelles
+import groma.app.carte.Forme
+import groma.app.carte.coucheParcelles
+import groma.app.carte.coucheUgf
 import groma.app.carte.CouchePosition
 import groma.app.carte.CouchePlacettes
 import groma.app.carte.Fond
@@ -80,8 +82,8 @@ import org.osmdroid.views.overlay.TilesOverlay
 
 /**
  * Map of one project (brief 2026-10-14 carte RTK, § 3 and § 5.1): IGN or OSM
- * base map, IGN cadastre, parcels, visiting route, plots by state, measured
- * centres. A tap on a plot opens its sheet. Position (RTK receiver or phone),
+ * base map, IGN cadastre, parcels, management units (UGF), visiting route,
+ * plots by state, measured centres. A tap on a plot opens its sheet. Position (RTK receiver or phone),
  * fix badge and follow mode (§ 5.1, § 6).
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -100,6 +102,7 @@ fun EcranCarte(
     var coucheParcours by rememberSaveable { mutableStateOf(true) }
     var coucheCentres by rememberSaveable { mutableStateOf(true) }
     var coucheParcelles by rememberSaveable { mutableStateOf(true) }
+    var coucheUgf by rememberSaveable { mutableStateOf(true) }
     var menu by remember { mutableStateOf(false) }
     var choisie by remember { mutableStateOf<PlacetteCarte?>(null) }
     val densite = ctx.resources.displayMetrics.density
@@ -110,7 +113,8 @@ fun EcranCarte(
 
     val placettes = remember { CouchePlacettes(densite) { choisie = it } }
     val position = remember { CouchePosition(densite) }
-    val parcelles = remember { CoucheParcelles(densite) }
+    val parcelles = remember { coucheParcelles(densite) }
+    val ugf = remember { coucheUgf(densite) }
     val couchCadastre = remember {
         TilesOverlay(MapTileProviderBasic(ctx.applicationContext, SOURCE_CADASTRE), ctx.applicationContext).apply {
             loadingBackgroundColor = android.graphics.Color.TRANSPARENT
@@ -127,6 +131,7 @@ fun EcranCarte(
             controller.setCenter(GeoPoint(46.6, 2.5))
             overlays += couchCadastre
             overlays += parcelles
+            overlays += ugf
             overlays += placettes
             overlays += position
             overlays += ScaleBarOverlay(this).apply { setAlignBottom(true) }
@@ -187,7 +192,7 @@ fun EcranCarte(
         prefs.edit().putBoolean(PREF_CADASTRE, cadastre).apply()
         mapView.invalidate()
     }
-    LaunchedEffect(donnees, couchePlacettes, coucheParcours, coucheCentres, coucheParcelles, choisie) {
+    LaunchedEffect(donnees, couchePlacettes, coucheParcours, coucheCentres, coucheParcelles, coucheUgf, choisie) {
         placettes.placettes = donnees?.placettes.orEmpty()
         placettes.parcours = donnees?.parcours.orEmpty()
         placettes.centres = donnees?.centres.orEmpty()
@@ -195,8 +200,10 @@ fun EcranCarte(
         placettes.afficherParcours = coucheParcours
         placettes.afficherCentres = coucheCentres
         placettes.selection = choisie?.plotId
-        parcelles.parcelles = donnees?.parcelles.orEmpty()
+        parcelles.formes = donnees?.parcelles.orEmpty().map { Forme(it.polygones, it.etiquette, it.centreEtiquette) }
         parcelles.isEnabled = coucheParcelles
+        ugf.formes = donnees?.ugf.orEmpty().map { Forme(it.polygones, it.etiquette, it.centreEtiquette) }
+        ugf.isEnabled = coucheUgf
         mapView.invalidate()
     }
     // First framing on the project, once the data is there.
@@ -228,6 +235,7 @@ fun EcranCarte(
                         Case(stringResource(R.string.carte_parcours, n?.parcours?.size ?: 0), coucheParcours) { coucheParcours = it }
                         Case(stringResource(R.string.carte_centres, n?.centres?.size ?: 0), coucheCentres) { coucheCentres = it }
                         Case(stringResource(R.string.carte_parcelles, n?.parcelles?.size ?: 0), coucheParcelles) { coucheParcelles = it }
+                        Case(stringResource(R.string.carte_ugf, n?.ugf?.size ?: 0), coucheUgf) { coucheUgf = it }
                         Case(stringResource(R.string.carte_cadastre), cadastre) { cadastre = it }
                     }
                 }

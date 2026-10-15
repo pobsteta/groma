@@ -78,6 +78,7 @@ Dépose chaque projet dans le dossier des projets, dans un sous-dossier qui port
     <string name="carte_parcours">Parcours (%1$d placettes)</string>
     <string name="carte_centres">Centres mesurés (%1$d)</string>
     <string name="carte_parcelles">Parcelles (%1$d)</string>
+    <string name="carte_ugf">UGF (%1$d)</string>
     <string name="carte_cadastre">Cadastre IGN</string>
     <string name="carte_cadrer">Cadrer le projet</string>
     <string name="carte_type_base">Base</string>

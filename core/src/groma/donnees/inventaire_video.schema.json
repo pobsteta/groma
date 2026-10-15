@@ -153,6 +153,21 @@
       ]
     },
     {
+      "nom": "ugf",
+      "geometrie": "MULTIPOLYGON",
+      "index_spatial": false,
+      "lecture_seule": true,
+      "remarque": "Parcellaire des unités de gestion forestière (UGF) du projet nemetonshiny : ténements de data/tenements.gpkg fusionnés par ug_id, attributs de data/ugs.json. Copié par groma-preparer pour la carte de Groma. Vide quand le plan ne vient pas d'un projet nemetonshiny ; absente des GeoPackages préparés avant. Pas d'index spatial, comme parcelles.",
+      "colonnes": [
+        {"nom": "ug_id", "type": "TEXT", "requis": true, "remarque": "Identifiant de l'UG dans nemetonshiny."},
+        {"nom": "libelle", "type": "TEXT", "remarque": "« Forêt communale de Couchey — parcelle 10 »."},
+        {"nom": "groupe", "type": "TEXT"},
+        {"nom": "foret", "type": "TEXT", "remarque": "Forêt ONF (onf_foret_nom)."},
+        {"nom": "parcelle_onf", "type": "TEXT", "remarque": "Numéro de parcelle forestière ONF, étiquette sur la carte."},
+        {"nom": "surface_m2", "type": "REAL", "min": 0, "remarque": "Somme des surfaces des ténements."}
+      ]
+    },
+    {
       "nom": "projet",
       "geometrie": null,
       "lecture_seule": true,

@@ -185,6 +185,25 @@ object GeoPackage {
         }
     }
 
+    /**
+     * The `ugf` layer (forest management units), Lambert-93: empty when the
+     * GeoPackage was prepared before it existed or holds no unit.
+     */
+    fun lireUgf(db: BaseSqlite): List<Ugf> {
+        if (db.requete("SELECT 1 AS un FROM sqlite_master WHERE type = 'table' AND name = 'ugf'").isEmpty()) return emptyList()
+        return db.requete("SELECT * FROM ugf ORDER BY fid").mapNotNull { l ->
+            val g = l[GEOMETRIE] as? ByteArray ?: return@mapNotNull null
+            Ugf(
+                ugId = l["ug_id"]?.toString() ?: return@mapNotNull null,
+                libelle = l["libelle"] as? String,
+                foret = l["foret"] as? String,
+                parcelleOnf = l["parcelle_onf"] as? String,
+                surfaceM2 = (l["surface_m2"] as? Number)?.toDouble(),
+                polygones = decoderPolygones(g),
+            )
+        }
+    }
+
     fun mettreAJourEtat(db: BaseSqlite, plotId: String, etat: String) {
         require(etat in setOf("a_faire", "provisoire", "envoye", "definitif"))
         db.transactionImmediate { db.executer("UPDATE placettes SET etat_traitement = ? WHERE plot_id = ?", listOf(etat, plotId)) }
@@ -194,6 +213,12 @@ object GeoPackage {
 /** Cadastral parcel of the `parcelles` layer: polygons → rings → points, Lambert-93. */
 data class Parcelle(
     val idu: String, val commune: String?, val section: String?, val numero: String?, val contenanceM2: Double?,
+    val polygones: List<List<List<Pair<Double, Double>>>>,
+)
+
+/** Forest management unit of the `ugf` layer: ONF parcel number, polygons in Lambert-93. */
+data class Ugf(
+    val ugId: String, val libelle: String?, val foret: String?, val parcelleOnf: String?, val surfaceM2: Double?,
     val polygones: List<List<List<Pair<Double, Double>>>>,
 )
 

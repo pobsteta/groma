@@ -39,8 +39,8 @@ def test_schema_noms_nmt():
 
 def test_couches_et_colonnes(gpkg):
     couches = dict(pyogrio.list_layers(gpkg))
-    assert set(couches) == {"placettes", "centres_mesures", "cibles", "arbres", "detections", "houppiers", "parcelles", "projet"}
-    assert couches["parcelles"] == "MultiPolygon"
+    assert set(couches) == {"placettes", "centres_mesures", "cibles", "arbres", "detections", "houppiers", "parcelles", "ugf", "projet"}
+    assert couches["parcelles"] == couches["ugf"] == "MultiPolygon"
     assert couches["projet"] is None  # non-spatial table
     p = gpd.read_file(gpkg, layer="placettes")
     assert list(p.columns[:-1]) == noms_colonnes("placettes")
@@ -106,6 +106,7 @@ def test_couche_parcelles(tmp_path):
     # Without parcels: empty layer, same columns.
     g = creer_gpkg(tmp_path / "b.gpkg", placettes)
     assert len(gpd.read_file(g, layer="parcelles")) == 0
+    assert list(gpd.read_file(g, layer="ugf").columns[:-1]) == noms_colonnes("ugf")
 
 
 def test_geometrie_point_aller_retour():

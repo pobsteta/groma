@@ -8,7 +8,6 @@ import android.graphics.Path
 import android.graphics.Point
 import android.view.MotionEvent
 import groma.core.CentreCarte
-import groma.core.ParcelleCarte
 import groma.core.PlacetteCarte
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -26,40 +25,59 @@ fun couleurEtat(etat: String): Int = when (etat) {
 
 private fun Projection.pixels(lon: Double, lat: Double, p: Point = Point()): Point = toPixels(GeoPoint(lat, lon), p)
 
-/** Cadastral parcels: outline, light fill, "section number" label from zoom 15. */
-class CoucheParcelles(private val densite: Float) : Overlay() {
-    var parcelles: List<ParcelleCarte> = emptyList()
+/** Polygon with its label, in WGS 84 (parcel or management unit). */
+class Forme(val polygones: List<List<List<Pair<Double, Double>>>>, val etiquette: String, val centre: Pair<Double, Double>)
 
-    private val contour = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 2f * densite; color = Color.rgb(0xFF, 0xD5, 0x4F) }
-    private val remplissage = Paint().apply { style = Paint.Style.FILL; color = Color.argb(0x22, 0xFF, 0xD5, 0x4F) }
-    private val texte = etiquette(densite, 12f)
+/**
+ * Outlined polygons with a label from [zoomEtiquettes]: cadastral parcels
+ * (yellow, light fill) and management units (green, thicker, no fill).
+ */
+class CouchePolygones(
+    densite: Float, trait: Int, epaisseurDp: Float, fond: Int?, tailleTexte: Float, gras: Boolean,
+    private val zoomEtiquettes: Double,
+) : Overlay() {
+    var formes: List<Forme> = emptyList()
+
+    private val contour = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = epaisseurDp * densite; color = trait }
+    private val remplissage = fond?.let { Paint().apply { style = Paint.Style.FILL; color = it } }
+    private val texte = etiquette(densite, tailleTexte).apply { isFakeBoldText = gras }
     private val halo = halo(texte, densite)
     private val p = Point()
 
     override fun draw(c: Canvas, mapView: MapView, shadow: Boolean) {
         if (shadow) return
         val proj = mapView.projection
-        for (parcelle in parcelles) {
+        for (forme in formes) {
             val chemin = Path().apply { fillType = Path.FillType.EVEN_ODD }
-            for (polygone in parcelle.polygones) for (anneau in polygone) {
+            for (polygone in forme.polygones) for (anneau in polygone) {
                 anneau.forEachIndexed { i, (lon, lat) ->
                     proj.pixels(lon, lat, p)
                     if (i == 0) chemin.moveTo(p.x.toFloat(), p.y.toFloat()) else chemin.lineTo(p.x.toFloat(), p.y.toFloat())
                 }
                 chemin.close()
             }
-            c.drawPath(chemin, remplissage)
+            remplissage?.let { c.drawPath(chemin, it) }
             c.drawPath(chemin, contour)
         }
-        if (mapView.zoomLevelDouble < 15) return
-        for (parcelle in parcelles) {
-            val (lon, lat) = parcelle.centreEtiquette
+        if (mapView.zoomLevelDouble < zoomEtiquettes) return
+        for (forme in formes) {
+            val (lon, lat) = forme.centre
             proj.pixels(lon, lat, p)
-            c.drawText(parcelle.etiquette, p.x.toFloat(), p.y.toFloat(), halo)
-            c.drawText(parcelle.etiquette, p.x.toFloat(), p.y.toFloat(), texte)
+            c.drawText(forme.etiquette, p.x.toFloat(), p.y.toFloat(), halo)
+            c.drawText(forme.etiquette, p.x.toFloat(), p.y.toFloat(), texte)
         }
     }
 }
+
+/** Cadastral parcels: yellow outline, light fill, "section number" label from zoom 15. */
+fun coucheParcelles(densite: Float) = CouchePolygones(
+    densite, Color.rgb(0xFF, 0xD5, 0x4F), 2f, Color.argb(0x22, 0xFF, 0xD5, 0x4F), 12f, gras = false, zoomEtiquettes = 15.0,
+)
+
+/** Management units (UGF): thick green outline over the parcels, ONF number from zoom 13. */
+fun coucheUgf(densite: Float) = CouchePolygones(
+    densite, Color.rgb(0x64, 0xDD, 0x17), 3f, null, 14f, gras = true, zoomEtiquettes = 13.0,
+)
 
 /**
  * Visiting route, plots and measured centres, drawn in one pass (a hundred

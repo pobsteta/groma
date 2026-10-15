@@ -7,7 +7,8 @@ RTK centre and the three targets, then:
 * P001: provisional detections written with the phone protocol
   (``ecrire_detections``), and field attributes typed "in QField";
 * P002: still to do;
-* one cadastral parcel in two parts (the first with a hole) for the map.
+* one cadastral parcel in two parts (the first with a hole) for the map,
+  each part a forest management unit (``ugf``).
 
 Also writes the definitive server result of P001
 (``resultats/P001_definitif.gpkg``), noisier positions removed, used by the
@@ -103,6 +104,16 @@ def main() -> None:
             ])],
             crs=2154,
         ),
+        # Each part of the parcel is a management unit, ONF numbers 1 and 2.
+        ugf=gpd.GeoDataFrame(
+            {"ug_id": ["ug_001", "ug_002"], "libelle": ["Forêt d'exemple — parcelle 1", "Forêt d'exemple — parcelle 2"],
+             "foret": ["Forêt d'exemple"] * 2, "parcelle_onf": ["1", "2"], "surface_m2": [60000.0, 50000.0]},
+            geometry=[
+                Polygon([(924900, 6699900), (925100, 6699900), (925100, 6700200), (924900, 6700200)]),
+                Polygon([(925100, 6699950), (925300, 6699950), (925300, 6700200), (925100, 6700200)]),
+            ],
+            crs=2154,
+        ),
         projet={
             "projet_id": "exemple_synthetique",
             "projet_nom": "Forêt d'exemple (synthétique)",
@@ -110,7 +121,7 @@ def main() -> None:
             "communes": "Exemple (00000)",
             "surface_zone_ha": 12.5,
             "nb_parcelles": 1,
-            "nb_ug": 1,
+            "nb_ug": 2,
             "plan_genere_le": "2026-10-12 08:00:00",
             "prepare_le": "2026-10-12 09:00:00",
             "prepare_par": "exemples/creer_exemple.py",

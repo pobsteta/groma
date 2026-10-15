@@ -7,9 +7,10 @@ Bridge until nemeton delivers ``creer_projet_inventaire_video()`` (brief
 ``inventaire_video.gpkg`` with :func:`groma.gpkg.creer_gpkg`. No raster:
 DEM, CHM and crowns stay with nemeton.
 
-Inside a nemetonshiny project, ``metadata.json`` and ``data/parcels.gpkg``
-are read (never written) to fill the ``projet`` table shown by the phone's
-project list (brief 2026-10-13) and the ``parcelles`` layer shown on its map
+Inside a nemetonshiny project, ``metadata.json``, ``data/parcels.gpkg``,
+``data/tenements.gpkg`` and ``data/ugs.json`` are read (never written) to
+fill the ``projet`` table shown by the phone's project list (brief
+2026-10-13) and the ``parcelles`` and ``ugf`` layers shown on its map
 (brief 2026-10-14), and the output folder defaults to ``./<projet_id>``, the
 name the folder must keep on the phone.
 
@@ -137,6 +138,51 @@ def lire_parcelles(chemin_plan: str | Path):
     return p
 
 
+def lire_ugf(chemin_plan: str | Path):
+    """``ugf`` layer: ``data/tenements.gpkg`` merged by ``ug_id``, attributes from ``data/ugs.json``, or None.
+
+    A nemetonshiny UG is a set of tenements (parts of cadastral parcels);
+    its outline is their union. None outside a nemetonshiny project or when
+    the files cannot be read: the map then goes without it.
+    """
+    import geopandas as gpd
+    import pandas as pd
+    import pyogrio
+
+    data = Path(chemin_plan).resolve().parent
+    f = data / "tenements.gpkg"
+    if not f.is_file():
+        return None
+    try:
+        t = pyogrio.read_dataframe(f)
+        ugs = json.loads((data / "ugs.json").read_text("utf-8")) if (data / "ugs.json").is_file() else {}
+    except Exception as e:  # like the parcels, a convenience only
+        log.warning("UGF non lues (%s) : %s", f, e)
+        return None
+    if t.crs is None or t.empty or "ug_id" not in t.columns:
+        return None
+    t = t[t["ug_id"].notna()].to_crs(2154)
+    t["geometry"] = t.geometry.make_valid()
+    ug = t.dissolve(by="ug_id", aggfunc={"surface_m2": "sum"} if "surface_m2" in t.columns else "first", as_index=False)
+    # ugs.json holds columns (nemetonshiny's data frame written by jsonlite).
+    a = pd.DataFrame(ugs) if isinstance(ugs, dict) else pd.DataFrame(list(ugs))
+    noms = {"label": "libelle", "groupe": "groupe", "onf_foret_nom": "foret", "onf_parcelle": "parcelle_onf"}
+    if "ug_id" in a.columns:
+        a = a.rename(columns=noms)
+        a = a[["ug_id"] + [c for c in noms.values() if c in a.columns]]
+        ug = ug.merge(a, on="ug_id", how="left")
+    colonnes = ["ug_id", *noms.values(), "surface_m2"]
+    ug = ug[[c for c in colonnes if c in ug.columns] + ["geometry"]]
+    for c in ("ug_id", *noms.values()):
+        if c in ug.columns:
+            ug[c] = ug[c].astype("string").astype(object)
+    # Natural order of the ONF numbers: 1, 2, 10 rather than 1, 10, 2.
+    if "parcelle_onf" in ug.columns:
+        cle = pd.to_numeric(ug["parcelle_onf"], errors="coerce")
+        ug = ug.assign(_n=cle).sort_values(["_n", "ug_id"]).drop(columns="_n")
+    return gpd.GeoDataFrame(ug.reset_index(drop=True), geometry="geometry", crs=2154)
+
+
 def preparer_projet(
     plan,
     sortie: str | Path,
@@ -149,6 +195,7 @@ def preparer_projet(
     ecraser: bool = False,
     projet: dict | None = None,
     parcelles=None,
+    ugf=None,
 ) -> Path:
     """Write ``<sortie>/inventaire_video.gpkg`` from a plan GeoDataFrame.
 
@@ -159,7 +206,7 @@ def preparer_projet(
 
     ``projet``: row of the ``projet`` table (see :func:`lire_metadonnees`);
     ``projet_id`` and ``projet_nom`` default to the output folder name.
-    ``parcelles``: see :func:`lire_parcelles`.
+    ``parcelles``, ``ugf``: see :func:`lire_parcelles` and :func:`lire_ugf`.
     """
     for nom, valeur in (("rayon_m", rayon_m), ("seuil_diam_cm", seuil_diam_cm), ("declinaison_deg", declinaison_deg)):
         lo, hi = _bornes(nom)
@@ -200,7 +247,7 @@ def preparer_projet(
     if gpkg.exists() and not ecraser:
         raise FileExistsError(f"{gpkg} existe déjà (données terrain possibles) : choisir un autre dossier ou --ecraser.")
     sortie.mkdir(parents=True, exist_ok=True)
-    creer_gpkg(gpkg, p.reset_index(drop=True), projet=ligne, parcelles=parcelles)
+    creer_gpkg(gpkg, p.reset_index(drop=True), projet=ligne, parcelles=parcelles, ugf=ugf)
     log.info("%d placettes, rayon %s m : %s", len(p), rayon_m, gpkg)
     return gpkg
 
@@ -249,6 +296,7 @@ def main(argv: Sequence[str] | None = None) -> None:
             ecraser=args.ecraser,
             projet=projet,
             parcelles=lire_parcelles(args.plan),
+            ugf=lire_ugf(args.plan),
         )
     except (ValueError, FileExistsError) as e:
         a.error(str(e))
