@@ -301,7 +301,9 @@ transport entre les deux bacs à sable. Options, par ordre de préférence :
    l'application). API vérifiées dans le source de QField 3.7 à 4.3
    (`FeatureUtils.createFeature`, `LayerUtils.addFeature`,
    `iface.createHttpRequest` à partir de 4.1, sinon `XMLHttpRequest` ;
-   trafic HTTP en clair autorisé par QField). **À valider sur appareil.**
+   trafic HTTP en clair autorisé par QField). Essayé le 2026-10-16 sur un
+   Galaxy S23 Ultra avec QField 4.3.5 : détections ajoutées. Centres mesurés
+   et détections d'une vraie capture pas encore essayés.
 
    Projet de test, en attendant celui de nemeton
    (`creer_projet_inventaire_video()`) :

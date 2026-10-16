@@ -60,8 +60,10 @@ reconstruction en sous-bois.
    projet `qfield/inventaire_video.qml` (détections et centres mesurés lus
    sur `127.0.0.1:8765/inventaire/<projet_id>`, ajoutés par QField),
    projet de test `qfield/creer_projet_test.py` ; API vérifiées dans le
-   source de QField. **Reste à l'essayer sur appareil** (QField à installer
-   sur le S23).
+   source de QField. **Essayé le 2026-10-16 sur le S23 Ultra (QField 4.3.5)**
+   avec le projet de Couchey : 3 détections de test ajoutées par le plugin.
+   Reste à essayer : second appui (pas de doublon), lignes `arbres` créées
+   par les déclencheurs, centres mesurés, détections d'une vraie capture.
 2. **NTRIP en forêt** : client NTRIP intégré à QField ≥ 4.2 ; sans 4G, il
    faut un repli PPK (UBX brut + RTKLIB). Les identifiants Centipède sont à
    vérifier.
