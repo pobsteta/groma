@@ -17,7 +17,7 @@ Source unique de l'état d'avancement. Mis à jour à chaque étape.
 | 2026-10-12 | Version unique pour tout le dépôt (tags `vX.Y.Z`), montée par release-please à partir des Conventional Commits ; release = wheels, image GHCR, APK | Claude, à valider |
 | 2026-10-12 | Pont `groma-preparer` côté Groma (GeoPackage, sans toucher à nemeton) ; rayon et déclinaison obligatoires, rayon à reprendre du plan | Pascal |
 | 2026-10-12 | Licence du dépôt : GPL-3.0-or-later (alignée sur nemeton), fichier `LICENSE` | Pascal |
-| 2026-10-15 | Déclinaison calculée par WMM2025 (NOAA, embarqué en Python et en Kotlin) quand elle n'est pas fournie à `groma-preparer`, par placette et à la date du jour ; saisie manuelle prioritaire (avertissement au-delà de 1° d'écart). Complète la décision « rayon et déclinaison obligatoires » du 2026-10-12 | Claude, à valider |
+| 2026-10-15 | Déclinaison calculée par WMM2025 (NOAA, embarqué en Python et en Kotlin) quand elle n'est pas fournie à `groma-preparer`, par placette et à la date du jour ; saisie manuelle prioritaire (avertissement au-delà de 1° d'écart). Complète la décision « rayon et déclinaison obligatoires » du 2026-10-12 | Pascal (2026-10-16) |
 
 ## Avancement (ordre de travail du brief)
 
@@ -78,6 +78,10 @@ reconstruction en sous-bois.
 4. Image Docker GPU : COLMAP avec CUDA, VGGT (licence à vérifier), SAM 2.
 5. Première placette réelle : tourner, mesurer à la main, `benchmark/`.
 6. Annexe au brief nemeton (tables `projet`, `parcelles`, `ugf`, plusieurs centres par placette) : `briefs/vers-nemeton/2026-10-15-inventaire-video-carte.md`, déposée le 2026-10-15.
+   Seconde annexe (plugin QField à livrer à côté du projet, noms de couches,
+   ajout d'entités autorisé, `declinaison_deg` vide accepté) :
+   `briefs/vers-nemeton/2026-10-16-inventaire-video-plugin-qfield.md`,
+   déposée le 2026-10-16.
 7. ~~Déposer les briefs~~ : déposés le 2026-10-12 dans
    `/home/pascal/dev/briefs/vers-nemeton/` et `vers-nemetonshiny/`, en
    attente de traitement.
