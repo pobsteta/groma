@@ -13,6 +13,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <!-- Keeps the local endpoint for the QField plugin alive (ServicePartageQfield). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <!-- Prerequisite of a connectedDevice service when the receiver is reached over TCP. -->
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -43,5 +45,13 @@
             android:name=".gnss.ServiceGnssRtk"
             android:exported="false"
             android:foregroundServiceType="connectedDevice" />
+        <service
+            android:name=".ServicePartageQfield"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Serves provisional tree detections on 127.0.0.1 to the QField project plugin while the user edits in QField." />
+        </service>
     </application>
 </manifest>

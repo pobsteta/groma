@@ -34,6 +34,7 @@ class ServeurLocal(private val dossierJson: File, private val dossierCopies: Fil
         thread(name = "groma-local", isDaemon = true) {
             while (!s.isClosed) {
                 val c = try { s.accept() } catch (e: java.io.IOException) { break }
+                derniereRequeteMs = System.currentTimeMillis()
                 c.use {
                     val ligne = it.getInputStream().bufferedReader().readLine() ?: return@use
                     val chemin = ligne.split(" ").getOrNull(1) ?: ""
@@ -108,6 +109,9 @@ class ServeurLocal(private val dossierJson: File, private val dossierCopies: Fil
 
     companion object {
         private var instance: ServeurLocal? = null
+
+        /** Time of the last request (ms), watched by [ServicePartageQfield]. */
+        @Volatile var derniereRequeteMs = 0L
 
         /**
          * Starts the endpoint once per process: the activity is recreated on

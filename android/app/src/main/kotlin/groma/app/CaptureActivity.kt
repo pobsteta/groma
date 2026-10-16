@@ -232,6 +232,7 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
                 if (r.detections.isNotEmpty()) {
                     CalculEmbarque.ecrire(projet, plotId, r.detections)
                     exporterJson(r.detections)
+                    ServicePartageQfield.demarrer(this@CaptureActivity)
                 }
                 val sortie = File(getExternalFilesDir("paquets"), CleProjet.chemin(projet.projetId, plotId, ".groma.zip"))
                 sortie.parentFile!!.mkdirs()
