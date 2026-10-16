@@ -167,14 +167,7 @@ fun EcranProjets(
             dismissButton = { TextButton(onClick = { aRetirer = null }) { Text(stringResource(R.string.annuler)) } },
         )
     }
-    if (aPropos) {
-        AlertDialog(
-            onDismissRequest = { aPropos = false },
-            title = { Text(stringResource(R.string.apropos_titre, version)) },
-            text = { Text(stringResource(R.string.apropos_texte)) },
-            confirmButton = { TextButton(onClick = { aPropos = false }) { Text(stringResource(R.string.fermer)) } },
-        )
-    }
+    if (aPropos) DialogueAPropos(version) { aPropos = false }
 }
 
 /** "350 m", "8,2 km", "27 km". */

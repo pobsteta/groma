@@ -14,7 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.DropdownMenu
@@ -25,7 +24,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -98,14 +96,7 @@ fun EcranPlacettes(
             }
         }
     }
-    if (aPropos) {
-        AlertDialog(
-            onDismissRequest = { aPropos = false },
-            title = { Text(stringResource(R.string.apropos_titre, version)) },
-            text = { Text(stringResource(R.string.apropos_texte)) },
-            confirmButton = { TextButton(onClick = { aPropos = false }) { Text(stringResource(R.string.fermer)) } },
-        )
-    }
+    if (aPropos) DialogueAPropos(version) { aPropos = false }
 }
 
 @Composable

@@ -21,12 +21,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.core.content.pm.PackageInfoCompat
 import groma.app.R
 
 /** Upload settings, saved as they are typed. */
@@ -78,17 +76,6 @@ fun EcranParametres(reglages: Reglages, onChange: (Reglages) -> Unit, onRetour: 
                 Switch(checked = reglages.envoi4g, onCheckedChange = { onChange(reglages.copy(envoi4g = it)) })
             }
             SectionRtk()
-            SectionAPropos()
         }
     }
-}
-
-/** Version installed (from the package, set by release-please), licence, source. */
-@Composable
-private fun SectionAPropos() {
-    val ctx = LocalContext.current
-    val info = ctx.packageManager.getPackageInfo(ctx.packageName, 0)
-    Text(stringResource(R.string.apropos_section), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 16.dp))
-    Text(stringResource(R.string.apropos_version, info.versionName.orEmpty(), PackageInfoCompat.getLongVersionCode(info)))
-    Text(stringResource(R.string.apropos_licence), style = MaterialTheme.typography.bodySmall)
 }
