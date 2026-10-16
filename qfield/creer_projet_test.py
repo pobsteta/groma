@@ -40,7 +40,7 @@ log = logging.getLogger("groma.qfield")
 PLUGIN = Path(__file__).with_name("inventaire_video.qml")
 
 # Drawing order, top first. Missing layers (older GeoPackages) are skipped.
-COUCHES = ["detections", "arbres", "cibles", "centres_mesures", "placettes", "parcelles", "ugf", "projet"]
+COUCHES = ["detections", "arbres", "cibles", "centres_mesures", "placettes", "houppiers", "parcelles", "ugf", "projet"]
 
 # Fields QField must not edit in forms (layer edits by the plugin still work).
 LECTURE_SEULE = {
@@ -85,6 +85,9 @@ def creer(dossier: Path) -> Path:
         couche.setEditFormConfig(cfg)
         symbologie.appliquer(couche)
         projet.addMapLayer(couche)
+        if nom in symbologie.MASQUEES:
+            projet.layerTreeRoot().findLayer(couche.id()).setItemVisibilityChecked(False)
+    symbologie.ajouter_fonds(projet)
     qgs = dossier / "inventaire_video.qgs"
     if not projet.write(str(qgs)):
         raise SystemExit(f"Échec de l'écriture de {qgs}")

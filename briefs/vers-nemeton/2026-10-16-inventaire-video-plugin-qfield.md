@@ -87,6 +87,16 @@ selon `etat_detection` » du § 2.5 :
 * `centres_mesures` : croix `#d500f9` ; `cibles` : carré `#ff6f00` ;
   `detections` : anneau `#f57c00` sans remplissage ; `parcelles` : contour
   `#ffd54f` fin, étiquette `section numero`.
+* `houppiers` : contour seul `#2e7d32` de 0,4 mm, sans remplissage,
+  **masqués** par défaut ;
+* fonds, sous toutes les couches, du haut vers le bas : cadastre IGN
+  (`CADASTRALPARCELS.PARCELLAIRE_EXPRESS`, style `PCI vecteur`, masqué),
+  Plan IGN (`GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2`, affiché), Ortho IGN
+  (`ORTHOIMAGERY.ORTHOPHOTOS`, masqué), OpenStreetMap (masqué). Tuiles WMTS
+  de la Géoplateforme en couche XYZ, grille `PM_0_19`, sans
+  GetCapabilities (voir `qfield/symbologie.py`) ; attributions « © IGN
+  Géoplateforme, Licence Ouverte Etalab 2.0 », « cadastre © IGN »,
+  « © contributeurs OpenStreetMap ».
 
 ## 3. Déclinaison magnétique
 

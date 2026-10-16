@@ -330,7 +330,12 @@ transport entre les deux bacs à sable. Options, par ordre de préférence :
    diamètre, étiquette « numéro – diamètre » ; UGF comme les parcelles
    forestières de Marculus (contour épais, fond à 20 %, une couleur par
    forêt, numéro ONF) ; placettes, centres mesurés, cibles et parcelles
-   cadastrales comme sur la carte de Groma ; détections en anneau orange.
+   cadastrales comme sur la carte de Groma ; détections en anneau orange ;
+   houppiers en contour vert seul, masqués par défaut. Fonds comme Marculus,
+   sous toutes les couches : Plan IGN affiché, Ortho IGN et OpenStreetMap
+   au choix, cadastre IGN (`PCI vecteur`) masqué. Tuiles WMTS de la
+   Géoplateforme lues en XYZ (grille `PM_0_19`, comme la carte de Groma),
+   sans clé.
 2. Groma écrit dans sa propre copie, puis l'utilisateur exporte vers QField.
    À écarter : QField réimporte et écrase sa copie, donc la saisie en cours.
 3. Android ≤ 10, ou QField configuré sur un dossier partagé : écriture
