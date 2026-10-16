@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://github.com/pobsteta/groma/compare/v0.6.0...v0.7.0) (2026-10-16)
+
+
+### Nouveautés
+
+* **android:** build, licence et code source dans « À propos » ([#37](https://github.com/pobsteta/groma/issues/37)) ([dcfe849](https://github.com/pobsteta/groma/commit/dcfe8499b042272de0402718850551fd9e9500d3))
+* **qfield:** symbologie de Marculus pour les couches du projet QField ([#38](https://github.com/pobsteta/groma/issues/38)) ([2909744](https://github.com/pobsteta/groma/commit/2909744077286e40b7b06b5f8563ddd0750e8e90))
+
 ## [0.6.0](https://github.com/pobsteta/groma/compare/v0.5.0...v0.6.0) (2026-10-16)
 
 
