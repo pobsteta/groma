@@ -16,6 +16,8 @@ class Config:
     reconstructeurs: tuple[str, ...] = field(
         default_factory=lambda: tuple(os.environ.get("GROMA_RECONSTRUCTEURS", "colmap,vggt,profondeur").split(","))
     )
+    taille_max_projet: int = field(default_factory=lambda: int(os.environ.get("GROMA_TAILLE_MAX_PROJET", str(500 * 1024**2))))
+    versions_projet: int = field(default_factory=lambda: int(os.environ.get("GROMA_VERSIONS_PROJET", "3")))
     tentatives_max: int = field(default_factory=lambda: int(os.environ.get("GROMA_TENTATIVES_MAX", "2")))
     s3_url: str | None = field(default_factory=lambda: os.environ.get("GROMA_S3_URL") or None)
     s3_bucket: str = field(default_factory=lambda: os.environ.get("GROMA_S3_BUCKET", "groma"))

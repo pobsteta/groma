@@ -14,6 +14,12 @@ Results: ``GET /placettes[?projet_id=]`` (state of every plot),
 ``GET /taches/{id}``,
 ``GET /projets/{projet_id}/placettes/{plot_id}/resultat.gpkg | rapport.json | rapport.html``.
 
+QField projects for the phones (nemetonshiny -> server -> Groma, see
+``projets_qfield``): ``PUT /projets/{projet_id}/qfield/fichiers/{nom}`` (raw
+body), ``POST /projets/{projet_id}/qfield/publier``, ``GET /projets``,
+``GET /projets/{projet_id}/qfield`` (manifest),
+``GET /projets/{projet_id}/qfield/{version}/{nom}`` (``Range`` supported).
+
 Plots are keyed by (``projet_id``, ``plot_id``): two sampling plans may both
 have a ``P001``. Without ``projet_id`` (phones older than the project list),
 the default project ``""`` is used, which the routes without ``/projets/``
@@ -34,6 +40,7 @@ from pydantic import BaseModel, Field
 
 from .config import Config
 from .file_attente import FileAttente
+from .projets_qfield import ErreurProjet, Fichier, ProjetsQfield
 
 PLOT_ID = re.compile(r"^[A-Za-z0-9_.-]{1,64}$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
@@ -46,6 +53,19 @@ class DemandeTeleversement(BaseModel):
     sha256: str = Field(pattern=SHA256.pattern)
 
 
+class FichierPublie(BaseModel):
+    nom: str
+    sha256: str = Field(pattern=SHA256.pattern)
+    taille: int = Field(gt=0)
+
+
+class DemandePublication(BaseModel):
+    projet_nom: str = Field(min_length=1, max_length=200)
+    fichiers: list[FichierPublie] = Field(min_length=1, max_length=4)
+    genere_le: str | None = None
+    nemeton_version: str | None = None
+
+
 def creer_app(config: Config | None = None) -> FastAPI:
     cfg = config or Config()
     file = FileAttente(cfg.base)
@@ -54,7 +74,13 @@ def creer_app(config: Config | None = None) -> FastAPI:
     for d in (dossier_tel, dossier_paquets):
         d.mkdir(parents=True, exist_ok=True)
 
+    projets = ProjetsQfield(cfg.dossier_donnees / "projets_qfield", cfg.taille_max_projet, cfg.versions_projet)
+
     app = FastAPI(title="Groma", version="0.1.0")
+
+    @app.exception_handler(ErreurProjet)
+    def erreur_projet(_request: Request, e: ErreurProjet):
+        return JSONResponse({"detail": str(e)}, status_code=e.code)
 
     def auth(authorization: str | None = Header(default=None)) -> None:
         if cfg.jeton and authorization != f"Bearer {cfg.jeton}":
@@ -149,6 +175,48 @@ def creer_app(config: Config | None = None) -> FastAPI:
         if fichier not in fichiers:
             raise HTTPException(404, "Fichier inconnu.")
         return resultat("", plot_id, *fichiers[fichier])
+
+    @app.put("/projets/{projet_id}/qfield/fichiers/{nom}", dependencies=[Depends(auth)])
+    async def deposer_fichier(projet_id: str, nom: str, request: Request):
+        cible = projets.chemin_attente(projet_id, nom)
+        tmp = cible.with_name(cible.name + ".part")
+        taille = 0
+        try:
+            with open(tmp, "wb") as f:
+                async for bloc in request.stream():
+                    taille += len(bloc)
+                    if taille > cfg.taille_max_projet:
+                        raise ErreurProjet(413, "Projet trop volumineux.")
+                    f.write(bloc)
+            if taille == 0:
+                raise ErreurProjet(400, "Fichier vide.")
+            tmp.replace(cible)
+        finally:
+            tmp.unlink(missing_ok=True)
+        f = projets.fin_depot(cible)
+        return {"nom": f.nom, "sha256": f.sha256, "taille": f.taille}
+
+    @app.post("/projets/{projet_id}/qfield/publier", dependencies=[Depends(auth)])
+    def publier(projet_id: str, d: DemandePublication):
+        fichiers = [Fichier(f.nom, f.sha256, f.taille) for f in d.fichiers]
+        m = projets.publier(projet_id, d.projet_nom, fichiers, d.genere_le, d.nemeton_version)
+        return {"projet_id": projet_id, "version": m["version"]}
+
+    @app.get("/projets", dependencies=[Depends(auth)])
+    def lister_projets():
+        return projets.lister()
+
+    @app.get("/projets/{projet_id}/qfield", dependencies=[Depends(auth)])
+    def manifeste_projet(projet_id: str):
+        m = projets.manifeste(projet_id)
+        if m is None:
+            raise HTTPException(404, "Aucun projet publié sous cet identifiant.")
+        return m
+
+    @app.get("/projets/{projet_id}/qfield/{version}/{nom}", dependencies=[Depends(auth)])
+    def telecharger_projet(projet_id: str, version: str, nom: str):
+        p = projets.fichier(projet_id, version, nom)
+        return FileResponse(p, media_type="application/zip" if nom.endswith(".qgz") else "text/plain", filename=nom)
 
     @app.get("/sante")
     def sante():
