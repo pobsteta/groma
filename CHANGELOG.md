@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.8.0](https://github.com/pobsteta/groma/compare/v0.7.0...v0.8.0) (2026-10-16)
+
+
+### Nouveautés
+
+* **qfield:** fonds IGN et OSM, cadastre et houppiers comme Marculus dans le projet QField ([#40](https://github.com/pobsteta/groma/issues/40)) ([4d5f4aa](https://github.com/pobsteta/groma/commit/4d5f4aad5ddf345023ef68b6d6e570e3b5b0acba))
+
 ## [0.7.0](https://github.com/pobsteta/groma/compare/v0.6.0...v0.7.0) (2026-10-16)
 
 
