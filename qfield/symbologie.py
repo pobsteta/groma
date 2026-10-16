@@ -9,8 +9,11 @@ the three applications:
   diameter; grey when the species is not entered yet;
 * ``ugf``: Marculus' forest parcels, thick outline and 20 % fill from
   ``PALETTE_FONCIER`` (one colour per forest), parcel number at the centre;
+* ``houppiers``: Marculus' crowns, outline only, hidden by default;
 * ``placettes``, ``centres_mesures``, ``cibles``, ``detections``,
-  ``parcelles``: Groma's map styles.
+  ``parcelles``: Groma's map styles;
+* base maps as in Marculus: Plan IGN shown, Ortho IGN and OSM hidden, IGN
+  cadastre (``PCI vecteur``) hidden, under every project layer.
 
 Sizes are in millimetres (QField scales them to the screen density).
 """
@@ -19,13 +22,16 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from urllib.parse import quote
 
 from qgis.core import (
     QgsCategorizedSymbolRenderer,
     QgsFillSymbol,
     QgsMarkerSymbol,
     QgsPalLayerSettings,
+    QgsProject,
     QgsProperty,
+    QgsRasterLayer,
     QgsRendererCategory,
     QgsSingleSymbolRenderer,
     QgsSymbolLayer,
@@ -45,6 +51,9 @@ INCONNUE = "#888888"  # Marculus: species without colour
 # Marculus, ui/carte/CarteScreen.kt, PALETTE_FONCIER.
 PALETTE_FONCIER = ["#1e88e5", "#43a047", "#f4511e", "#8e24aa", "#fdd835", "#00acc1", "#6d4c41", "#ec407a"]
 SANS_FORET = "#374742"
+
+# Marculus, ui/carte/CarteScreen.kt, COULEUR_HOUPPIER.
+HOUPPIER = "#2e7d32"
 
 # Groma, carte/Couches.kt.
 ETATS_PLACETTE = {"a_faire": ("#ffffff", "À faire"), "provisoire": ("#f57c00", "Provisoire"),
@@ -125,10 +134,11 @@ def ugf(layer: QgsVectorLayer) -> None:
         cats.append(QgsRendererCategory(nom, _surface(PALETTE_FONCIER[i % len(PALETTE_FONCIER)]), nom))
     cats.append(QgsRendererCategory(None, _surface(SANS_FORET), "Sans forêt"))
     layer.setRenderer(QgsCategorizedSymbolRenderer("foret", cats))
+    # Marculus draws 4 px outlines: 0.9 mm in QField.
     _etiquette(layer, "coalesce(\"parcelle_onf\", \"libelle\", \"ug_id\")", 10)
 
 
-def _surface(couleur: str, epaisseur_mm: float = 0.8, opacite_fond: int = 0x33) -> QgsFillSymbol:
+def _surface(couleur: str, epaisseur_mm: float = 0.9, opacite_fond: int = 0x33) -> QgsFillSymbol:
     c = QColor(couleur)
     c.setAlpha(opacite_fond)
     return QgsFillSymbol.createSimple({
@@ -162,6 +172,11 @@ def cibles(layer: QgsVectorLayer) -> None:
     _etiquette(layer, "\"id_cible\"", 8, 1000)
 
 
+def houppiers(layer: QgsVectorLayer) -> None:
+    # Marculus: outline only (2 px), so what lies below stays readable.
+    layer.setRenderer(QgsSingleSymbolRenderer(_surface(HOUPPIER, 0.4, 0)))
+
+
 def detections(layer: QgsVectorLayer) -> None:
     # Hollow ring: the provisional detection under the tree entered in `arbres`.
     sym = QgsMarkerSymbol.createSimple({"name": "circle", "color": "0,0,0,0", "outline_color": "#f57c00",
@@ -170,7 +185,46 @@ def detections(layer: QgsVectorLayer) -> None:
 
 
 STYLES = {"arbres": arbres, "ugf": ugf, "parcelles": parcelles, "placettes": placettes,
-          "centres_mesures": centres_mesures, "cibles": cibles, "detections": detections}
+          "centres_mesures": centres_mesures, "cibles": cibles, "detections": detections,
+          "houppiers": houppiers}
+
+# Hidden by default, as in Marculus (thousands of crowns slow the map down).
+MASQUEES = {"houppiers"}
+
+ATTRIBUTION_IGN = "© IGN Géoplateforme, Licence Ouverte Etalab 2.0"
+
+
+def _tuiles_ign(couche: str, style: str, fmt: str) -> str:
+    """XYZ URI of a Géoplateforme WMTS layer (same PM_0_19 grid as Groma's map, no GetCapabilities)."""
+    url = ("https://data.geopf.fr/wmts?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=" + couche
+           + "&STYLE=" + style.replace(" ", "%20") + "&FORMAT=" + fmt
+           + "&TILEMATRIXSET=PM_0_19&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}")
+    return "type=xyz&url=" + quote(url, safe="") + "&zmin=0&zmax=19"
+
+
+# Top to bottom, all under the project layers: (name, URI, attribution, shown).
+# Marculus: cadastre (transparent PNG) above the base map and hidden; Plan IGN by default.
+FONDS = [
+    ("Cadastre IGN", _tuiles_ign("CADASTRALPARCELS.PARCELLAIRE_EXPRESS", "PCI vecteur", "image/png"), "cadastre © IGN", False),
+    ("Plan IGN", _tuiles_ign("GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2", "normal", "image/png"), ATTRIBUTION_IGN, True),
+    ("Ortho IGN", _tuiles_ign("ORTHOIMAGERY.ORTHOPHOTOS", "normal", "image/jpeg"), ATTRIBUTION_IGN, False),
+    ("OpenStreetMap", "type=xyz&url=" + quote("https://tile.openstreetmap.org/{z}/{x}/{y}.png", safe="") + "&zmin=0&zmax=19",
+     "© contributeurs OpenStreetMap", False),
+]
+
+
+def ajouter_fonds(projet: QgsProject) -> None:
+    """Appends the base maps under every layer already in ``projet``."""
+    racine = projet.layerTreeRoot()
+    for nom, uri, attribution, visible in FONDS:
+        fond = QgsRasterLayer(uri, nom, "wms")
+        if not fond.isValid():
+            raise RuntimeError(f"Fond de carte invalide : {nom}")
+        md = fond.metadata()
+        md.setRights([attribution])
+        fond.setMetadata(md)
+        projet.addMapLayer(fond, False)
+        racine.insertLayer(len(racine.children()), fond).setItemVisibilityChecked(visible)
 
 
 def appliquer(layer: QgsVectorLayer) -> None:
