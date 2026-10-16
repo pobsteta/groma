@@ -15,18 +15,24 @@ fill the ``projet`` table shown by the phone's project list (brief
 name the folder must keep on the phone.
 
     groma-preparer ~/.local/share/nemeton/projects/<id>/data/samples.gpkg \\
-        --rayon 15 --declinaison 2.1
+        --rayon 15
+
+Without ``--declinaison``, the magnetic declination of each plot is computed
+with WMM2025 (:mod:`groma.declinaison`) at its position and today's date; a
+value given by hand takes precedence (warning beyond 1° from the model).
 """
 
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import json
 import logging
 from pathlib import Path
 from typing import Sequence
 
 from . import __version__
+from .declinaison import declinaison_deg as declinaison_wmm
 from .gpkg import couche, creer_gpkg
 
 log = logging.getLogger(__name__)
@@ -183,11 +189,17 @@ def lire_ugf(chemin_plan: str | Path):
     return gpd.GeoDataFrame(ug.reset_index(drop=True), geometry="geometry", crs=2154)
 
 
+def _declinaisons_wmm(plan, date: dt.date):
+    """WMM2025 declination at each plot of a plan GeoDataFrame (degrees, series)."""
+    wgs84 = plan.geometry.to_crs(4326)
+    return wgs84.apply(lambda pt: declinaison_wmm(pt.y, pt.x, date))
+
+
 def preparer_projet(
     plan,
     sortie: str | Path,
     rayon_m: float,
-    declinaison_deg: float,
+    declinaison_deg: float | None = None,
     seuil_diam_cm: float = 7.5,
     unite_azimut: str = "deg",
     plot_ids: Sequence[str] | None = None,
@@ -196,6 +208,7 @@ def preparer_projet(
     projet: dict | None = None,
     parcelles=None,
     ugf=None,
+    date: dt.date | None = None,
 ) -> Path:
     """Write ``<sortie>/inventaire_video.gpkg`` from a plan GeoDataFrame.
 
@@ -207,8 +220,14 @@ def preparer_projet(
     ``projet``: row of the ``projet`` table (see :func:`lire_metadonnees`);
     ``projet_id`` and ``projet_nom`` default to the output folder name.
     ``parcelles``, ``ugf``: see :func:`lire_parcelles` and :func:`lire_ugf`.
+
+    ``declinaison_deg``: applied to every plot when given; otherwise
+    computed per plot with WMM2025 at its position on ``date`` (default:
+    today).
     """
     for nom, valeur in (("rayon_m", rayon_m), ("seuil_diam_cm", seuil_diam_cm), ("declinaison_deg", declinaison_deg)):
+        if valeur is None:
+            continue
         lo, hi = _bornes(nom)
         if not lo <= valeur <= hi:
             raise ValueError(f"{nom} = {valeur} hors de [{lo}, {hi}].")
@@ -234,7 +253,16 @@ def preparer_projet(
     p["rayon_m"] = float(rayon_m)
     p["seuil_diam_cm"] = float(seuil_diam_cm)
     p["unite_azimut"] = unite_azimut
-    p["declinaison_deg"] = float(declinaison_deg)
+    modele = _declinaisons_wmm(p, date or dt.date.today())
+    if declinaison_deg is None:
+        p["declinaison_deg"] = modele.round(2)
+        log.info("Déclinaison calculée par WMM2025 : %.2f° à %.2f° selon les placettes.", modele.min(), modele.max())
+    else:
+        p["declinaison_deg"] = float(declinaison_deg)
+        ecart = (modele - float(declinaison_deg)).abs().max()
+        if ecart > 1:
+            log.warning("Déclinaison saisie (%.2f°) à %.1f° du modèle WMM2025 (%.2f° à %.2f°) : vérifier la valeur.",
+                        declinaison_deg, ecart, modele.min(), modele.max())
     p["etat_traitement"] = "a_faire"
 
     sortie = Path(sortie)
@@ -263,8 +291,9 @@ def main(argv: Sequence[str] | None = None) -> None:
     a.add_argument("--nom", help="nom du projet affiché sur le téléphone (défaut : celui du projet nemetonshiny ; obligatoire sinon)")
     a.add_argument("--rayon", type=float, required=True,
                    help="rayon de la placette en mètres ; reprendre celui du plan (15 m par défaut dans nemetonshiny)")
-    a.add_argument("--declinaison", type=float, required=True,
-                   help="déclinaison magnétique en degrés, positive vers l'est (calculateur IGN ou NOAA)")
+    a.add_argument("--declinaison", type=float,
+                   help="déclinaison magnétique en degrés, positive vers l'est ; défaut : calculée par le modèle "
+                        "WMM2025 pour chaque placette à la date du jour (avertissement si la valeur saisie s'en écarte de plus de 1°)")
     a.add_argument("--seuil", type=float, default=7.5, help="diamètre de précomptage en cm (défaut 7,5)")
     a.add_argument("--unite", choices=("deg", "gr"), default="deg", help="unité des azimuts (défaut deg)")
     a.add_argument("--placettes", help="plot_id à garder, séparés par des virgules (défaut : toutes)")

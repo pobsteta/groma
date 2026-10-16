@@ -4,6 +4,7 @@ import android.database.sqlite.SQLiteDatabase
 import groma.core.CentreMesure
 import groma.core.CibleMesuree
 import groma.core.CleProjet
+import groma.core.Declinaison
 import groma.core.DonneesCarte
 import groma.core.GeoPackage
 import groma.core.GeoTiff
@@ -11,6 +12,7 @@ import groma.core.Grille
 import groma.core.Houppier
 import groma.core.InfosProjet
 import groma.core.ParametresPlacette
+import groma.core.Projections
 import java.io.File
 
 /**
@@ -45,7 +47,10 @@ class Projet(val dossier: File) {
             (p["rayon_m"] as? Number)?.toDouble() ?: 20.0,
             (p["seuil_diam_cm"] as? Number)?.toDouble() ?: 7.5,
             p["unite_azimut"] as? String ?: "deg",
-            (p["declinaison_deg"] as? Number)?.toDouble() ?: 0.0,
+            // Declination left empty in the GeoPackage: WMM2025 at the planned point, today (never written back).
+            (p["declinaison_deg"] as? Number)?.toDouble()
+                ?: Projections.versWgs84(p["x"] as Double, p["y"] as Double).let { (lon, lat) -> Declinaison.ouNull(lat, lon) }
+                ?: 0.0,
             (p["convergence_deg"] as? Number)?.toDouble() ?: 0.0,
         )
     }

@@ -90,6 +90,31 @@ def test_ligne_de_commande(plan, tmp_path, capsys):
         main([str(plan), "--sortie", str(tmp_path / "x"), "--declinaison", "1"])
 
 
+def test_declinaison_calculee_par_wmm(plan, tmp_path):
+    import datetime as dt
+    from groma.declinaison import declinaison_deg
+    g = preparer_projet(lire_plan(plan), tmp_path / "w", rayon_m=15, date=dt.date(2026, 10, 15))
+    lignes = lire_points(g, "placettes")
+    # P01 (Lambert 93 925000, 6700000) is near Besançon: about 3° east in 2026.
+    for r in lignes:
+        assert 2 < r["declinaison_deg"] < 3.5
+    attendu = declinaison_deg(47.362, 5.982, dt.date(2026, 10, 15))
+    assert lignes[0]["declinaison_deg"] == pytest.approx(attendu, abs=0.005)
+    # Without --declinaison, the command line computes it as well.
+    main([str(plan), "--sortie", str(tmp_path / "cli"), "--rayon", "15", "--nom", "Essai"])
+    assert all(r["declinaison_deg"] is not None for r in lire_points(tmp_path / "cli" / "inventaire_video.gpkg", "placettes"))
+
+
+def test_declinaison_saisie_prioritaire_avec_avertissement(plan, tmp_path, caplog):
+    import datetime as dt
+    g = preparer_projet(lire_plan(plan), tmp_path / "s", rayon_m=15, declinaison_deg=-2.0, date=dt.date(2026, 10, 15))
+    assert {r["declinaison_deg"] for r in lire_points(g, "placettes")} == {-2.0}
+    assert "WMM2025" in caplog.text
+    caplog.clear()
+    preparer_projet(lire_plan(plan), tmp_path / "t", rayon_m=15, declinaison_deg=2.5, date=dt.date(2026, 10, 15))
+    assert "WMM2025" not in caplog.text
+
+
 def _ligne_projet(gpkg) -> dict:
     with sqlite3.connect(gpkg) as cx:
         cx.row_factory = sqlite3.Row

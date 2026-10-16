@@ -26,7 +26,7 @@ groma-preparer = "groma.preparer:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-groma = ["donnees/*.json", "donnees/*.sql"]
+groma = ["donnees/*.json", "donnees/*.sql", "donnees/*.COF"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

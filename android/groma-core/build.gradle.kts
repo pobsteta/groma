@@ -14,6 +14,16 @@ kotlin {
     }
 }
 
+// WMM2025 coefficients: single source in the Python package, copied as a
+// resource (/groma/WMM2025.COF) rather than duplicated by hand.
+val copierWmm by tasks.registering(Copy::class) {
+    from(rootProject.projectDir.parentFile.resolve("core/src/groma/donnees/WMM2025.COF"))
+    into(layout.buildDirectory.dir("generated/wmm/groma"))
+}
+sourceSets.main {
+    resources.srcDir(copierWmm.map { layout.buildDirectory.dir("generated/wmm").get() })
+}
+
 dependencies {
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
