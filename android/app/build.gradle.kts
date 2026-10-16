@@ -5,7 +5,7 @@ plugins {
 
 // Single project version, bumped by release-please. versionCode is derived
 // from it (MAJOR*10000 + MINOR*100 + PATCH) so every release is monotonic.
-val versionGroma = "0.6.0" // x-release-please-version
+val versionGroma = "0.7.0" // x-release-please-version
 val codeVersionGroma = versionGroma.split(".").map(String::toInt).let { (ma, mi, pa) -> ma * 10000 + mi * 100 + pa }
 
 // Release signing from the environment (CI secrets); without it the release
