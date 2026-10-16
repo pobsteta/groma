@@ -61,6 +61,36 @@ migrée au démarrage.
 
 Authentification : jeton porteur (`GROMA_JETON`).
 
+## Projets QField pour les téléphones
+
+nemetonshiny publie le projet de l'inventaire vidéo, et Groma le télécharge
+(brief `briefs/groma/2026-10-17-envoi-projet-telephone.md`,
+`groma_server/projets_qfield.py`). Le projet est le `.qgz` écrit par
+`creer_projet_inventaire_video()`, avec le GeoPackage et les rasters
+dedans, plus le plugin `<nom>.qml`.
+
+| Méthode | Chemin |
+|---|---|
+| PUT | `/projets/{projet_id}/qfield/fichiers/{nom}` : corps brut, `<nom>.qgz` ou `<nom>.qml` ; réponse `{nom, sha256, taille}` |
+| POST | `/projets/{projet_id}/qfield/publier` : `{projet_nom, fichiers: [{nom, sha256, taille}], genere_le?, nemeton_version?}` ; réponse `{projet_id, version}` |
+| GET | `/projets` : manifeste de la version courante de chaque projet publié |
+| GET | `/projets/{projet_id}/qfield` : manifeste de la version courante |
+| GET | `/projets/{projet_id}/qfield/{version}/{nom}` : téléchargement, reprise par en-tête `Range` (réponse 206) |
+
+À la publication, le serveur :
+* vérifie la taille et le SHA-256 de chaque fichier ;
+* exige exactement un `.qgz`, le `.qml` étant facultatif ;
+* contrôle que le `.qgz` est une archive zip qui contient un `.qgs` et
+  `inventaire_video.gpkg` ;
+* vérifie que le `projet_id` de la table `projet` de ce GeoPackage est celui
+  de l'URL. Sinon, il répond 422 et ne publie rien.
+
+La version porte l'horodatage UTC (`AAAAMMJJTHHMMSSZ`) et la publication est
+atomique. Le stockage est rangé dans `projets_qfield/<projet_id>/<version>/`,
+avec `manifeste.json`. Taille maximale : `GROMA_TAILLE_MAX_PROJET` (500 Mo
+par défaut, 413 au-delà). Versions gardées : `GROMA_VERSIONS_PROJET` (3 par
+défaut). Le jeton est le même que pour le reste de l'API.
+
 ## Déploiement
 
 ```bash
