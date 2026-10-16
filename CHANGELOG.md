@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://github.com/pobsteta/groma/compare/v0.5.0...v0.6.0) (2026-10-16)
+
+
+### Nouveautés
+
+* **android:** service de partage avec QField qui garde le serveur local en vie ([#34](https://github.com/pobsteta/groma/issues/34)) ([5886ab8](https://github.com/pobsteta/groma/commit/5886ab807edf8b8aa1607cc637888113f55fa551))
+
+
+### Documentation
+
+* **briefs:** annexe nemeton pour le plugin QField et la déclinaison WMM2025 ([#35](https://github.com/pobsteta/groma/issues/35)) ([aa885df](https://github.com/pobsteta/groma/commit/aa885df72d51b9e3af081e9bb581575e259ca042))
+
 ## [0.5.0](https://github.com/pobsteta/groma/compare/v0.4.1...v0.5.0) (2026-10-16)
 
 
