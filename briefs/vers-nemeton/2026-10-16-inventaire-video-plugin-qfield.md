@@ -64,6 +64,30 @@ Au premier chargement, QField demande l'accord de l'utilisateur, avec le
 titre du projet. Donner au projet un titre parlant, par exemple « Inventaire
 vidéo — <nom du projet nemetonshiny> ».
 
+## 2 bis. Symbologie
+
+Pour que l'opérateur retrouve dans QField ce qu'il voit dans Marculus et
+dans Groma, reprendre la symbologie de `qfield/symbologie.py` (dépôt
+groma_nemeton). Elle **remplace** la « symbologie catégorisée de `arbres`
+selon `etat_detection` » du § 2.5 :
+
+* `arbres` : catégorisé sur `essence_arbre`, pastille pleine de la couleur du
+  groupe d'essence de Marculus. Chênes `#2a7fa6`, hêtre `#5061b8`, autres
+  feuillus `#7e8e9c`, sapin `#94304d`, épicéa `#c2502f`, autres résineux
+  `#ae9381`. Gris `#888888` sans essence. Contour blanc de 0,5 mm ; taille
+  `scale_linear(coalesce(dbh_cm, 7.5), 7.5, 80, 2.4, 6.4)` mm ; étiquette
+  `"tree_id" || ' – ' || format_number("dbh_cm", 0)` au-dessous du 1/1000 ;
+* `ugf` : catégorisé sur `foret`, palette « foncier » de Marculus
+  (`#1e88e5`, `#43a047`, `#f4511e`, `#8e24aa`, `#fdd835`, `#00acc1`,
+  `#6d4c41`, `#ec407a`). Contour de 0,8 mm, fond de la même couleur à 20 %,
+  étiquette `parcelle_onf` ;
+* `placettes` : catégorisé sur `etat_traitement`. À faire blanc, provisoire
+  `#f57c00`, envoyée `#1976d2`, définitive `#2e7d32` ; contour `#212121` ;
+  3,5 mm, 2,4 mm pour une placette de remplacement ;
+* `centres_mesures` : croix `#d500f9` ; `cibles` : carré `#ff6f00` ;
+  `detections` : anneau `#f57c00` sans remplissage ; `parcelles` : contour
+  `#ffd54f` fin, étiquette `section numero`.
+
 ## 3. Déclinaison magnétique
 
 Le § 3 du brief du 2026-10-12 disait de laisser `declinaison_deg` à saisir,

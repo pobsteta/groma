@@ -32,6 +32,9 @@ from qgis.core import (  # noqa: E402
     QgsVectorLayer,
 )
 
+sys.path.insert(0, str(Path(__file__).parent))
+import symbologie  # noqa: E402
+
 log = logging.getLogger("groma.qfield")
 
 PLUGIN = Path(__file__).with_name("inventaire_video.qml")
@@ -80,6 +83,7 @@ def creer(dossier: Path) -> Path:
             if champs is None or f.name() in champs:
                 cfg.setReadOnly(i, True)
         couche.setEditFormConfig(cfg)
+        symbologie.appliquer(couche)
         projet.addMapLayer(couche)
     qgs = dossier / "inventaire_video.qgs"
     if not projet.write(str(qgs)):
