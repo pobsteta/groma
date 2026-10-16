@@ -153,6 +153,10 @@ Dépose chaque projet dans le dossier des projets, dans un sous-dossier qui port
     <string name="gnss_age">Âge des corrections</string>
     <string name="gnss_station">Station de référence</string>
     <string name="gnss_ciel">Satellites en vue</string>
+    <string name="partage_canal">Partage avec QField</string>
+    <string name="partage_titre">Groma — partage avec QField</string>
+    <string name="partage_texte">Détections et centres disponibles pour le plugin QField. Arrêt automatique après 30 min sans demande.</string>
+    <string name="partage_arreter">Arrêter le partage</string>
     <string name="rtk_canal">Récepteur GNSS RTK</string>
     <string name="rtk_notif_titre">Groma — GNSS RTK</string>
     <string name="rtk_liberer">Libérer le récepteur</string>

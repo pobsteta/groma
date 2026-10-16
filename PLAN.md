@@ -66,6 +66,9 @@ reconstruction en sous-bois.
    avec le projet de Couchey : 3 détections de test ajoutées par le plugin.
    Reste à essayer : second appui (pas de doublon), lignes `arbres` créées
    par les déclencheurs, centres mesurés, détections d'une vraie capture.
+   Service « partage avec QField » (premier plan, arrêt après 30 min sans
+   demande) pour que Android ne coupe pas Groma pendant la saisie dans
+   QField ; compilé, pas encore essayé sur appareil.
 2. **NTRIP en forêt** : client NTRIP intégré à QField ≥ 4.2 ; sans 4G, il
    faut un repli PPK (UBX brut + RTKLIB). Les identifiants Centipède sont à
    vérifier.

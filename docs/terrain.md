@@ -301,8 +301,12 @@ transport entre les deux bacs à sable. Options, par ordre de préférence :
    * n'écrit rien si la couche est déjà en cours d'édition (il ne valide
      jamais les modifications de quelqu'un d'autre), et affiche un bilan.
 
-   Groma doit être ouvert sur le téléphone (son serveur local vit avec
-   l'application). API vérifiées dans le source de QField 3.7 à 4.3
+   Le serveur local vit avec l'application. Après une capture ou une
+   mesure de centre, Groma affiche la notification « Groma — partage avec
+   QField » (service de premier plan) : Android ne coupe pas Groma pendant
+   qu'on travaille dans QField. Le partage s'arrête seul après 30 min sans
+   demande du plugin, ou par **Arrêter le partage** ; ensuite, rouvrir
+   Groma avant d'appuyer sur le bouton du plugin. API vérifiées dans le source de QField 3.7 à 4.3
    (`FeatureUtils.createFeature`, `LayerUtils.addFeature`,
    `iface.createHttpRequest` à partir de 4.1, sinon `XMLHttpRequest` ;
    trafic HTTP en clair autorisé par QField). Essayé le 2026-10-16 sur un
