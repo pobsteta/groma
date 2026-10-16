@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/pobsteta/groma/compare/v0.4.1...v0.5.0) (2026-10-16)
+
+
+### Nouveautés
+
+* **core:** déclinaison magnétique WMM2025, calculée par groma-preparer et par Groma si absente ([#32](https://github.com/pobsteta/groma/issues/32)) ([272cd38](https://github.com/pobsteta/groma/commit/272cd384cb6cc0509a59037001a2434653fc6f09))
+* **qfield:** prototype du plugin de projet QField pour les détections et les centres mesurés ([#31](https://github.com/pobsteta/groma/issues/31)) ([1cb170c](https://github.com/pobsteta/groma/commit/1cb170ca76d91804bdd1b07babf04af431c54eb0))
+
 ## [0.4.1](https://github.com/pobsteta/groma/compare/v0.4.0...v0.4.1) (2026-10-15)
 
 
