@@ -30,6 +30,9 @@
     <string name="param_retour">Retour</string>
     <string name="param_envoi_section">Envoi au serveur</string>
     <string name="param_envoi_desc">Les prises de vue restent sur le téléphone tant qu\'aucun serveur n\'est renseigné. L\'envoi part en Wi-Fi, ou en 4G si tu l\'autorises.</string>
+    <string name="apropos_section">À propos</string>
+    <string name="apropos_version">Groma %1$s (build %2$d)</string>
+    <string name="apropos_licence">Inventaire forestier par vidéo, plateforme Néméton. Licence GPL-3.0-or-later. Code source : github.com/pobsteta/groma</string>
     <string name="param_4g_desc">Les paquets peuvent peser plusieurs centaines de Mo.</string>
     <string name="apropos_titre">Groma %1$s</string>
     <string name="apropos_texte">Inventaire forestier par vidéo, plateforme Néméton.</string>
