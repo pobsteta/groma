@@ -323,6 +323,14 @@ transport entre les deux bacs à sable. Options, par ordre de préférence :
 
    puis, dans QField, « Ouvrir un projet local » → « Importer un projet
    depuis un dossier ».
+
+   Le projet de test reprend la symbologie de Marculus (`qfield/symbologie.py`) :
+   arbres en pastilles de la couleur du groupe d'essence de Marculus (gris
+   tant que l'essence n'est pas saisie), contour blanc, taille selon le
+   diamètre, étiquette « numéro – diamètre » ; UGF comme les parcelles
+   forestières de Marculus (contour épais, fond à 20 %, une couleur par
+   forêt, numéro ONF) ; placettes, centres mesurés, cibles et parcelles
+   cadastrales comme sur la carte de Groma ; détections en anneau orange.
 2. Groma écrit dans sa propre copie, puis l'utilisateur exporte vers QField.
    À écarter : QField réimporte et écrase sa copie, donc la saisie en cours.
 3. Android ≤ 10, ou QField configuré sur un dossier partagé : écriture
