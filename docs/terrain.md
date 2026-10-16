@@ -313,8 +313,11 @@ transport entre les deux bacs à sable. Options, par ordre de préférence :
    Galaxy S23 Ultra avec QField 4.3.5 : détections ajoutées. Centres mesurés
    et détections d'une vraie capture pas encore essayés.
 
-   Projet de test, en attendant celui de nemeton
-   (`creer_projet_inventaire_video()`) :
+   Le projet QField complet est généré par nemetonshiny (Terrain →
+   Inventaire vidéo → « Générer le projet QField », qui appelle
+   `nemeton::creer_projet_inventaire_video()`). Pour un essai sans
+   nemetonshiny, projet de test minimal (couches, plugin, symbologie ; sans
+   formulaires complets ni rasters) :
 
    ```bash
    python3 qfield/creer_projet_test.py <dossier du projet>   # PyQGIS requis
