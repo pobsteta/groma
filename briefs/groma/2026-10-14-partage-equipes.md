@@ -110,10 +110,12 @@ signalé dans le rapport de `groma-preparer` quand une équipe n'en a pas.
   moment de préparer le projet :
 
   ```bash
-  groma-preparer <projet>/data/samples.gpkg --rayon 15 --declinaison 2.1 \
+  groma-preparer <projet>/data/samples.gpkg --rayon 15 \
       --equipes "Équipe A,Équipe B,Équipe C" \
       --depart 5.0123,47.2345 --vitesse 2 --temps-placette 40
   ```
+
+  (`--declinaison` est facultatif depuis le modèle WMM2025.)
 
   Le rapport donne, par équipe : nombre de placettes Base et Over,
   distance, durée estimée.
