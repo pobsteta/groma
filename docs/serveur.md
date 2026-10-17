@@ -91,6 +91,40 @@ avec `manifeste.json`. Taille maximale : `GROMA_TAILLE_MAX_PROJET` (500 Mo
 par défaut, 413 au-delà). Versions gardées : `GROMA_VERSIONS_PROJET` (3 par
 défaut). Le jeton est le même que pour le reste de l'API.
 
+## Workers distants
+
+Pour un GPU loué à la demande (brief
+`briefs/groma/2026-10-17-worker-gpu-scaleway.md`), le worker peut tourner
+sur une autre machine que l'API, sans volume ni file SQLite partagés : il
+passe par l'API en HTTPS.
+
+```bash
+# côté API : active les routes /worker/… (jeton distinct de celui des téléphones)
+GROMA_JETON_WORKER=...
+# côté machine GPU
+GROMA_JETON_WORKER=... groma-worker --api https://groma.exemple.fr --arret-inactif 600
+```
+
+| Méthode | Chemin |
+|---|---|
+| POST | `/worker/prendre` : `{id, projet_id, plot_id, tentative, taille, bail_s}`, ou 204 si la file est vide |
+| GET | `/worker/taches/{id}/paquet?tentative=N` : le paquet, reprise par `Range` |
+| POST | `/worker/taches/{id}/bail` `{tentative}` : prolonge le bail |
+| PUT | `/worker/taches/{id}/resultats/{nom}?tentative=N` : `definitif.gpkg`, `rapport.json`, `rapport.html` (corps brut) |
+| POST | `/worker/taches/{id}/terminer` `{tentative, verdict}` ; `/worker/taches/{id}/echouer` `{tentative, erreur}` |
+
+* Le jeton des téléphones est refusé sur `/worker/…`, celui des workers
+  ailleurs. Sans `GROMA_JETON_WORKER`, ces routes répondent 404.
+* Chaque appel nomme la tentative pour laquelle il travaille. Le worker
+  renouvelle son bail au tiers de sa durée (`GROMA_BAIL_S`, 3600 s par
+  défaut). Bail expiré et tâche reprise par un autre : 409, le résultat est
+  écarté. La même garde s'applique au worker local.
+* Les résultats sont rangés comme ceux du worker local
+  (`resultats/<projet_id>/<plot_id>/<tâche>/`) et archivés en S3 par l'API
+  si `GROMA_S3_URL` est défini.
+* `--arret-inactif` (secondes) arrête le worker quand la file reste vide,
+  en mode local comme distant : l'instance GPU peut alors être supprimée.
+
 ## Déploiement
 
 ```bash

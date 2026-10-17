@@ -11,6 +11,10 @@ from pathlib import Path
 class Config:
     dossier_donnees: Path = field(default_factory=lambda: Path(os.environ.get("GROMA_DONNEES", "/var/lib/groma")))
     jeton: str | None = field(default_factory=lambda: os.environ.get("GROMA_JETON") or None)
+    # Token of the remote GPU workers (routes /worker/...); unset: those routes are off.
+    jeton_worker: str | None = field(default_factory=lambda: os.environ.get("GROMA_JETON_WORKER") or None)
+    # A task taken by a worker is offered again when its lease is older than this.
+    bail_s: int = field(default_factory=lambda: int(os.environ.get("GROMA_BAIL_S", "3600")))
     taille_morceau: int = field(default_factory=lambda: int(os.environ.get("GROMA_TAILLE_MORCEAU", str(8 * 1024 * 1024))))
     taille_max: int = field(default_factory=lambda: int(os.environ.get("GROMA_TAILLE_MAX", str(4 * 1024**3))))
     reconstructeurs: tuple[str, ...] = field(

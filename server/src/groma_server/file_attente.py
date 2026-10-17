@@ -103,18 +103,40 @@ class FileAttente:
         finally:
             cx.close()
 
-    def terminer(self, tid: str, gpkg: str, rapport_json: str, rapport_html: str, verdict: str) -> None:
-        with self._cx() as cx:
-            cx.execute(
-                "UPDATE taches SET etat='terminee', gpkg=?, rapport_json=?, rapport_html=?, verdict=?, erreur=NULL, maj=? WHERE id=?",
-                (gpkg, rapport_json, rapport_html, verdict, _maintenant(), tid),
-            )
+    # With ``tentative``, the call only applies while the task is still in
+    # progress under that attempt: a worker whose lease expired, and whose
+    # task was taken again, can neither finish nor fail it any more.
+    @staticmethod
+    def _garde(tentative: int | None) -> tuple[str, list]:
+        if tentative is None:
+            return "", []
+        return " AND etat='en_cours' AND tentatives=?", [tentative]
 
-    def echouer(self, tid: str, erreur: str, tentatives_max: int) -> None:
+    def terminer(self, tid: str, gpkg: str, rapport_json: str, rapport_html: str, verdict: str,
+                 tentative: int | None = None) -> bool:
+        garde, args = self._garde(tentative)
+        with self._cx() as cx:
+            c = cx.execute(
+                "UPDATE taches SET etat='terminee', gpkg=?, rapport_json=?, rapport_html=?, verdict=?, erreur=NULL, maj=? WHERE id=?" + garde,
+                (gpkg, rapport_json, rapport_html, verdict, _maintenant(), tid, *args),
+            )
+            return c.rowcount == 1
+
+    def echouer(self, tid: str, erreur: str, tentatives_max: int, tentative: int | None = None) -> bool:
+        garde, args = self._garde(tentative)
         with self._cx() as cx:
             r = cx.execute("SELECT tentatives FROM taches WHERE id=?", (tid,)).fetchone()
             etat = "en_attente" if r and r["tentatives"] < tentatives_max else "echec"
-            cx.execute("UPDATE taches SET etat=?, erreur=?, maj=? WHERE id=?", (etat, erreur[:2000], _maintenant(), tid))
+            c = cx.execute("UPDATE taches SET etat=?, erreur=?, maj=? WHERE id=?" + garde,
+                           (etat, erreur[:2000], _maintenant(), tid, *args))
+            return c.rowcount == 1
+
+    def prolonger(self, tid: str, tentative: int) -> bool:
+        """Renews the lease of a task still in progress under ``tentative``."""
+        with self._cx() as cx:
+            c = cx.execute("UPDATE taches SET maj=? WHERE id=? AND etat='en_cours' AND tentatives=?",
+                           (_maintenant(), tid, tentative))
+            return c.rowcount == 1
 
     def obtenir(self, tid: str) -> dict | None:
         with self._cx() as cx:
