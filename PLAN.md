@@ -82,8 +82,9 @@ reconstruction en sous-bois.
    `creer_projet_inventaire_video()` au schéma 1.2.0 avec plugin, symbologie
    de Marculus et fonds IGN (nemeton 2026.10.9, dépôt) ; sous-onglet
    « Inventaire vidéo » de nemetonshiny (2026.10.10). Nemeton installé ici :
-   2026.10.8, sans la symbologie ; à mettre à jour. Reste à essayer le bouton
-   sur Marsannay et à comparer avec le projet de test.
+   2026.10.12 (branche de la PR nemeton #566, le 2026-10-17). Bouton
+   « Envoyer au téléphone » essayé sur Marsannay le 2026-10-17 (projet
+   `20261015_194200_yzoh`, avec nemeton 2026.10.11).
    Annexe au brief nemeton (tables `projet`, `parcelles`, `ugf`, plusieurs centres par placette) : `briefs/vers-nemeton/2026-10-15-inventaire-video-carte.md`, déposée le 2026-10-15.
    Seconde annexe (plugin QField à livrer à côté du projet, noms de couches,
    ajout d'entités autorisé, `declinaison_deg` vide accepté) :
@@ -94,6 +95,16 @@ reconstruction en sous-bois.
    fausse ; emprise d'ouverture ; légende en trois groupes au lieu de 225
    couches à plat) : `briefs/vers-nemeton/2026-10-17-projet-qgs-crs-groupes.md`,
    déposée le 2026-10-17.
+   **Traités par nemeton 2026.10.12** (constaté le 2026-10-17, PR nemeton
+   #566 pas encore fusionnée) : cette troisième annexe, et le brief
+   `2026-10-17-inventaire-video-chemins-qgz.md` par l'option 2 (dossier
+   `<projet>/` ouvrable à côté du `.qgz`, qui ne change pas). nemeton
+   propose à nemetonshiny de livrer ce dossier dans `video_zip_livraison()`
+   (brief `vers-nemetonshiny/2026-10-17-inventaire-video-dossier-projet.md`).
+   Rien à changer côté Groma : serveur et application lisent le `.qgz`, et
+   le zip de « Ouvrir dans QField » reste valable. Reste : régénérer un
+   projet avec 2026.10.12, l'envoyer, et vérifier fonds, échelle et légende
+   dans QField (fenêtre « nouvelle version » essayée au passage).
 7. ~~Déposer les briefs~~ : déposés le 2026-10-12 dans
    `/home/pascal/dev/briefs/vers-nemeton/` et `vers-nemetonshiny/`, en
    attente de traitement.
