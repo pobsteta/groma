@@ -77,7 +77,19 @@ reconstruction en sous-bois.
 3. Tester `android/app` sur un appareil ARCore Depth : installée sur un
    Galaxy S23 Ultra le 2026-10-12, l'écran de capture s'ouvre ; capture
    complète d'une placette pas encore faite.
-4. Image Docker GPU : COLMAP avec CUDA, VGGT (licence à vérifier), SAM 2.
+4. Image Docker GPU : COLMAP avec CUDA, VGGT, SAM 2. Brief écrit le
+   2026-10-17 (`briefs/groma/2026-10-17-worker-gpu-scaleway.md`) : API
+   toujours allumée sans GPU, worker GPU L4 créé à la demande sur Scaleway
+   (outillage repris de maestronemeton), worker par HTTP, image CUDA sans
+   poids, garde-fous de coût. Licence VGGT vérifiée : code sous « VGGT
+   License » (usage commercial permis, non OSI) ; poids d'origine non
+   commerciaux, `VGGT-1B-Commercial` sur demande. Complété le même jour :
+   **MapAnything** (code et poids `map-anything-apache` sous Apache-2.0)
+   remplace VGGT par défaut ; nouvelle méthode `profondeur_ia` (profondeur
+   ARCore affinée par Prompt Depth Anything, repli Video Depth Anything
+   Small ou Depth Anything 3 Metric, points de contrôle Apache seulement) ;
+   GLOMAP à essayer dans COLMAP. À trancher : hébergement de l'API, VGGT en
+   essai ou écarté, plafond d'heures GPU.
 5. Première placette réelle : tourner, mesurer à la main, `benchmark/`.
 6. **Chaîne nemeton / nemetonshiny livrée** (constaté le 2026-10-17) :
    `creer_projet_inventaire_video()` au schéma 1.2.0 avec plugin, symbologie
