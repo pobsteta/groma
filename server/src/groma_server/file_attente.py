@@ -52,10 +52,18 @@ class FileAttente:
         self.chemin.parent.mkdir(parents=True, exist_ok=True)
         with self._cx() as cx:
             cx.executescript(SCHEMA)
-            if "projet_id" not in {r["name"] for r in cx.execute("PRAGMA table_info(taches)")}:
-                cx.execute("ALTER TABLE taches ADD COLUMN projet_id TEXT NOT NULL DEFAULT ''")
-            cx.execute("DROP INDEX IF EXISTS taches_plot")
-            cx.execute(INDEX)
+            # API and worker may start together: check and migrate under the
+            # write lock, or both see the column missing and both add it.
+            cx.execute("BEGIN IMMEDIATE")
+            try:
+                if "projet_id" not in {r["name"] for r in cx.execute("PRAGMA table_info(taches)")}:
+                    cx.execute("ALTER TABLE taches ADD COLUMN projet_id TEXT NOT NULL DEFAULT ''")
+                cx.execute("DROP INDEX IF EXISTS taches_plot")
+                cx.execute(INDEX)
+                cx.execute("COMMIT")
+            except BaseException:
+                cx.execute("ROLLBACK")
+                raise
 
     def _cx(self) -> sqlite3.Connection:
         cx = sqlite3.connect(self.chemin, timeout=30, isolation_level=None)

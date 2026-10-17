@@ -120,3 +120,40 @@ def test_file_creee_avant_projet_id(tmp_path):
     f.ajouter("P001", "y.zip", "foret_a")
     assert f.derniere("P001")["id"] == "t1"
     assert len(f.lister()) == 2 and len(f.lister("foret_a")) == 1
+
+
+def test_migration_simultanee(tmp_path):
+    """API and worker started together on an old base: only one adds projet_id, neither fails."""
+    import sqlite3
+    import threading
+    import time
+
+    base = tmp_path / "t.sqlite"
+    with sqlite3.connect(base) as cx:
+        cx.execute("PRAGMA journal_mode=WAL")  # as left by the server that created it
+        cx.executescript(
+            "CREATE TABLE taches (id TEXT PRIMARY KEY, plot_id TEXT NOT NULL, paquet TEXT NOT NULL,"
+            " etat TEXT NOT NULL DEFAULT 'en_attente', tentatives INTEGER NOT NULL DEFAULT 0, cree TEXT NOT NULL,"
+            " maj TEXT NOT NULL, erreur TEXT, gpkg TEXT, rapport_json TEXT, rapport_html TEXT, verdict TEXT);"
+            "CREATE INDEX taches_etat ON taches(etat, cree);"
+        )
+    # The other process holds the write lock and migrates while this one starts.
+    autre = sqlite3.connect(base, isolation_level=None)
+    autre.execute("BEGIN IMMEDIATE")
+    erreurs = []
+
+    def demarrer():
+        try:
+            FileAttente(base)
+        except Exception as e:  # noqa: BLE001 - the failure is what the test looks for
+            erreurs.append(e)
+
+    t = threading.Thread(target=demarrer)
+    t.start()
+    time.sleep(0.5)
+    autre.execute("ALTER TABLE taches ADD COLUMN projet_id TEXT NOT NULL DEFAULT ''")
+    autre.execute("COMMIT")
+    autre.close()
+    t.join(10)
+    assert not erreurs
+    FileAttente(base).ajouter("P001", "x.zip", "foret_a")
