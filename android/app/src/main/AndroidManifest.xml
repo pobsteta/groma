@@ -21,6 +21,10 @@
     <!-- Prerequisite of a connectedDevice service when the receiver is reached over TCP. -->
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- "Ouvrir dans QField": tells "QField not installed" apart (package visibility, API 30+). -->
+    <queries>
+        <package android:name="ch.opengis.qfield" />
+    </queries>
     <uses-feature android:name="android.hardware.camera.ar" android:required="true" />
     <uses-feature android:glEsVersion="0x00030000" android:required="true" />
 
@@ -56,6 +60,16 @@
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="Serves provisional tree detections on 127.0.0.1 to the QField project plugin while the user edits in QField." />
         </service>
+        <!-- Zip of the QField project handed to QField ("Ouvrir dans QField"). -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fichiers"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/fichiers_partages" />
+        </provider>
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="dataSync"

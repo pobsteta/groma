@@ -55,6 +55,21 @@ Dépose chaque projet dans le dossier des projets, dans un sous-dossier qui port
     <string name="projet_ouvrir">Ouvrir</string>
     <string name="projet_details">Détails</string>
     <string name="projet_mettre_a_jour">Mettre à jour depuis le dossier</string>
+    <string name="projet_ouvrir_qfield">Ouvrir dans QField</string>
+    <string name="qfield_preparation">Préparation du projet pour QField…</string>
+    <string name="qfield_repli_titre">Ouvrir le projet dans QField</string>
+    <string name="qfield_repli_texte">QField n\'a pas pu recevoir le projet directement%1$s.
+Dans QField : « Ouvrir un fichier local », puis le menu ⋮ → « Importer un projet depuis un dossier », et choisis :
+Téléchargements/groma/%2$s/qfield</string>
+    <string name="qfield_deja_titre">Projet déjà dans QField</string>
+    <string name="qfield_deja_texte">Ce projet est déjà dans QField, sans changement depuis. Rouvre-le depuis QField (projets récents, ou « Imported Projects/%1$s ») : c\'est là que se trouve ce qui a été saisi.
+« Renvoyer » sert seulement si la copie de QField a été supprimée : il en crée une nouvelle (%1$s_1…), sans les saisies de la première.</string>
+    <string name="qfield_nouvelle_version_titre">Nouvelle version du projet</string>
+    <string name="qfield_nouvelle_version_texte">Une nouvelle version de ce projet est arrivée depuis le dernier envoi à QField. L\'envoyer crée une nouvelle copie dans QField (%1$s_1…), sans ce qui a été saisi dans l\'ancienne ; l\'ancienne y reste, avec ses saisies.</string>
+    <string name="qfield_ouvrir_app">Ouvrir QField</string>
+    <string name="qfield_renvoyer">Renvoyer</string>
+    <string name="qfield_envoyer_version">Envoyer la nouvelle version</string>
+    <string name="qfield_absent">(QField n\'est pas installé)</string>
     <string name="projet_mis_a_jour">Projet mis à jour.</string>
     <string name="retirer">Retirer du téléphone</string>
     <string name="retirer_titre">Retirer le projet ?</string>
