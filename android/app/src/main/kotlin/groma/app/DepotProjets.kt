@@ -55,7 +55,8 @@ class DepotProjets(private val ctx: Context) {
     private fun dossierRacine(): DocumentFile? = racine?.let { DocumentFile.fromTreeUri(ctx, it) }?.takeIf { it.canRead() }
 
     private fun sources(): Map<String, DocumentFile> = dossierRacine()?.listFiles().orEmpty()
-        .filter { it.isDirectory && it.name != null && it.findFile(GPKG)?.isFile == true }
+        // Dot folders: a download being installed (TelechargementProjet).
+        .filter { it.isDirectory && it.name?.startsWith(".") == false && it.findFile(GPKG)?.isFile == true }
         .associateBy { it.name!! }
 
     /**
@@ -146,11 +147,15 @@ class DepotProjets(private val ctx: Context) {
         return Resultat.Fait
     }
 
+    /** Projects on the phone: working copies and source folders. */
+    fun cles(): Set<String> =
+        copies.listFiles { f -> f.isDirectory && !f.name.startsWith(".") }.orEmpty().map { it.name }.toSet() + sources().keys
+
     fun projet(cle: String): Projet? = File(copies, cle).takeIf { File(it, GPKG).isFile }?.let(::Projet)
 
     private fun importerDepuis(doc: DocumentFile, cible: File) {
         try {
-            copier(doc, cible)
+            copier(doc, cible, racine = true)
             File(cible, SOURCE).writeText(JSONObject().put("gpkg_modifie", doc.findFile(GPKG)?.lastModified() ?: 0L).toString())
         } catch (e: Exception) {
             cible.deleteRecursively(); throw e
@@ -160,10 +165,12 @@ class DepotProjets(private val ctx: Context) {
     private fun lireSource(dossier: File): Long? =
         File(dossier, SOURCE).takeIf { it.isFile }?.let { runCatching { JSONObject(it.readText()).getLong("gpkg_modifie") }.getOrNull() }
 
-    private fun copier(src: DocumentFile, dst: File) {
+    private fun copier(src: DocumentFile, dst: File, racine: Boolean = false) {
         dst.mkdirs()
         for (f in src.listFiles()) {
             val nom = f.name ?: continue
+            // qfield/: the .qgz for QField already holds the GeoPackage and rasters, not needed by Groma.
+            if (racine && nom == QFIELD) continue
             if (f.isDirectory) copier(f, File(dst, nom))
             else ctx.contentResolver.openInputStream(f.uri)!!.use { i -> File(dst, nom).outputStream().use { i.copyTo(it) } }
         }
@@ -171,6 +178,7 @@ class DepotProjets(private val ctx: Context) {
 
     companion object {
         const val GPKG = "inventaire_video.gpkg"
+        const val QFIELD = "qfield"
         private const val SOURCE = ".source.json" // last-modified time of the source GeoPackage at import
         private const val CLE_RACINE = "racine_projets"
         private const val CLE_DERNIER = "dernier_projet"

@@ -31,10 +31,13 @@ import groma.app.ui.EcranCarte
 import groma.app.ui.EcranParametres
 import groma.app.ui.EcranPlacettes
 import groma.app.ui.EcranProjets
+import groma.app.ui.EcranProjetsServeur
+import groma.app.ui.LigneServeur
 import groma.app.ui.GromaTheme
 import groma.app.ui.LignePlacette
 import groma.app.ui.Reglages
 import groma.core.DonneesCarte
+import groma.core.ProjetsServeur
 import groma.core.TriProjets
 import java.io.File
 import java.text.Collator
@@ -80,6 +83,7 @@ class MainActivity : AppCompatActivity() {
         setContent {
             GromaTheme {
                 var parametres by rememberSaveable { mutableStateOf(false) }
+                var projetsServeur by rememberSaveable { mutableStateOf(false) }
                 var cle by rememberSaveable { mutableStateOf<String?>(null) }
                 var carte by rememberSaveable { mutableStateOf(false) }
                 // Leaving the project releases the RTK receiver (for QField, and the battery).
@@ -94,6 +98,20 @@ class MainActivity : AppCompatActivity() {
                             reglages = reglages,
                             onChange = { reglages = it; Preferences.memoriserReglages(this, it) },
                             onRetour = { parametres = false },
+                        )
+                    }
+                    projetsServeur -> {
+                        BackHandler { projetsServeur = false }
+                        EcranProjetsServeur(
+                            serveurConfigure = reglages.serveur.isNotBlank(),
+                            racineChoisie = depot.racine != null,
+                            charger = { withContext(Dispatchers.IO) { lignesServeur(reglages) } },
+                            onTelecharger = { m -> depot.racine?.let { TelechargementProjet.planifier(this, m, it) } },
+                            onAnnuler = { m -> TelechargementProjet.annuler(this, m.projetId) },
+                            onInstalle = ::actualiser,
+                            onParametres = { parametres = true },
+                            onChoisirRacine = { choisirRacine.launch(DOSSIER_PAR_DEFAUT) },
+                            onRetour = { projetsServeur = false },
                         )
                     }
                     ouvert != null && carte -> {
@@ -140,6 +158,8 @@ class MainActivity : AppCompatActivity() {
                         onActualiser = ::actualiser,
                         onChoisirRacine = { choisirRacine.launch(DOSSIER_PAR_DEFAUT) },
                         onImporter = { importer.launch(null) },
+                        onProjetsServeur = { projetsServeur = true },
+                        serveurConfigure = reglages.serveur.isNotBlank(),
                         onMettreAJour = { e -> tache { message(depot.mettreAJour(e), R.string.projet_mis_a_jour) } },
                         onRetirer = { e -> tache { message(depot.retirer(e), null) } },
                         onParametres = { parametres = true },
@@ -171,6 +191,13 @@ class MainActivity : AppCompatActivity() {
             projets = trier(liste)
             chargement = false
             if (erreurs.isNotEmpty()) Toast.makeText(this@MainActivity, erreurs.joinToString("\n"), Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun lignesServeur(r: Reglages): List<LigneServeur> {
+        val presents = depot.cles()
+        return ProjetsDuServeur.lister(r.serveur, r.jeton.ifBlank { null }).map { m ->
+            LigneServeur(m, ProjetsServeur.etat(m, m.projetId in presents, ProjetsDuServeur.versionInstallee(this, m.projetId)))
         }
     }
 
