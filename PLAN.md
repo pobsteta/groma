@@ -102,9 +102,18 @@ reconstruction en sous-bois.
    propose à nemetonshiny de livrer ce dossier dans `video_zip_livraison()`
    (brief `vers-nemetonshiny/2026-10-17-inventaire-video-dossier-projet.md`).
    Rien à changer côté Groma : serveur et application lisent le `.qgz`, et
-   le zip de « Ouvrir dans QField » reste valable. Reste : régénérer un
-   projet avec 2026.10.12, l'envoyer, et vérifier fonds, échelle et légende
-   dans QField (fenêtre « nouvelle version » essayée au passage).
+   le zip de « Ouvrir dans QField » reste valable. Vérifié le 2026-10-17
+   dans QField 4.3.6 avec un projet régénéré : échelle juste et légende en
+   groupes ; mais `arbres`, `cibles`, `ugf`, `projet`, Plan IGN et Ortho IGN
+   invalides. Cause isolée par essais sur l'appareil : les identifiants de
+   couches fixes (`arbres_01`…), identiques d'un projet à l'autre ; avec des
+   identifiants nouveaux, tout est valide. Quatrième annexe (identifiants
+   uniques à chaque génération, noms inchangés) :
+   `briefs/vers-nemeton/2026-10-17-projet-qgs-ids-couches.md`, déposée le
+   2026-10-17. Reste : fenêtre « nouvelle version » à essayer (mémoire des
+   envois perdue au passage à l'APK de publication 0.9.0) ; tuiles
+   OpenStreetMap refusées dans QField (règles d'usage du serveur de tuiles,
+   à examiner).
 7. ~~Déposer les briefs~~ : déposés le 2026-10-12 dans
    `/home/pascal/dev/briefs/vers-nemeton/` et `vers-nemetonshiny/`, en
    attente de traitement.
