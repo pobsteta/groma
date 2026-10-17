@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.9.0](https://github.com/pobsteta/groma/compare/v0.8.0...v0.9.0) (2026-10-17)
+
+
+### Nouveautés
+
+* **android:** afficher et coller le jeton d'accès dans les paramètres ([#51](https://github.com/pobsteta/groma/issues/51)) ([dce918a](https://github.com/pobsteta/groma/commit/dce918a60ce605e94ef1ebeb235b577dc8ac6758))
+* **android:** ouvrir le projet du serveur dans QField, plugin compris ([#48](https://github.com/pobsteta/groma/issues/48)) ([ad51eda](https://github.com/pobsteta/groma/commit/ad51edaba6beb1fc5f1d3242ad5290c8936f4f16))
+* **android:** projets du serveur, téléchargement reprenable et installation dans le dossier des projets ([#47](https://github.com/pobsteta/groma/issues/47)) ([0747fa6](https://github.com/pobsteta/groma/commit/0747fa634799020a27ff81fcdbc75da2d159cfd2))
+* **core:** versions et extraction sûre des projets publiés sur le serveur ([#46](https://github.com/pobsteta/groma/issues/46)) ([baecba3](https://github.com/pobsteta/groma/commit/baecba307339c3deb4fcf30f6824028d65339fa1))
+* **server:** dépôt, publication et téléchargement des projets QField pour les téléphones ([#45](https://github.com/pobsteta/groma/issues/45)) ([229ee25](https://github.com/pobsteta/groma/commit/229ee2545851bb9e727bd438b4fa43c598cea408))
+
+
+### Corrections
+
+* **server:** migration de la file d'attente sûre au démarrage simultané de l'API et du worker ([#50](https://github.com/pobsteta/groma/issues/50)) ([8546c09](https://github.com/pobsteta/groma/commit/8546c099fca24932c85db0bc3eedfe1a1db55666))
+
+
+### Documentation
+
+* **briefs:** envoi du projet de nemetonshiny au téléphone par le serveur Groma ([#43](https://github.com/pobsteta/groma/issues/43)) ([af6d5a0](https://github.com/pobsteta/groma/commit/af6d5a044e9f2f1a9c0ad814dbe429fa0eeb5d41))
+* projet QField complet généré par nemetonshiny, projet de test en dépannage ([#42](https://github.com/pobsteta/groma/issues/42)) ([8b7e10a](https://github.com/pobsteta/groma/commit/8b7e10ad6d9e7b9a04f2b175a87bb8dd9c096aa7))
+* recevoir un projet par le serveur et l'ouvrir dans QField ([#52](https://github.com/pobsteta/groma/issues/52)) ([e87bf44](https://github.com/pobsteta/groma/commit/e87bf44aea442cd28498d858a6abb19b395a96d9))
+
 ## [0.8.0](https://github.com/pobsteta/groma/compare/v0.7.0...v0.8.0) (2026-10-16)
 
 
