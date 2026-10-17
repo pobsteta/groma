@@ -1,6 +1,7 @@
 package groma.app
 
 import android.Manifest
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -12,6 +13,7 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -23,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import groma.app.carte.configurerOsmdroid
 import groma.app.gnss.ServiceGnssRtk
@@ -162,6 +165,7 @@ class MainActivity : AppCompatActivity() {
                         serveurConfigure = reglages.serveur.isNotBlank(),
                         onMettreAJour = { e -> tache { message(depot.mettreAJour(e), R.string.projet_mis_a_jour) } },
                         onRetirer = { e -> tache { message(depot.retirer(e), null) } },
+                        onOuvrirQfield = ::ouvrirQfield,
                         onParametres = { parametres = true },
                     )
                 }
@@ -199,6 +203,65 @@ class MainActivity : AppCompatActivity() {
         return ProjetsDuServeur.lister(r.serveur, r.jeton.ifBlank { null }).map { m ->
             LigneServeur(m, ProjetsServeur.etat(m, m.projetId in presents, ProjetsDuServeur.versionInstallee(this, m.projetId)))
         }
+    }
+
+    /**
+     * Hands the QField project to QField as a zip (ACTION_VIEW, then ACTION_SEND):
+     * QField imports it into "Imported Projects", plugin included, and opens
+     * it. Each import is a new folder there, without what was entered in the
+     * previous one: the same version is reopened from QField (resending stays
+     * possible if QField's copy was deleted), a new version is sent with a
+     * warning. Falls back to the folder to import by hand.
+     */
+    private fun ouvrirQfield(e: EntreeProjet) {
+        lifecycleScope.launch {
+            val empreinte = try {
+                withContext(Dispatchers.IO) { depot.empreinteQfield(e) }
+            } catch (ex: Exception) {
+                Toast.makeText(this@MainActivity, ex.message ?: ex.toString(), Toast.LENGTH_LONG).show(); return@launch
+            }
+            val precedent = depot.envoiQfield(e.cle) ?: return@launch envoyerQfield(e, empreinte)
+            val qfield = packageManager.getLaunchIntentForPackage(QFIELD)
+            val ouvrir = { startActivity(qfield) }
+            val envoyer = { lifecycleScope.launch { envoyerQfield(e, empreinte) } }
+            val d = AlertDialog.Builder(this@MainActivity).setNegativeButton(R.string.annuler, null)
+            if (precedent == empreinte) {
+                d.setTitle(R.string.qfield_deja_titre).setMessage(getString(R.string.qfield_deja_texte, e.cle))
+                if (qfield != null) d.setPositiveButton(R.string.qfield_ouvrir_app) { _, _ -> ouvrir() }
+                d.setNeutralButton(R.string.qfield_renvoyer) { _, _ -> envoyer() }
+            } else {
+                d.setTitle(R.string.qfield_nouvelle_version_titre).setMessage(getString(R.string.qfield_nouvelle_version_texte, e.cle))
+                d.setPositiveButton(R.string.qfield_envoyer_version) { _, _ -> envoyer() }
+                if (qfield != null) d.setNeutralButton(R.string.qfield_ouvrir_app) { _, _ -> ouvrir() }
+            }
+            d.show()
+        }
+    }
+
+    private suspend fun envoyerQfield(e: EntreeProjet, empreinte: String) {
+        Toast.makeText(this, R.string.qfield_preparation, Toast.LENGTH_SHORT).show()
+        val zip = try {
+            withContext(Dispatchers.IO) { depot.archiveQfield(e) }
+        } catch (ex: Exception) {
+            Toast.makeText(this, ex.message ?: ex.toString(), Toast.LENGTH_LONG).show(); return
+        }
+        val uri = FileProvider.getUriForFile(this, "$packageName.fichiers", zip)
+        val vue = Intent(Intent.ACTION_VIEW).setDataAndType(uri, TYPE_ZIP)
+        val envoi = Intent(Intent.ACTION_SEND).setType(TYPE_ZIP).putExtra(Intent.EXTRA_STREAM, uri)
+        for (i in listOf(vue, envoi)) {
+            i.setPackage(QFIELD).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            try {
+                startActivity(i)
+                depot.memoriserEnvoiQfield(e.cle, empreinte)
+                return
+            } catch (_: ActivityNotFoundException) {}
+        }
+        val installe = try { packageManager.getPackageInfo(QFIELD, 0); true } catch (_: PackageManager.NameNotFoundException) { false }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.qfield_repli_titre)
+            .setMessage(getString(R.string.qfield_repli_texte, if (installe) "" else " " + getString(R.string.qfield_absent), e.cle))
+            .setPositiveButton(R.string.fermer, null)
+            .show()
     }
 
     private fun message(r: DepotProjets.Resultat, ok: Int?) {
@@ -249,6 +312,9 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         /** Where the folder picker opens the first time: Téléchargements/groma. */
+        private const val QFIELD = "ch.opengis.qfield"
+        private const val TYPE_ZIP = "application/zip"
+
         private val DOSSIER_PAR_DEFAUT: Uri =
             DocumentsContract.buildDocumentUri("com.android.externalstorage.documents", "primary:Download/groma")
     }

@@ -10,6 +10,9 @@ import groma.core.InfosProjet
 import groma.core.ResumeProjet
 import org.json.JSONObject
 import java.io.File
+import java.util.zip.Deflater
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 /** One project of the list: the working copy on the phone, and its source folder if still there. */
 data class EntreeProjet(
@@ -22,6 +25,8 @@ data class EntreeProjet(
     val majDisponible: Boolean,
     /** Distance (m) from the phone to the centre of the project's extent, when both are known. */
     val distanceM: Double? = null,
+    /** The source folder holds the QField project (a `.qgz` in `qfield/`, from nemetonshiny). */
+    val qfield: Boolean = false,
 ) {
     val titre: String get() = infos?.projetNom ?: cle
 }
@@ -89,7 +94,8 @@ class DepotProjets(private val ctx: Context) {
         }
         val importe = lireSource(dossier)
         val modifie = source?.findFile(GPKG)?.lastModified() ?: 0L
-        return EntreeProjet(dossier.name, projet, infos, resume, majDisponible = importe != null && modifie > importe)
+        val qfield = source?.findFile(QFIELD)?.listFiles().orEmpty().any { it.name?.endsWith(".qgz") == true }
+        return EntreeProjet(dossier.name, projet, infos, resume, majDisponible = importe != null && modifie > importe, qfield = qfield)
     }
 
     /** Picked folder outside the projects folder ("Importer un dossier…"): copied the same way. */
@@ -151,6 +157,57 @@ class DepotProjets(private val ctx: Context) {
     fun cles(): Set<String> =
         copies.listFiles { f -> f.isDirectory && !f.name.startsWith(".") }.orEmpty().map { it.name }.toSet() + sources().keys
 
+    /**
+     * Zip of the QField project for QField's import (brief envoi projet, § 4):
+     * `<nom>.qgz` and its plugin `<nom>.qml` at the root, as QField expects
+     * them side by side, with `inventaire_video.gpkg` and `rasters/` next to
+     * them. The `.qgs` points to `./inventaire_video.gpkg`, and QGIS resolves
+     * relative paths from the `.qgz` location, not inside the archive (only
+     * `attachment:` paths are read there): without these copies the layers
+     * would be missing. Built in the cache, shared through the FileProvider.
+     */
+    fun archiveQfield(e: EntreeProjet): File {
+        val source = sources()[e.cle] ?: error("Le dossier ${e.cle} n'est plus dans le dossier des projets.")
+        val (qgz, fichiers) = fichiersQfield(e)
+        val base = qgz.name!!.removeSuffix(".qgz")
+        val entrees = buildList {
+            add(qgz.name!! to qgz)
+            fichiers.firstOrNull { it.name == "$base.qml" }?.let { add(it.name!! to it) }
+            source.findFile(GPKG)?.takeIf { it.isFile }?.let { add(GPKG to it) }
+            source.findFile("rasters")?.listFiles().orEmpty().filter { it.isFile && it.name != null }.forEach { add("rasters/${it.name}" to it) }
+        }
+        val cache = File(ctx.cacheDir, QFIELD).apply { deleteRecursively(); mkdirs() }
+        val zip = File(cache, "${e.cle}.zip")
+        ZipOutputStream(zip.outputStream().buffered()).use { z ->
+            z.setLevel(Deflater.BEST_SPEED)
+            for ((chemin, f) in entrees) {
+                z.putNextEntry(ZipEntry(chemin))
+                ctx.contentResolver.openInputStream(f.uri)!!.use { it.copyTo(z) }
+                z.closeEntry()
+            }
+        }
+        return zip
+    }
+
+    /** Identifies the `.qgz` handed to QField: name, size and modification time. */
+    fun empreinteQfield(e: EntreeProjet): String = fichiersQfield(e).first.let { "${it.name}:${it.length()}:${it.lastModified()}" }
+
+    /**
+     * What was last handed to QField for this project. QField unzips every
+     * archive into a new folder of "Imported Projects" (`<cle>`, `<cle>_1`…):
+     * sending again makes a separate copy, without what was entered in the first.
+     */
+    fun envoiQfield(cle: String): String? = prefs.getString(CLE_QFIELD + cle, null)
+
+    fun memoriserEnvoiQfield(cle: String, empreinte: String) = prefs.edit().putString(CLE_QFIELD + cle, empreinte).apply()
+
+    private fun fichiersQfield(e: EntreeProjet): Pair<DocumentFile, List<DocumentFile>> {
+        val dossier = sources()[e.cle]?.findFile(QFIELD) ?: error("Pas de projet QField dans le dossier ${e.cle}.")
+        val fichiers = dossier.listFiles().filter { f -> f.isFile && f.name?.let { it.endsWith(".qgz") || it.endsWith(".qml") } == true }
+        val qgz = fichiers.singleOrNull { it.name!!.endsWith(".qgz") } ?: error("Le dossier ${e.cle}/$QFIELD doit contenir un seul .qgz.")
+        return qgz to fichiers
+    }
+
     fun projet(cle: String): Projet? = File(copies, cle).takeIf { File(it, GPKG).isFile }?.let(::Projet)
 
     private fun importerDepuis(doc: DocumentFile, cible: File) {
@@ -182,5 +239,6 @@ class DepotProjets(private val ctx: Context) {
         private const val SOURCE = ".source.json" // last-modified time of the source GeoPackage at import
         private const val CLE_RACINE = "racine_projets"
         private const val CLE_DERNIER = "dernier_projet"
+        private const val CLE_QFIELD = "qfield_envoye_"
     }
 }

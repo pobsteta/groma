@@ -70,6 +70,7 @@ fun EcranProjets(
     serveurConfigure: Boolean,
     onMettreAJour: (EntreeProjet) -> Unit,
     onRetirer: (EntreeProjet) -> Unit,
+    onOuvrirQfield: (EntreeProjet) -> Unit,
     onParametres: () -> Unit,
 ) {
     var menu by remember { mutableStateOf(false) }
@@ -149,6 +150,7 @@ fun EcranProjets(
                         onDetails = { details = e },
                         onMettreAJour = { onMettreAJour(e) },
                         onRetirer = { aRetirer = e },
+                        onOuvrirQfield = { onOuvrirQfield(e) },
                     )
                 }
             }
@@ -182,7 +184,7 @@ private fun distanceTexte(m: Double): String = when {
 }
 
 @Composable
-private fun CarteProjet(e: EntreeProjet, onOuvrir: () -> Unit, onDetails: () -> Unit, onMettreAJour: () -> Unit, onRetirer: () -> Unit) {
+private fun CarteProjet(e: EntreeProjet, onOuvrir: () -> Unit, onDetails: () -> Unit, onMettreAJour: () -> Unit, onRetirer: () -> Unit, onOuvrirQfield: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
     val r = e.resume
     val i = e.infos
@@ -239,6 +241,7 @@ private fun CarteProjet(e: EntreeProjet, onOuvrir: () -> Unit, onDetails: () -> 
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                     DropdownMenuItem(text = { Text(stringResource(R.string.projet_ouvrir)) }, onClick = { menu = false; onOuvrir() })
                     DropdownMenuItem(text = { Text(stringResource(R.string.projet_details)) }, onClick = { menu = false; onDetails() })
+                    if (e.qfield) DropdownMenuItem(text = { Text(stringResource(R.string.projet_ouvrir_qfield)) }, onClick = { menu = false; onOuvrirQfield() })
                     DropdownMenuItem(
                         text = { Text(stringResource(R.string.projet_mettre_a_jour)) },
                         enabled = e.majDisponible,
