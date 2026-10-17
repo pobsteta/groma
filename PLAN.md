@@ -83,8 +83,13 @@ reconstruction en sous-bois.
    (outillage repris de maestronemeton), worker par HTTP, image CUDA sans
    poids, garde-fous de coût. Licence VGGT vérifiée : code sous « VGGT
    License » (usage commercial permis, non OSI) ; poids d'origine non
-   commerciaux, `VGGT-1B-Commercial` sur demande. À trancher : hébergement
-   de l'API, VGGT ou non, plafond d'heures GPU.
+   commerciaux, `VGGT-1B-Commercial` sur demande. Complété le même jour :
+   **MapAnything** (code et poids `map-anything-apache` sous Apache-2.0)
+   remplace VGGT par défaut ; nouvelle méthode `profondeur_ia` (profondeur
+   ARCore affinée par Prompt Depth Anything, repli Video Depth Anything
+   Small ou Depth Anything 3 Metric, points de contrôle Apache seulement) ;
+   GLOMAP à essayer dans COLMAP. À trancher : hébergement de l'API, VGGT en
+   essai ou écarté, plafond d'heures GPU.
 5. Première placette réelle : tourner, mesurer à la main, `benchmark/`.
 6. **Chaîne nemeton / nemetonshiny livrée** (constaté le 2026-10-17) :
    `creer_projet_inventaire_video()` au schéma 1.2.0 avec plugin, symbologie
