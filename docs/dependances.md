@@ -32,7 +32,7 @@ par GeoPackage et GeoTIFF : ce dépôt n'importe pas son code R.
 
 | Composant | Licence | Statut |
 |---|---|---|
-| **VGGT** (reconstruction IA) | code et poids VGGT-1B d'origine : **non commerciale** (Meta) ; un point de contrôle « VGGT-1B-Commercial » existe sous d'autres conditions | Adaptateur fourni, chargé seulement s'il est installé. **Signalé** : à vérifier avant tout usage commercial, poids non distribués ici. |
+| **VGGT** (reconstruction IA) | code : « VGGT License » de Meta (2025-07-29), usage commercial permis, **non OSI**, politique d'usage excluant notamment le militaire et les infrastructures critiques ; poids VGGT-1B d'origine : **non commerciaux** ; « VGGT-1B-Commercial » : usage commercial après formulaire de demande | Adaptateur fourni, chargé seulement s'il est installé. **Signalé** : installé dans l'image GPU, jamais copié dans le dépôt ; poids jamais dans l'image ; désactivé par défaut tant que les poids commerciaux ne sont pas obtenus (brief `briefs/groma/2026-10-17-worker-gpu-scaleway.md`). |
 | SAM 2 (segmentation des troncs) | Apache-2.0 | adaptateur optionnel |
 | PyTorch | BSD-3 | requis par VGGT et SAM 2 |
 | MinIO (stockage S3 auto-hébergé) | **AGPL-3.0** | **Signalé** : acceptable comme service séparé non modifié. Alternatives : SeaweedFS (Apache-2.0), Garage (AGPL-3.0). Par défaut : disque local. |
