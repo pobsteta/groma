@@ -77,9 +77,16 @@ nemetonshiny :
 
 ```
 Téléchargements/groma/
-├── 20261008_212542_uywc/inventaire_video.gpkg
+├── 20261015_194200_yzoh/          reçu du serveur
+│   ├── inventaire_video.gpkg
+│   ├── rasters/P001_mnt.tif …
+│   └── qfield/inventaire_video.qgz, inventaire_video.qml
+├── 20261008_212542_uywc/inventaire_video.gpkg   déposé par câble
 └── 20261007_084614_qapz/inventaire_video.gpkg
 ```
+
+Un projet arrive de deux façons : **par le serveur Groma**, envoyé depuis
+nemetonshiny (recommandé, avec le projet QField), ou **par câble**.
 
 * Un nouveau dossier est copié dans le stockage de Groma (copie de
   travail) à l'ouverture de l'application ou par ⋮ → « Actualiser ». La
@@ -100,13 +107,76 @@ Téléchargements/groma/
   traitée) : rien de ce qui a été saisi n'est écrasé.
 * **Retirer du téléphone** : supprime la copie de travail et le dossier
   source ; refusé tant qu'une placette faite n'est pas envoyée.
+* **Ouvrir dans QField** (menu de la carte) : seulement pour un projet reçu
+  du serveur, voir plus bas.
 * ⋮ → « Importer un dossier… » copie un dossier situé ailleurs.
 * Un GeoPackage préparé avant la table `projet` (Groma < 0.3) s'affiche
   avec le nom de son dossier et ses seuls nombres de placettes.
 
-### Déposer les dossiers
+### Recevoir un projet par le serveur
 
-Par câble USB, avec `adb` :
+1. **Dans nemetonshiny** (Terrain → Inventaire vidéo) : « Générer le
+   projet QField », puis **« Envoyer au téléphone »**
+   (`nemeton::groma_envoyer_projet()`). Le serveur vérifie le `.qgz` et
+   publie une nouvelle version du projet ; il garde les 3 dernières
+   (`docs/serveur.md`).
+2. **Dans Groma**, une fois : ⋮ → Paramètres → « Envoi au serveur » :
+   * **Adresse du serveur**, par exemple `https://groma.exemple.fr`.
+     Serveur sur l'ordinateur et téléphone branché en USB :
+     `adb reverse tcp:8000 tcp:8000`, puis `http://127.0.0.1:8000` (la
+     redirection tombe à chaque débranchement ; en Wi-Fi, mettre l'adresse
+     de l'ordinateur sur le réseau local, port 8000 ouvert) ;
+   * **Jeton d'accès** : le `GROMA_JETON` du serveur. Le champ est masqué ;
+     pour un long jeton, toucher le champ puis, depuis l'ordinateur,
+     `adb shell input text <jeton>`.
+3. ⋮ → **« Projets du serveur… »** : chaque projet publié, avec sa date et
+   son état sur le téléphone (« Pas encore sur le téléphone », « À jour »,
+   « Version plus récente sur le serveur »). **Télécharger** :
+   * en Wi-Fi, ou en 4G si « Autoriser l'envoi en 4G » est coché ;
+   * reprise après une coupure, empreinte SHA-256 vérifiée à la fin,
+     progression dans la notification ;
+   * installation dans `Download/groma/<projet_id>/` : le GeoPackage et
+     les rasters sont extraits du `.qgz`, le `.qgz` et le plugin `.qml`
+     rangés dans `qfield/`.
+   Remplacer un projet déjà présent demande confirmation. La copie de
+   travail n'est jamais touchée : pour la rafraîchir, **Mettre à jour** sur
+   la carte du projet (refusé dès qu'elle contient des données de terrain).
+
+### Ouvrir le projet dans QField
+
+Menu de la carte du projet → **« Ouvrir dans QField »** (projet reçu du
+serveur, avec `qfield/`). Groma prépare un zip (`.qgz` et `.qml` côte à
+côte, `inventaire_video.gpkg` et `rasters/` à côté d'eux) et le passe à
+QField, qui l'importe dans « Imported Projects/<projet_id> » et l'ouvre.
+Au premier lancement du projet, QField demande d'autoriser le plugin :
+accepter (« Remember my choice ») ; son bouton apparaît dans la barre des
+plugins.
+
+QField travaille ensuite sur **sa** copie : c'est là que vont les saisies.
+
+* **Même version, déjà envoyée** : Groma propose **« Ouvrir QField »**.
+  Rouvrir le projet depuis QField (projets récents). « Renvoyer » ne sert
+  que si la copie de QField a été supprimée : il crée une copie séparée
+  (`<projet_id>_1`…), sans les saisies de la première.
+* **Nouvelle version reçue du serveur** : **« Envoyer la nouvelle
+  version »** crée elle aussi une copie séparée dans QField. L'ancienne y
+  reste avec ses saisies ; ne pas mélanger les deux.
+* **QField ne reçoit pas le projet** (absent, ou version qui refuse le
+  zip) : Groma explique l'import à la main. Dans QField, « Ouvrir un fichier
+  local », menu ⋮ → « Importer un projet depuis un dossier »,
+  `Téléchargements/groma/<projet_id>/qfield`.
+
+Défauts connus du projet produit par nemeton (brief
+`briefs/vers-nemeton/2026-10-17-projet-qgs-crs-groupes.md`) : la
+projection du projet n'est pas activée, donc **les fonds IGN et OSM ne
+s'affichent pas** et la barre d'échelle est fausse ; la légende aligne à
+plat les deux rasters (MNT, MNH) de chaque placette. Les couches de l'inventaire et la saisie ne sont
+pas touchées.
+
+### Déposer les dossiers par câble
+
+Pour un projet préparé par `groma-preparer`, ou sans serveur. Par câble
+USB, avec `adb` :
 
 ```bash
 adb push 20261008_212542_uywc 20261007_084614_qapz /sdcard/Download/groma/
@@ -124,7 +194,8 @@ L'autorisation est gardée, même après un redémarrage.
 ### Mettre à jour un projet
 
 Quand le plan change dans nemetonshiny (placettes ajoutées, rayon corrigé)
-avant le début du terrain :
+avant le début du terrain : régénérer le projet QField, « Envoyer au
+téléphone », puis « Projets du serveur… » → Télécharger. Ou, par câble :
 
 ```bash
 groma-preparer ~/.local/share/nemeton/projects/<id>/data/samples.gpkg \
@@ -315,7 +386,10 @@ transport entre les deux bacs à sable. Options, par ordre de préférence :
 
    Le projet QField complet est généré par nemetonshiny (Terrain →
    Inventaire vidéo → « Générer le projet QField », qui appelle
-   `nemeton::creer_projet_inventaire_video()`). Pour un essai sans
+   `nemeton::creer_projet_inventaire_video()`), envoyé au téléphone par le
+   serveur Groma et passé à QField par « Ouvrir dans QField », plugin
+   compris (voir « Projets sur le téléphone »). Essayé le 2026-10-17 sur le
+   S23 Ultra avec QField 4.3.6 : import, couches et bouton du plugin. Pour un essai sans
    nemetonshiny, projet de test minimal (couches, plugin, symbologie ; sans
    formulaires complets ni rasters) :
 
