@@ -18,14 +18,23 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import groma.app.R
+import kotlinx.coroutines.launch
 
 /** Upload settings, saved as they are typed. */
 data class Reglages(val serveur: String, val jeton: String, val envoi4g: Boolean)
@@ -33,6 +42,10 @@ data class Reglages(val serveur: String, val jeton: String, val envoi4g: Boolean
 /** Settings screen, reached from the ⋮ menu (same layout as Marculus). */
 @Composable
 fun EcranParametres(reglages: Reglages, onChange: (Reglages) -> Unit, onRetour: () -> Unit) {
+    // The token is long and masked: show it on demand, and paste it whole.
+    var jetonVisible by rememberSaveable { mutableStateOf(false) }
+    val pressePapiers = LocalClipboard.current
+    val scope = rememberCoroutineScope()
     Scaffold(
         topBar = {
             BandeauCompact(
@@ -64,10 +77,21 @@ fun EcranParametres(reglages: Reglages, onChange: (Reglages) -> Unit, onRetour: 
                 onValueChange = { onChange(reglages.copy(jeton = it.trim())) },
                 label = { Text(stringResource(R.string.jeton)) },
                 singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
+                visualTransformation = if (jetonVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 modifier = Modifier.fillMaxWidth(),
             )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                TextButton(onClick = {
+                    scope.launch {
+                        val texte = pressePapiers.getClipEntry()?.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text
+                        if (!texte.isNullOrBlank()) onChange(reglages.copy(jeton = texte.toString().trim()))
+                    }
+                }) { Text(stringResource(R.string.jeton_coller)) }
+                TextButton(onClick = { jetonVisible = !jetonVisible }) {
+                    Text(stringResource(if (jetonVisible) R.string.jeton_masquer else R.string.jeton_afficher))
+                }
+            }
             Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.envoi_4g), style = MaterialTheme.typography.titleMedium)
