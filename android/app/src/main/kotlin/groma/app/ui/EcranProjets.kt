@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -65,6 +66,8 @@ fun EcranProjets(
     onActualiser: () -> Unit,
     onChoisirRacine: () -> Unit,
     onImporter: () -> Unit,
+    onProjetsServeur: () -> Unit,
+    serveurConfigure: Boolean,
     onMettreAJour: (EntreeProjet) -> Unit,
     onRetirer: (EntreeProjet) -> Unit,
     onParametres: () -> Unit,
@@ -87,6 +90,7 @@ fun EcranProjets(
                         DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                             DropdownMenuItem(text = { Text(stringResource(R.string.menu_actualiser)) }, onClick = { menu = false; onActualiser() })
                             DropdownMenuItem(text = { Text(stringResource(R.string.menu_dossier_projets)) }, onClick = { menu = false; onChoisirRacine() })
+                            DropdownMenuItem(text = { Text(stringResource(R.string.menu_projets_serveur)) }, onClick = { menu = false; onProjetsServeur() })
                             DropdownMenuItem(text = { Text(stringResource(R.string.menu_importer)) }, onClick = { menu = false; onImporter() })
                             DropdownMenuItem(text = { Text(stringResource(R.string.menu_parametres)) }, onClick = { menu = false; onParametres() })
                             DropdownMenuItem(text = { Text(stringResource(R.string.menu_apropos)) }, onClick = { menu = false; aPropos = true })
@@ -99,7 +103,7 @@ fun EcranProjets(
         Column(Modifier.fillMaxSize().padding(padding)) {
             if (chargement) LinearProgressIndicator(Modifier.fillMaxWidth())
             if (projets.isEmpty()) {
-                Vide(racineChoisie, chargement, onChoisirRacine)
+                Vide(racineChoisie, chargement, serveurConfigure, onChoisirRacine, onProjetsServeur)
                 return@Column
             }
             val trouves = if (recherche.isBlank()) projets else projets.filter { correspond(it, recherche) }
@@ -248,7 +252,7 @@ private fun CarteProjet(e: EntreeProjet, onOuvrir: () -> Unit, onDetails: () -> 
 }
 
 @Composable
-private fun Vide(racineChoisie: Boolean, chargement: Boolean, onChoisirRacine: () -> Unit) {
+private fun Vide(racineChoisie: Boolean, chargement: Boolean, serveurConfigure: Boolean, onChoisirRacine: () -> Unit, onProjetsServeur: () -> Unit) {
     Column(
         Modifier.fillMaxSize().padding(32.dp),
         verticalArrangement = Arrangement.Center,
@@ -263,6 +267,10 @@ private fun Vide(racineChoisie: Boolean, chargement: Boolean, onChoisirRacine: (
         )
         Spacer(Modifier.height(16.dp))
         Button(onClick = onChoisirRacine) { Text(stringResource(R.string.menu_dossier_projets)) }
+        if (racineChoisie && serveurConfigure) {
+            Spacer(Modifier.height(8.dp))
+            OutlinedButton(onClick = onProjetsServeur) { Text(stringResource(R.string.menu_projets_serveur)) }
+        }
     }
 }
 

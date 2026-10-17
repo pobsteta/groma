@@ -38,6 +38,7 @@
     <string name="menu_actualiser">Actualiser</string>
     <string name="menu_dossier_projets">Dossier des projets…</string>
     <string name="menu_importer">Importer un dossier…</string>
+    <string name="menu_projets_serveur">Projets du serveur…</string>
     <string name="projets_recherche">Rechercher</string>
     <string name="projets_termines">Terminés (%1$d)</string>
     <string name="projets_autres_termines">Aussi %1$d projet(s) terminé(s) : puce « Terminés ».</string>
@@ -195,4 +196,23 @@ Dépose chaque projet dans le dossier des projets, dans un sous-dossier qui port
     <string name="rtk_ntrip_401">NTRIP : identifiant ou mot de passe refusé.</string>
     <string name="rtk_ntrip_table">NTRIP : point de montage inconnu du caster.</string>
     <string name="rtk_ntrip_inconnu">NTRIP : réponse inattendue du caster.</string>
+    <!-- Projects published on the Groma server (brief envoi projet) -->
+    <string name="serveur_titre">Projets du serveur</string>
+    <string name="serveur_non_configure">Aucun serveur Groma configuré. Renseigne son adresse et le jeton dans Paramètres pour recevoir les projets envoyés par nemetonshiny.</string>
+    <string name="serveur_erreur">Liste des projets indisponible : %1$s</string>
+    <string name="reessayer">Réessayer</string>
+    <string name="serveur_aucun">Aucun projet publié sur le serveur.
+Dans nemetonshiny, génère le projet QField puis « Envoyer au téléphone ».</string>
+    <string name="serveur_publie">Publié le %1$s</string>
+    <string name="serveur_etat_absent">Pas encore sur le téléphone</string>
+    <string name="serveur_etat_a_jour">À jour sur le téléphone</string>
+    <string name="serveur_etat_plus_recent">Version plus récente sur le serveur</string>
+    <string name="serveur_etat_plus_ancien">Le téléphone a une version plus récente</string>
+    <string name="serveur_telecharger">Télécharger</string>
+    <string name="serveur_remplacer_texte">Le dossier de ce projet sera remplacé dans le dossier des projets. La copie de travail et les données de terrain ne sont pas touchées : pour l\'actualiser, utilise ensuite « Mettre à jour » sur la carte du projet (refusé s\'il contient déjà des données de terrain).</string>
+    <string name="serveur_en_attente_reseau">En attente du réseau (Wi-Fi, ou 4G si autorisée dans Paramètres)…</string>
+    <string name="serveur_echec">Échec du téléchargement.</string>
+    <string name="serveur_installe">Installé dans le dossier des projets. Si le projet était déjà sur le téléphone, utilise « Mettre à jour » sur sa carte.</string>
+    <string name="serveur_canal">Téléchargement des projets</string>
+    <string name="serveur_notif_titre">Téléchargement : %1$s</string>
 </resources>
