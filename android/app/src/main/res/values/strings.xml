@@ -13,6 +13,9 @@
     <string name="envoi_4g">Autoriser l\'envoi en 4G</string>
     <string name="serveur">Adresse du serveur</string>
     <string name="jeton">Jeton d\'accès</string>
+    <string name="jeton_afficher">Afficher</string>
+    <string name="jeton_masquer">Masquer</string>
+    <string name="jeton_coller">Coller</string>
     <string name="cibles_vues">Cibles vues : %1$s</string>
     <string name="couverture">Couverture : %1$d %%</string>
     <string name="camera_requise">La caméra est nécessaire pour filmer la placette.</string>
