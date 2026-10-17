@@ -97,6 +97,10 @@ défaut). Le jeton est le même que pour le reste de l'API.
 GROMA_JETON=... docker compose -f server/docker-compose.yml up -d
 ```
 
+Après une mise à jour du code, reconstruire l'image (`up -d --build`) avec
+le même `GROMA_JETON` : le volume de données est gardé, et les téléphones
+comme nemetonshiny gardent leur réglage.
+
 * PC avec carte graphique, ou machine GPU louée à la demande (ADR-003 :
   Scaleway GPU L4). Le worker GPU se construit avec une base CUDA
   (`--build-arg BASE=nvidia/cuda:…`) et une compilation de COLMAP avec CUDA.
