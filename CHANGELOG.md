@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.12.0](https://github.com/pobsteta/groma/compare/v0.11.0...v0.12.0) (2026-10-24)
+
+
+### Nouveautés
+
+* **android:** réglage Plein écran dans Paramètres ([#62](https://github.com/pobsteta/groma/issues/62)) ([29feaec](https://github.com/pobsteta/groma/commit/29feaec4a30f2b50cee36b43f7354d8ace4ab12c))
+
 ## [0.11.0](https://github.com/pobsteta/groma/compare/v0.10.0...v0.11.0) (2026-10-24)
 
 
