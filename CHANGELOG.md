@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.11.0](https://github.com/pobsteta/groma/compare/v0.10.0...v0.11.0) (2026-10-24)
+
+
+### Nouveautés
+
+* **android:** choix du thème Système, Clair, Sombre ; retour aux anciennes couleurs ([#61](https://github.com/pobsteta/groma/issues/61)) ([14dc589](https://github.com/pobsteta/groma/commit/14dc589a8f701ba0738690d8578d7177543196fd))
+
+
+### Documentation
+
+* **pilotage:** installer la méthode de l'Impératrice ; thème validé au soleil ([#59](https://github.com/pobsteta/groma/issues/59)) ([9ad811e](https://github.com/pobsteta/groma/commit/9ad811e5100c1b64c9ac830452c1fe82bfb3399f))
+
 ## [0.10.0](https://github.com/pobsteta/groma/compare/v0.9.0...v0.10.0) (2026-10-24)
 
 
