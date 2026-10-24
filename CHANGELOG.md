@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.10.0](https://github.com/pobsteta/groma/compare/v0.9.0...v0.10.0) (2026-10-24)
+
+
+### Nouveautés
+
+* **android:** thème Groma = jetons terrain-style v0.6.0 ([#58](https://github.com/pobsteta/groma/issues/58)) ([6aaf042](https://github.com/pobsteta/groma/commit/6aaf0421e150ba42ea1198b292e39025e9b1eec8))
+* **server:** worker distant qui prend les tâches par l'API en HTTP ([#56](https://github.com/pobsteta/groma/issues/56)) ([205960e](https://github.com/pobsteta/groma/commit/205960eeedd142bbf22fb10bd126d19ce25813e1))
+
+
+### Documentation
+
+* briefs nemeton du 2026-10-17 traités ; identifiants de couches uniques ([#53](https://github.com/pobsteta/groma/issues/53)) ([8883a09](https://github.com/pobsteta/groma/commit/8883a09cda6beef857cbc945ca52983e572d9616))
+* **briefs:** worker GPU à la demande sur Scaleway ([#55](https://github.com/pobsteta/groma/issues/55)) ([6948444](https://github.com/pobsteta/groma/commit/69484441b371214a25df7097c29e158a99ab6aeb))
+
 ## [0.9.0](https://github.com/pobsteta/groma/compare/v0.8.0...v0.9.0) (2026-10-17)
 
 
