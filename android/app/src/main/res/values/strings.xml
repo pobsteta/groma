@@ -30,6 +30,11 @@
     <string name="etat_envoye">Envoyée</string>
     <string name="etat_definitif">Définitive</string>
     <string name="param_titre">Paramètres</string>
+    <string name="param_theme_titre">Thème</string>
+    <string name="param_theme_desc">Suivre le téléphone, ou forcer le thème clair ou sombre.</string>
+    <string name="param_theme_systeme">Système</string>
+    <string name="param_theme_clair">Clair</string>
+    <string name="param_theme_sombre">Sombre</string>
     <string name="param_retour">Retour</string>
     <string name="param_envoi_section">Envoi au serveur</string>
     <string name="param_envoi_desc">Les prises de vue restent sur le téléphone tant qu\'aucun serveur n\'est renseigné. L\'envoi part en Wi-Fi, ou en 4G si tu l\'autorises.</string>

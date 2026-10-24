@@ -5,7 +5,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -15,6 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -29,15 +33,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import groma.app.R
+import groma.core.ChoixTheme
 import kotlinx.coroutines.launch
 
 /** Upload settings, saved as they are typed. */
-data class Reglages(val serveur: String, val jeton: String, val envoi4g: Boolean)
+data class Reglages(val serveur: String, val jeton: String, val envoi4g: Boolean,
+    val theme: ChoixTheme = ChoixTheme.SYSTEME)
 
 /** Settings screen, reached from the ⋮ menu (same layout as Marculus). */
 @Composable
@@ -99,7 +106,36 @@ fun EcranParametres(reglages: Reglages, onChange: (Reglages) -> Unit, onRetour: 
                 }
                 Switch(checked = reglages.envoi4g, onCheckedChange = { onChange(reglages.copy(envoi4g = it)) })
             }
+            ChoixThemeReglage(reglages.theme) { onChange(reglages.copy(theme = it)) }
             SectionRtk()
+        }
+    }
+}
+
+/** Theme choice: follow the phone, or force light or dark (radio group, 48 dp rows). */
+@Composable
+private fun ChoixThemeReglage(valeur: ChoixTheme, onChange: (ChoixTheme) -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp).selectableGroup()) {
+        Text(stringResource(R.string.param_theme_titre), style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.param_theme_desc), style = MaterialTheme.typography.bodySmall)
+        for (choix in ChoixTheme.entries) {
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                    .selectable(selected = valeur == choix, onClick = { onChange(choix) }, role = Role.RadioButton),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                RadioButton(selected = valeur == choix, onClick = null)
+                Text(
+                    stringResource(
+                        when (choix) {
+                            ChoixTheme.SYSTEME -> R.string.param_theme_systeme
+                            ChoixTheme.CLAIR -> R.string.param_theme_clair
+                            ChoixTheme.SOMBRE -> R.string.param_theme_sombre
+                        },
+                    ),
+                    Modifier.padding(start = 12.dp),
+                )
+            }
         }
     }
 }
