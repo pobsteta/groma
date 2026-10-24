@@ -97,3 +97,33 @@ jobs:
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # GPU worker image: built (and its imports checked) without a GPU, only
+  # when the server, core or the Dockerfile change. Several GB: no GHA cache.
+  docker-gpu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: changements
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE" 2>/dev/null \
+             || git diff --name-only "$BASE" HEAD | grep -qE '^(server/|core/)'; then
+            echo "construire=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "construire=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Place disque
+        if: steps.changements.outputs.construire == 'true'
+        run: sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL && df -h /
+      - if: steps.changements.outputs.construire == 'true'
+        uses: docker/setup-buildx-action@v4
+      - if: steps.changements.outputs.construire == 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: server/Dockerfile.gpu
+          push: false
