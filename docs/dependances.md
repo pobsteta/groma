@@ -19,7 +19,6 @@ par GeoPackage et GeoTIFF : ce dépôt n'importe pas son code R.
 | ARCore SDK (client) | Android | Apache-2.0 | requiert « Services Google Play pour la RA » (propriétaire, installé sur l'appareil) |
 | AndroidX, WorkManager | Android | Apache-2.0 | |
 | Jetpack Compose, Material 3, icônes Material (core) | Android (écran principal, style Marculus) | Apache-2.0 | |
-| `terrain-style` v0.6.0 (bibliothèque `terrain`, JitPack) | Android (thème) | GPL-3.0-or-later | même auteur ; jetons de couleur communs à Marculus, Groma et Surculus, Kotlin pur, seule dépendance `kotlin-stdlib` ; dépôt JitPack limité au groupe `com.github.pobsteta.terrain` |
 | osmdroid | Android (écran Carte) | Apache-2.0 | |
 | Code GNSS / NTRIP repris de Marculus | `groma-core` (NMEA, NTRIP), Android (transports, service RTK, position sur la carte) | même auteur (pobsteta) | Marculus n'a pas de fichier `LICENSE` ; repris par son auteur, adapté aux conventions de Groma, aucune dépendance ajoutée |
 | Tuiles IGN Géoplateforme (Plan IGN, ortho, cadastre) | Android (écran Carte), service web | Licence Ouverte Etalab 2.0 | sans clé ; attribution affichée sur la carte ; User-Agent `Groma/<version>` ; téléchargement hors ligne limité à l'emprise du projet + 200 m, zooms 12 à 18, 30 000 tuiles au plus, une requête à la fois |

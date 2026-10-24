@@ -15,6 +15,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -40,6 +41,7 @@ import groma.app.ui.GromaTheme
 import groma.app.ui.LignePlacette
 import groma.app.ui.Reglages
 import groma.core.DonneesCarte
+import groma.core.choixThemeDepuis
 import groma.core.ProjetsServeur
 import groma.core.TriProjets
 import java.io.File
@@ -84,14 +86,14 @@ class MainActivity : AppCompatActivity() {
         val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
         configurerOsmdroid(this, version)
         setContent {
-            GromaTheme {
+            var reglages by remember { mutableStateOf(Preferences.reglages(this)) }
+            GromaTheme(darkTheme = reglages.theme.estSombre(isSystemInDarkTheme())) {
                 var parametres by rememberSaveable { mutableStateOf(false) }
                 var projetsServeur by rememberSaveable { mutableStateOf(false) }
                 var cle by rememberSaveable { mutableStateOf<String?>(null) }
                 var carte by rememberSaveable { mutableStateOf(false) }
                 // Leaving the project releases the RTK receiver (for QField, and the battery).
                 LaunchedEffect(cle) { if (cle == null) ServiceGnssRtk.arreter(this@MainActivity) }
-                var reglages by remember { mutableStateOf(Preferences.reglages(this)) }
                 val ouvert = remember(cle) { cle?.let(depot::projet) }
                 SideEffect { projetOuvert = ouvert }
                 when {
@@ -99,7 +101,11 @@ class MainActivity : AppCompatActivity() {
                         BackHandler { parametres = false }
                         EcranParametres(
                             reglages = reglages,
-                            onChange = { reglages = it; Preferences.memoriserReglages(this, it) },
+                            onChange = {
+                                reglages = it
+                                Preferences.memoriserReglages(this, it)
+                                appliquerTheme(it.theme)
+                            },
                             onRetour = { parametres = false },
                         )
                     }
@@ -324,11 +330,13 @@ object Preferences {
     fun prefs(ctx: Context) = ctx.getSharedPreferences("groma", Context.MODE_PRIVATE)
 
     fun reglages(ctx: Context): Reglages = prefs(ctx).let {
-        Reglages(it.getString("serveur", "").orEmpty(), it.getString("jeton", "").orEmpty(), it.getBoolean("4g", false))
+        Reglages(it.getString("serveur", "").orEmpty(), it.getString("jeton", "").orEmpty(), it.getBoolean("4g", false),
+            choixThemeDepuis(it.getString("theme", null)))
     }
 
     fun memoriserReglages(ctx: Context, r: Reglages) =
-        prefs(ctx).edit().putString("serveur", r.serveur).putString("jeton", r.jeton).putBoolean("4g", r.envoi4g).apply()
+        prefs(ctx).edit().putString("serveur", r.serveur).putString("jeton", r.jeton).putBoolean("4g", r.envoi4g)
+            .putString("theme", r.theme.name).apply()
 
     fun planifierEnvoi(ctx: Context, paquet: File, projetId: String, plotId: String) {
         val p = prefs(ctx)
