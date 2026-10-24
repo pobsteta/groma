@@ -39,6 +39,8 @@
     <string name="param_retour">Retour</string>
     <string name="param_envoi_section">Envoi au serveur</string>
     <string name="param_envoi_desc">Les prises de vue restent sur le téléphone tant qu\'aucun serveur n\'est renseigné. L\'envoi part en Wi-Fi, ou en 4G si tu l\'autorises.</string>
+    <string name="param_plein_titre">Plein écran</string>
+    <string name="param_plein_desc">Masque les barres de statut et de navigation.</string>
     <string name="param_4g_desc">Les paquets peuvent peser plusieurs centaines de Mo.</string>
     <string name="apropos_titre">Groma %1$s</string>
     <string name="apropos_build">Version %1$s (build %2$d)</string>
