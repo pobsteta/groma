@@ -8,7 +8,7 @@
 
 > **PLAN.md reste la source maître de l'avancement et des décisions prises avant la méthode** (choix de Pascal, 2026-10-23). Ce kanban ne suit que les missions confiées par `/imperatrice:boucle`.
 
-**Dernier cycle :** 1 _(augmenté de 1 à la fin de chaque `/boucle`, même quand elle n'a
+**Dernier cycle :** 3 _(augmenté de 1 à la fin de chaque `/boucle`, même quand elle n'a
 rien lancé. Une carte est immobile quand dernier cycle − N ≥ 2.)_
 
 _Modèle de carte :_
@@ -23,16 +23,37 @@ _Modèle de carte :_
 ## Bac à sable
 
 - Couleurs écrites en dur hors du thème (19 `Color(0x…)` dans `EcranCarte.kt` et `Gnss.kt`) : essai au soleil positif le 2026-10-24, débloquée ; reste à décider le sens (badges GNSS, SNR) · depuis le cycle 0
-- Garde-fou inverse du test du thème : compter aussi les rôles de `ColorScheme` (une mise à jour de Compose qui ajoute un rôle le laisserait au défaut clair en sombre) ; même angle mort chez Marculus · depuis le cycle 1
 - Bibliothèques `terrain` (`terrain-gnss`, `terrain-gpkg`, `terrain-carte`) à la place du code de `groma-core` (brief Marculus du 2026-10-17) · depuis le cycle 0
 
 ## Validé
 
 ## Planifié
 
+- [003](missions/003-garde-fou-colorscheme.md) · depuis le cycle 2
+  - Homme : testeur (sonnet), appuyer
+  - Mission : le test du thème échoue aussi si `ColorScheme` a un rôle que `Schema` n'a pas
+  - Moyens : `ThemeTerrainStyleTest.kt` sur `main`, AAR `material3-android-1.4.0` · rendue (2d42339, branche `test/003-garde-fou-colorscheme`), sans PR : attend la réadoption de `terrain-style` (cap du 2026-10-24)
+
+
 
 ## Terminé
 
+- [007](missions/007-plein-ecran.md) · depuis le cycle 3
+  - Homme : dev (sonnet), appuyer
+  - Mission : réglage « Plein écran » dans Paramètres, appliqué à l'accueil et à la capture, comme Marculus
+  - Moyens : `MainActivity.kt` de Marculus l. 51-61, réglages de Groma · PR #62 fusionnée (29feaec), 0.12.0
+- [004](missions/004-retour-anciennes-couleurs.md) · depuis le cycle 2
+  - Homme : dev (sonnet), appuyer
+  - Mission : retour aux anciennes couleurs (bandeau vert), comme Marculus, jusqu'à `terrain-style` v0.6.1
+  - Moyens : `Theme.kt` d'avant 6aaf042, PR marculus #12 · PR #61 fusionnée (14dc589), 0.11.0
+- [005](missions/005-test-choix-theme.md) · depuis le cycle 2
+  - Homme : testeur (sonnet), appuyer
+  - Mission : tests de `ChoixTheme` (Système, Clair, Sombre) dans `groma-core`
+  - Moyens : Marculus 042797a · PR #61 fusionnée (14dc589)
+- [006](missions/006-choix-theme-parametres.md) · depuis le cycle 2
+  - Homme : dev (sonnet), appuyer
+  - Mission : choix du thème en liste déroulante dans Paramètres, comme Marculus ; une PR avec 004 et 005
+  - Moyens : Marculus 042797a et c73c9a0, tests de 005 · PR #61 fusionnée (14dc589), aller-retour 1/3, 0.11.0
 - [001](missions/001-test-theme-terrain-style.md) · depuis le cycle 1
   - Homme : testeur (sonnet), appuyer
   - Mission : test d'égalité du `ColorScheme` (48 rôles × 2) avec `terrain-style` v0.6.0, issue #57
@@ -63,3 +84,5 @@ l'inscrit avec ce qu'elle nous apprend._
 - bilan du AAAA-MM-JJ · mauvaise nouvelle : … · pour qui · ce qu'elle nous apprend
 ```
 - cycle 1 · APK de la PR #58 (thème = jetons `terrain-style` v0.6.0) · pour Pascal, opérateur de terrain, essai au soleil le 2026-10-30 avec Marculus · texte des boutons à 7:1 au lieu de 5,17:1 et même vert que Marculus et Surculus (première livraison inscrite)
+- cycle 2 · Groma 0.11.0 (bandeau vert retrouvé, choix du thème Système / Clair / Sombre dans Paramètres, appliqué à toute l'appli) · pour Pascal, opérateur de terrain, sur le S23 Ultra · le vert revient (la livraison du cycle 1 l'avait perdu) et le thème se choisit dans l'appli au lieu de suivre le téléphone
+- cycle 3 · Groma 0.12.0 (réglage Plein écran dans Paramètres, accueil, carte et capture) · pour Pascal, opérateur de terrain, sur le S23 Ultra · plus de place à l'écran : barres de statut et de navigation masquées, rappelées au glissement

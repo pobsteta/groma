@@ -31,3 +31,8 @@
 |---|---|---|---|---|---|
 | [001](missions/001-test-theme-terrain-style.md) test d'égalité du thème | `testeur` | sonnet | appuyer | oui · oui · oui | 1 |
 | [002](missions/002-theme-terrain-style.md) thème = jetons `terrain-style` | `dev` | sonnet | appuyer | oui · oui · oui | 1 |
+| [003](missions/003-garde-fou-colorscheme.md) garde-fou inverse du test du thème | `testeur` | sonnet | appuyer | oui · oui · oui | 2 |
+| [004](missions/004-retour-anciennes-couleurs.md) retour aux anciennes couleurs (bandeau vert) | `dev` | sonnet | appuyer | oui · oui · oui | 2 |
+| [005](missions/005-test-choix-theme.md) tests du choix du thème | `testeur` | sonnet | appuyer | oui · oui · oui | 2 |
+| [006](missions/006-choix-theme-parametres.md) choix du thème dans les paramètres | `dev` | sonnet | appuyer | oui · oui · oui | 2 |
+| [007](missions/007-plein-ecran.md) plein écran dans les paramètres | `dev` | sonnet | appuyer | oui · oui · oui | 3 |
