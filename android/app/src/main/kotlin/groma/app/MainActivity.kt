@@ -85,6 +85,7 @@ class MainActivity : AppCompatActivity() {
         ServeurLocal.demarrerUneFois(File(filesDir, "detections"), File(getExternalFilesDir(null), "projets"))
         val version = packageManager.getPackageInfo(packageName, 0).versionName.orEmpty()
         configurerOsmdroid(this, version)
+        appliquerPleinEcran(window, Preferences.reglages(this).pleinEcran)
         setContent {
             var reglages by remember { mutableStateOf(Preferences.reglages(this)) }
             GromaTheme(darkTheme = reglages.theme.estSombre(isSystemInDarkTheme())) {
@@ -105,6 +106,7 @@ class MainActivity : AppCompatActivity() {
                                 reglages = it
                                 Preferences.memoriserReglages(this, it)
                                 appliquerTheme(it.theme)
+                                appliquerPleinEcran(window, it.pleinEcran)
                             },
                             onRetour = { parametres = false },
                         )
@@ -331,12 +333,12 @@ object Preferences {
 
     fun reglages(ctx: Context): Reglages = prefs(ctx).let {
         Reglages(it.getString("serveur", "").orEmpty(), it.getString("jeton", "").orEmpty(), it.getBoolean("4g", false),
-            choixThemeDepuis(it.getString("theme", null)))
+            choixThemeDepuis(it.getString("theme", null)), it.getBoolean("plein_ecran", false))
     }
 
     fun memoriserReglages(ctx: Context, r: Reglages) =
         prefs(ctx).edit().putString("serveur", r.serveur).putString("jeton", r.jeton).putBoolean("4g", r.envoi4g)
-            .putString("theme", r.theme.name).apply()
+            .putString("theme", r.theme.name).putBoolean("plein_ecran", r.pleinEcran).apply()
 
     fun planifierEnvoi(ctx: Context, paquet: File, projetId: String, plotId: String) {
         val p = prefs(ctx)

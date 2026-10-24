@@ -63,6 +63,7 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activite_capture)
+        appliquerPleinEcran(window, Preferences.reglages(this).pleinEcran)
         OpenCVLoader.initLocal()
         projet = Projet(File(intent.getStringExtra(EXTRA_PROJET)!!))
         plotId = intent.getStringExtra(EXTRA_PLOT)!!
