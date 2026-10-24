@@ -4,6 +4,14 @@ package groma.core
 enum class ChoixTheme {
     SYSTEME, CLAIR, SOMBRE;
 
+    /** Night mode to force: null follows the phone, false is light, true is dark. */
+    val nuitForcee: Boolean?
+        get() = when (this) {
+            SYSTEME -> null
+            CLAIR -> false
+            SOMBRE -> true
+        }
+
     /** True if the app must be dark; [systemeSombre] is the phone's state. */
     fun estSombre(systemeSombre: Boolean): Boolean = when (this) {
         SYSTEME -> systemeSombre

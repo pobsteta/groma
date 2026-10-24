@@ -35,6 +35,7 @@
     <string name="param_theme_systeme">Système</string>
     <string name="param_theme_clair">Clair</string>
     <string name="param_theme_sombre">Sombre</string>
+    <string name="param_theme_choix_actuel">Choix actuel</string>
     <string name="param_retour">Retour</string>
     <string name="param_envoi_section">Envoi au serveur</string>
     <string name="param_envoi_desc">Les prises de vue restent sur le téléphone tant qu\'aucun serveur n\'est renseigné. L\'envoi part en Wi-Fi, ou en 4G si tu l\'autorises.</string>

@@ -101,7 +101,11 @@ class MainActivity : AppCompatActivity() {
                         BackHandler { parametres = false }
                         EcranParametres(
                             reglages = reglages,
-                            onChange = { reglages = it; Preferences.memoriserReglages(this, it) },
+                            onChange = {
+                                reglages = it
+                                Preferences.memoriserReglages(this, it)
+                                appliquerTheme(it.theme)
+                            },
                             onRetour = { parametres = false },
                         )
                     }

@@ -7,18 +7,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.RadioButton
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -26,6 +29,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -112,29 +116,45 @@ fun EcranParametres(reglages: Reglages, onChange: (Reglages) -> Unit, onRetour: 
     }
 }
 
-/** Theme choice: follow the phone, or force light or dark (radio group, 48 dp rows). */
+/** Theme choice: follow the phone, or force light or dark (drop-down list, as in Marculus). */
 @Composable
 private fun ChoixThemeReglage(valeur: ChoixTheme, onChange: (ChoixTheme) -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp).selectableGroup()) {
+    var ouvert by remember { mutableStateOf(false) }
+    @Composable
+    fun libelle(choix: ChoixTheme) = stringResource(
+        when (choix) {
+            ChoixTheme.SYSTEME -> R.string.param_theme_systeme
+            ChoixTheme.CLAIR -> R.string.param_theme_clair
+            ChoixTheme.SOMBRE -> R.string.param_theme_sombre
+        },
+    )
+    Column(Modifier.fillMaxWidth().padding(vertical = 6.dp)) {
         Text(stringResource(R.string.param_theme_titre), style = MaterialTheme.typography.titleMedium)
         Text(stringResource(R.string.param_theme_desc), style = MaterialTheme.typography.bodySmall)
-        for (choix in ChoixTheme.entries) {
+        Box {
             Row(
-                Modifier.fillMaxWidth().heightIn(min = 48.dp)
-                    .selectable(selected = valeur == choix, onClick = { onChange(choix) }, role = Role.RadioButton),
+                Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(role = Role.DropdownList) { ouvert = true },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                RadioButton(selected = valeur == choix, onClick = null)
-                Text(
-                    stringResource(
-                        when (choix) {
-                            ChoixTheme.SYSTEME -> R.string.param_theme_systeme
-                            ChoixTheme.CLAIR -> R.string.param_theme_clair
-                            ChoixTheme.SOMBRE -> R.string.param_theme_sombre
+                Text(libelle(valeur), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+            }
+            DropdownMenu(expanded = ouvert, onDismissRequest = { ouvert = false }) {
+                for (choix in ChoixTheme.entries) {
+                    DropdownMenuItem(
+                        modifier = Modifier.heightIn(min = 48.dp),
+                        text = { Text(libelle(choix)) },
+                        trailingIcon = {
+                            if (choix == valeur) {
+                                Icon(Icons.Default.Check, contentDescription = stringResource(R.string.param_theme_choix_actuel))
+                            }
                         },
-                    ),
-                    Modifier.padding(start = 12.dp),
-                )
+                        onClick = {
+                            ouvert = false
+                            onChange(choix)
+                        },
+                    )
+                }
             }
         }
     }
