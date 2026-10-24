@@ -136,8 +136,26 @@ le même `GROMA_JETON` : le volume de données est gardé, et les téléphones
 comme nemetonshiny gardent leur réglage.
 
 * PC avec carte graphique, ou machine GPU louée à la demande (ADR-003 :
-  Scaleway GPU L4). Le worker GPU se construit avec une base CUDA
-  (`--build-arg BASE=nvidia/cuda:…`) et une compilation de COLMAP avec CUDA.
+  Scaleway GPU L4, brief `briefs/groma/2026-10-17-worker-gpu-scaleway.md`).
+  Le worker GPU a sa propre image, `server/Dockerfile.gpu`, publiée sur
+  `ghcr.io/pobsteta/groma-worker-gpu` à chaque version :
+  * base : image officielle de COLMAP, compilé avec CUDA (Ubuntu 24.04,
+    CUDA 12.9), étiquette datée épinglée ;
+  * PyTorch 2.10 (roues CUDA 12.8), `transformers` (Prompt Depth Anything,
+    Depth Anything), MapAnything et SAM 2 à des commits épinglés ; VGGT
+    seulement avec `--build-arg AVEC_VGGT=1`, pour les essais ;
+  * **aucun poids de modèle dans l'image** : téléchargés à la première
+    utilisation dans `HF_HOME` (`/var/lib/groma/cache/huggingface`, sur le
+    volume de données) ;
+  * la construction vérifie COLMAP et les imports Python, sans GPU ; la CI
+    la construit quand `server/` ou `core/` changent ;
+  * `GROMA_RECONSTRUCTEURS=colmap,profondeur` en attendant les adaptateurs
+    `mapanything` et `profondeur_ia`.
+
+  ```bash
+  docker run --gpus all -e GROMA_JETON_WORKER=... -v groma:/var/lib/groma \
+    ghcr.io/pobsteta/groma-worker-gpu --api https://groma.exemple.fr --arret-inactif 600
+  ```
 * File de tâches SQLite (aucun courtier à exploiter). Une tâche interrompue
   repart après expiration de son bail. Deux tentatives par défaut.
 * Stockage S3 compatible en option (`GROMA_S3_URL`), pour l'archivage.

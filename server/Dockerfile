@@ -1,11 +1,9 @@
 # Groma server (API + worker). Build from the repository root:
 #   docker build -f server/Dockerfile -t groma-server .
 #
-# BASE selects the runtime: the default CPU image runs the depth-fusion
-# reconstruction and COLMAP without its dense step; for the GPU worker
-# (COLMAP dense, VGGT, SAM 2) build with a CUDA base, e.g.
-#   --build-arg BASE=nvidia/cuda:12.4.1-runtime-ubuntu22.04
-# and install a CUDA-enabled COLMAP (see docs/serveur.md).
+# CPU image: API, and a worker for the depth-fusion reconstruction and
+# COLMAP without its dense step. The GPU worker (COLMAP dense, MapAnything,
+# Prompt Depth Anything, SAM 2) has its own image: server/Dockerfile.gpu.
 ARG BASE=python:3.12-slim-bookworm
 FROM ${BASE}
 

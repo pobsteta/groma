@@ -1,0 +1,80 @@
+# Groma GPU worker (brief briefs/groma/2026-10-17-worker-gpu-scaleway.md).
+# Build from the repository root:
+#   docker build -f server/Dockerfile.gpu -t groma-worker-gpu .
+# Run on a GPU machine, taking the tasks from the API over HTTPS:
+#   docker run --gpus all -e GROMA_JETON_WORKER=... -v groma:/var/lib/groma \
+#     groma-worker-gpu --api https://groma.example --arret-inactif 600
+#
+# COLMAP comes compiled with CUDA in its official image (Ubuntu 24.04,
+# CUDA 12.9). PyTorch wheels bring their own CUDA libraries (cu128 runs on
+# that driver). No model weights in the image: they are downloaded on first
+# use into HF_HOME, on the data volume (only Apache-2.0 checkpoints, see
+# docs/dependances.md). The image builds and checks its imports without a GPU.
+ARG COLMAP_IMAGE=colmap/colmap:20260907.8077
+FROM ${COLMAP_IMAGE}
+
+ENV DEBIAN_FRONTEND=noninteractive PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
+    GROMA_DONNEES=/var/lib/groma HF_HOME=/var/lib/groma/cache/huggingface \
+    GROMA_RECONSTRUCTEURS=colmap,profondeur
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends python3 python3-venv python3-dev git build-essential \
+      ca-certificates libgl1 libglib2.0-0 \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN python3 -m venv /opt/venv
+ENV PATH=/opt/venv/bin:$PATH
+
+# torchaudio too: uniception (MapAnything) requires it unpinned, and the
+# PyPI build of a newer release does not load against this torch.
+ARG TORCH=2.10.0
+ARG TORCHVISION=0.25.0
+ARG CUDA_ROUES=cu128
+RUN pip install --no-cache-dir "torch==${TORCH}" "torchvision==${TORCHVISION}" "torchaudio==${TORCH}" \
+      --index-url "https://download.pytorch.org/whl/${CUDA_ROUES}"
+
+WORKDIR /app
+COPY core /app/core
+COPY server /app/server
+# transformers carries Prompt Depth Anything and Depth Anything (profondeur_ia).
+ARG TRANSFORMERS=5.18.0
+RUN pip install --no-cache-dir "/app/core[geo]" "/app/server[s3]" "transformers==${TRANSFORMERS}"
+
+# MapAnything without its dependencies: it pins opencv-python-headless,
+# which would overwrite Groma's OpenCV (same cv2 module); the others are
+# installed explicitly, leaving out the viewers and training tools.
+ARG MAPANYTHING_SHA=3d10cf7a3016fc0f9bb13a071ee66c47b10be0d9
+RUN pip install --no-cache-dir --no-deps \
+      "mapanything @ git+https://github.com/facebookresearch/map-anything.git@${MAPANYTHING_SHA}" \
+ && pip install --no-cache-dir huggingface_hub hydra-core natsort orjson pillow-heif plyfile python-box \
+      safetensors tqdm trimesh "uniception==0.1.7"
+
+# SAM 2 without its CUDA extension (only used by video post-processing).
+ARG SAM2_SHA=2b90b9f5ceec907a1c18123530e92e794ad901a4
+RUN SAM2_BUILD_CUDA=0 pip install --no-cache-dir --no-build-isolation \
+      "sam-2 @ git+https://github.com/facebookresearch/sam2.git@${SAM2_SHA}"
+
+# VGGT only for comparison runs (Meta licence, non-commercial original weights).
+ARG AVEC_VGGT=0
+ARG VGGT_SHA=a288dd0f14786c93483e45524328726ab7b1b4ce
+RUN if [ "$AVEC_VGGT" = 1 ]; then \
+      pip install --no-cache-dir "vggt @ git+https://github.com/facebookresearch/vggt.git@${VGGT_SHA}"; fi
+
+# A single OpenCV: if a dependency pulled another cv2 package, put Groma's back.
+RUN if pip list 2>/dev/null | grep -qiE '^opencv-python(-headless)? '; then \
+      v=$(pip show opencv-contrib-python-headless | sed -n 's/^Version: //p'); \
+      pip uninstall -y opencv-python opencv-python-headless; \
+      pip install --no-cache-dir --force-reinstall --no-deps "opencv-contrib-python-headless==$v"; fi
+
+# Checked at build time, without a GPU.
+RUN colmap -h >/dev/null \
+ && python -c "import cv2, torch, transformers, mapanything, sam2, groma_server.worker_distant; \
+from transformers import PromptDepthAnythingForDepthEstimation; \
+assert hasattr(cv2, 'aruco'); print('torch', torch.__version__, 'CUDA', torch.version.cuda)"
+
+RUN useradd --system --create-home groma && mkdir -p /var/lib/groma && chown groma /var/lib/groma
+USER groma
+VOLUME ["/var/lib/groma"]
+
+ENTRYPOINT ["groma-worker"]
+CMD ["--arret-inactif", "600"]
