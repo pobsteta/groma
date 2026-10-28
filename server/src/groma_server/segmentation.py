@@ -50,33 +50,51 @@ class SegmenteurSAM2:
             return False
         return torch.cuda.is_available()
 
-    def masques(self, paquet: Paquet) -> dict[int, np.ndarray]:
-        import cv2
+    def charger(self):
+        """Build the SAM 2 image predictor (weights downloaded on first use)."""
         from sam2.build_sam import build_sam2
         from sam2.sam2_image_predictor import SAM2ImagePredictor
 
-        pred = SAM2ImagePredictor(build_sam2(self.configuration, self.poids))
+        return SAM2ImagePredictor(build_sam2(self.configuration, self.poids))
+
+    @staticmethod
+    def masque_troncs(pred, bgr: np.ndarray, d: np.ndarray, graine: int) -> np.ndarray | None:
+        """Trunk mask of one frame at image resolution, ground excluded.
+
+        Prompts: pixels in the middle band of the frame whose depth is well
+        defined and lower than their row median (stems stand out in front
+        of the background). ``None`` when no prompt can be placed.
+        """
+        import cv2
+
+        h, w = d.shape
+        bande = d[h // 3 : 2 * h // 3]
+        med = np.nanmedian(bande, axis=1, keepdims=True)
+        v, u = np.nonzero(np.nan_to_num(bande, nan=np.inf) < 0.8 * med)
+        if len(u) == 0:
+            return None
+        sel = np.random.default_rng(graine).choice(len(u), min(16, len(u)), replace=False)
+        sx, sy = bgr.shape[1] / w, bgr.shape[0] / h
+        pts = np.column_stack([(u[sel] + 0.5) * sx, (v[sel] + h // 3 + 0.5) * sy])
+        pred.set_image(cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
+        m, _, _ = pred.predict(point_coords=pts, point_labels=np.ones(len(pts)), multimask_output=False)
+        return m[0].astype(bool)
+
+    def masques(self, paquet: Paquet) -> dict[int, np.ndarray]:
+        import cv2
+
+        pred = self.charger()
         out = {}
         for img in paquet.manifeste.images:
             bgr = paquet.image_bgr(img)
             if bgr is None or img.profondeur is None:
                 continue
             d = paquet.profondeur(img)
-            # Prompts: pixels in the middle band of the frame whose depth is
-            # well defined and lower than their row median (stems stand out
-            # in front of the background).
-            h, w = d.shape
-            bande = d[h // 3 : 2 * h // 3]
-            med = np.nanmedian(bande, axis=1, keepdims=True)
-            v, u = np.nonzero(np.nan_to_num(bande, nan=np.inf) < 0.8 * med)
-            if len(u) == 0:
+            m = self.masque_troncs(pred, bgr, d, img.id)
+            if m is None:
                 continue
-            sel = np.random.default_rng(img.id).choice(len(u), min(16, len(u)), replace=False)
-            sx, sy = bgr.shape[1] / w, bgr.shape[0] / h
-            pts = np.column_stack([(u[sel] + 0.5) * sx, (v[sel] + h // 3 + 0.5) * sy])
-            pred.set_image(cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB))
-            m, _, _ = pred.predict(point_coords=pts, point_labels=np.ones(len(pts)), multimask_output=False)
-            masque = cv2.resize(m[0].astype(np.uint8), (w, h), interpolation=cv2.INTER_NEAREST).astype(bool)
+            h, w = d.shape
+            masque = cv2.resize(m.astype(np.uint8), (w, h), interpolation=cv2.INTER_NEAREST).astype(bool)
             # Keep the ground: everything below the horizon line stays.
             masque[2 * h // 3 :] = True
             out[img.id] = masque
