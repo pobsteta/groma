@@ -1,5 +1,6 @@
 package groma.app.ui
 
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -126,6 +127,7 @@ fun EcranProjets(
                     modifier = Modifier.weight(1f),
                 )
                 FilterChip(
+                    modifier = Modifier.margeBouton(WindowInsetsSides.End),
                     selected = voirTermines,
                     onClick = { voirTermines = !voirTermines },
                     label = { Text(stringResource(R.string.projets_termines, projets.count { it.resume.termine })) },
@@ -235,7 +237,7 @@ private fun CarteProjet(e: EntreeProjet, onOuvrir: () -> Unit, onDetails: () -> 
                     Text(stringResource(R.string.projet_maj_disponible), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
                 }
             }
-            Box {
+            Box(Modifier.margeBouton(WindowInsetsSides.End)) {
                 IconButton(onClick = { menu = true }) {
                     Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.menu))
                 }

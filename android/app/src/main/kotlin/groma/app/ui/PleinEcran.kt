@@ -1,6 +1,11 @@
 package groma.app.ui
 
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.ui.Modifier
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ScaffoldDefaults
@@ -19,3 +24,11 @@ val LocalPleinEcran = compositionLocalOf { false }
 @Composable
 fun margesContenu(): WindowInsets =
     if (LocalPleinEcran.current) WindowInsets.systemBars else ScaffoldDefaults.contentWindowInsets
+
+/**
+ * Keeps a button clear of the camera cutout on the given [cote] (Start or End) in full screen;
+ * no-op otherwise (the Scaffold insets already include the cutout then).
+ */
+@Composable
+fun Modifier.margeBouton(cote: WindowInsetsSides): Modifier =
+    if (LocalPleinEcran.current) windowInsetsPadding(WindowInsets.displayCutout.only(cote)) else this

@@ -39,9 +39,6 @@ fun BandeauCompact(
 ) {
     val pleinEcran = LocalPleinEcran.current
     // In full screen the title may reach the edge; the buttons alone stay clear of the cutout.
-    val margeBoutons: @Composable (WindowInsetsSides) -> Modifier = { cote ->
-        if (pleinEcran) Modifier.windowInsetsPadding(WindowInsets.displayCutout.only(cote)) else Modifier
-    }
     Surface(color = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary) {
         Row(
             modifier = modifier.fillMaxWidth()
@@ -56,7 +53,7 @@ fun BandeauCompact(
                 .height(48.dp).padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (navigationIcon != null) Row(margeBoutons(WindowInsetsSides.Start)) { navigationIcon() } else Spacer(Modifier.width(12.dp))
+            if (navigationIcon != null) Row(Modifier.margeBouton(WindowInsetsSides.Start)) { navigationIcon() } else Spacer(Modifier.width(12.dp))
             Text(
                 titre,
                 style = MaterialTheme.typography.titleMedium,
@@ -65,7 +62,7 @@ fun BandeauCompact(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
             )
-            Row(margeBoutons(WindowInsetsSides.End), verticalAlignment = Alignment.CenterVertically) { actions() }
+            Row(Modifier.margeBouton(WindowInsetsSides.End), verticalAlignment = Alignment.CenterVertically) { actions() }
         }
     }
 }

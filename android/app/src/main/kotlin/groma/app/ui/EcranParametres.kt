@@ -1,5 +1,6 @@
 package groma.app.ui
 
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -93,7 +94,7 @@ fun EcranParametres(reglages: Reglages, onChange: (Reglages) -> Unit, onRetour: 
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 modifier = Modifier.fillMaxWidth(),
             )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            Row(Modifier.fillMaxWidth().margeBouton(WindowInsetsSides.End), horizontalArrangement = Arrangement.End) {
                 TextButton(onClick = {
                     scope.launch {
                         val texte = pressePapiers.getClipEntry()?.clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.text
@@ -109,14 +110,14 @@ fun EcranParametres(reglages: Reglages, onChange: (Reglages) -> Unit, onRetour: 
                     Text(stringResource(R.string.envoi_4g), style = MaterialTheme.typography.titleMedium)
                     Text(stringResource(R.string.param_4g_desc), style = MaterialTheme.typography.bodySmall)
                 }
-                Switch(checked = reglages.envoi4g, onCheckedChange = { onChange(reglages.copy(envoi4g = it)) })
+                Switch(modifier = Modifier.margeBouton(WindowInsetsSides.End), checked = reglages.envoi4g, onCheckedChange = { onChange(reglages.copy(envoi4g = it)) })
             }
             Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.param_plein_titre), style = MaterialTheme.typography.titleMedium)
                     Text(stringResource(R.string.param_plein_desc), style = MaterialTheme.typography.bodySmall)
                 }
-                Switch(checked = reglages.pleinEcran, onCheckedChange = { onChange(reglages.copy(pleinEcran = it)) })
+                Switch(modifier = Modifier.margeBouton(WindowInsetsSides.End), checked = reglages.pleinEcran, onCheckedChange = { onChange(reglages.copy(pleinEcran = it)) })
             }
             ChoixThemeReglage(reglages.theme) { onChange(reglages.copy(theme = it)) }
             SectionRtk()
