@@ -1,6 +1,6 @@
 """Generate Groma's adaptive launcher icon (same style as Marculus).
 
-Navy hexagon outline with a blackletter capital G (UnifrakturCook Bold, OFL),
+Navy hexagon outline with a blackletter capital G (New Rocker, OFL),
 drawn in the 108 dp adaptive-icon canvas, white background. Writes the
 foreground PNG for each density into ../src/main/res/mipmap-*/.
 
@@ -20,8 +20,8 @@ log = logging.getLogger("generer_icone")
 
 ICI = Path(__file__).resolve().parent
 RES = ICI.parent / "src/main/res"
-POLICE = ICI / "UnifrakturCook-Bold.ttf"
-URL_POLICE = "https://raw.githubusercontent.com/google/fonts/main/ofl/unifrakturcook/UnifrakturCook-Bold.ttf"
+POLICE = ICI / "NewRocker-Regular.ttf"
+URL_POLICE = "https://raw.githubusercontent.com/google/fonts/main/ofl/newrocker/NewRocker-Regular.ttf"
 
 ENCRE = (26, 26, 46, 255)  # #1A1A2E, Marculus' ink
 DENSITES = {"mdpi": 108, "hdpi": 162, "xhdpi": 216, "xxhdpi": 324, "xxxhdpi": 432}
