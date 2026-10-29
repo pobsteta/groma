@@ -72,3 +72,18 @@ plein écran désactivé : comme la 0.12.0.
 ## Qui veille, qui tranche
 
 `relecteur`, puis Pascal · 3 allers-retours · Pascal tranche.
+
+## Aller-retour 1/3 (2026-10-29)
+
+Relecture : prêt pour Pascal (PR #71). Décisions de Pascal du 2026-10-29 (« fais ce qu'il y a à
+faire », sur les propositions de l'orchestrateur) :
+1. **Boutons du contenu** : en plein écran, le menu ⋮ de chaque carte projet
+   (`EcranProjets.kt` l. 239) et la puce « Terminés » au bout de la ligne de recherche gardent la
+   marge de l'encoche du côté où ils sont (fin de ligne), comme les boutons du bandeau ; le texte des
+   cartes va jusqu'au bord. Même règle pour tout autre bouton en bout de ligne des écrans à
+   `Scaffold` (Placettes, Paramètres, Projets du serveur), s'il y en a.
+2. **Capture** : les boutons de la surcouche gardent la marge (confirmé).
+3. **Portrait** : la marge du haut reste pour tout le bandeau (confirmé).
+4. Points mineurs du relecteur : réindenter le bloc `CompositionLocalProvider` de `MainActivity.kt`
+   (l. 94) ; couper la ligne de KDoc de `GromaApp.kt` l. 37.
+5. Commits ajoutés sur la branche `fix/009-plein-ecran-sans-bande` (PR #71), pas de nouvelle PR.

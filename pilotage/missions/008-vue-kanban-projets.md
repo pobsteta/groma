@@ -95,3 +95,16 @@ colonne sous le minimum la laisse en place ; le choix survit à une relance.
 ## Qui veille, qui tranche
 
 `relecteur`, puis Pascal · 3 allers-retours · Pascal tranche.
+
+## Aller-retour 1/3 (2026-10-29)
+
+Relecture : prêt pour Pascal (PR #72). Décisions de Pascal du 2026-10-29 (« fais ce qu'il y a à
+faire », sur les propositions de l'orchestrateur) :
+1. **La vue colonnes montre tous les projets** : la recherche s'applique, la puce « Terminés » non
+   (les colonnes font déjà ce tri). La puce reste pour la vue liste ; la masquer en vue colonnes.
+2. **Icônes : on garde les icônes dessinées**, pas de `material-icons-extended`.
+3. Points mineurs du relecteur : remplacer dans `EcranProjets.kt` les noms complets
+   (`groma.core.EtatKanban`, `androidx.compose.ui.graphics.vector.*`) par des imports.
+4. `PLAN.md` : la PR #71 (009) prend la ligne 7l et sera fusionnée d'abord ; rebaser sur
+   `origin/main` après sa fusion et passer la ligne de la 008 en 7m.
+5. Commits ajoutés sur la branche `feat/008-vue-kanban-projets` (PR #72), pas de nouvelle PR.

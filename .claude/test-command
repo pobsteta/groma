@@ -1,1 +1,1 @@
-cd android && gradle :groma-core:test :app:testDebugUnitTest
+cd android && ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}" gradle :groma-core:test :app:testDebugUnitTest
