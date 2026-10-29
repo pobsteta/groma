@@ -43,12 +43,17 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.PathData
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import groma.app.EntreeProjet
 import groma.app.R
+import groma.core.EtatKanban
 import groma.core.ReglagesKanban
 import java.text.Normalizer
 import java.util.Locale
@@ -82,7 +87,7 @@ fun EcranProjets(
     var recherche by rememberSaveable { mutableStateOf("") }
     var voirTermines by rememberSaveable { mutableStateOf(false) }
     var vueColonnes by remember { mutableStateOf(kanban.vueColonnes) }
-    val statuts = remember { mutableStateMapOf<String, groma.core.EtatKanban>() }
+    val statuts = remember { mutableStateMapOf<String, EtatKanban>() }
     var details by remember { mutableStateOf<EntreeProjet?>(null) }
     var aRetirer by remember { mutableStateOf<EntreeProjet?>(null) }
     Scaffold(
@@ -121,7 +126,7 @@ fun EcranProjets(
             }
             val trouves = if (recherche.isBlank()) projets else projets.filter { correspond(it, recherche) }
             val (termines, enCours) = trouves.partition { it.resume.termine }
-            val affiches = if (voirTermines) termines else enCours
+            val affiches = if (vueColonnes) trouves else if (voirTermines) termines else enCours
             val autres = if (voirTermines) enCours else termines
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
@@ -136,14 +141,14 @@ fun EcranProjets(
                     leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
                     modifier = Modifier.weight(1f),
                 )
-                FilterChip(
+                if (!vueColonnes) FilterChip(
                     selected = voirTermines,
                     onClick = { voirTermines = !voirTermines },
                     label = { Text(stringResource(R.string.projets_termines, projets.count { it.resume.termine })) },
                     leadingIcon = if (voirTermines) ({ Icon(Icons.Filled.Check, contentDescription = null) }) else null,
                 )
             }
-            if (recherche.isNotBlank() && autres.isNotEmpty()) {
+            if (!vueColonnes && recherche.isNotBlank() && autres.isNotEmpty()) {
                 Text(
                     stringResource(if (voirTermines) R.string.projets_autres_en_cours else R.string.projets_autres_termines, autres.size),
                     style = MaterialTheme.typography.bodySmall,
@@ -340,15 +345,15 @@ private fun correspond(e: EntreeProjet, recherche: String): Boolean {
 }
 
 /** Three columns, drawn here to avoid material-icons-extended (ViewColumn). */
-private val iconeColonnes: androidx.compose.ui.graphics.vector.ImageVector by lazy {
-    androidx.compose.ui.graphics.vector.ImageVector.Builder(
+private val iconeColonnes: ImageVector by lazy {
+    ImageVector.Builder(
         name = "VueColonnes", defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f,
     ).addPath(
-        pathData = androidx.compose.ui.graphics.vector.PathData {
+        pathData = PathData {
             moveTo(4f, 5f); horizontalLineTo(8f); verticalLineTo(19f); horizontalLineTo(4f); close()
             moveTo(10f, 5f); horizontalLineTo(14f); verticalLineTo(19f); horizontalLineTo(10f); close()
             moveTo(16f, 5f); horizontalLineTo(20f); verticalLineTo(19f); horizontalLineTo(16f); close()
         },
-        fill = androidx.compose.ui.graphics.SolidColor(androidx.compose.ui.graphics.Color.Black),
+        fill = SolidColor(Color.Black),
     ).build()
 }
