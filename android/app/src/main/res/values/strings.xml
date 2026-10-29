@@ -50,6 +50,8 @@
     <string name="menu_dossier_projets">Dossier des projets…</string>
     <string name="menu_importer">Importer un dossier…</string>
     <string name="menu_projets_serveur">Projets du serveur…</string>
+    <string name="vue_liste">Vue liste</string>
+    <string name="vue_colonnes">Vue colonnes</string>
     <string name="projets_recherche">Rechercher</string>
     <string name="projets_termines">Terminés (%1$d)</string>
     <string name="projets_autres_termines">Aussi %1$d projet(s) terminé(s) : puce « Terminés ».</string>
