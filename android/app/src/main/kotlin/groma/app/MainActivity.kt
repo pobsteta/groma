@@ -42,6 +42,8 @@ import groma.app.ui.LigneServeur
 import groma.app.ui.GromaTheme
 import groma.app.ui.LignePlacette
 import groma.app.ui.Reglages
+import groma.core.MagasinKanban
+import groma.core.ReglagesKanban
 import groma.core.DonneesCarte
 import groma.core.choixThemeDepuis
 import groma.core.ProjetsServeur
@@ -90,6 +92,7 @@ class MainActivity : AppCompatActivity() {
         appliquerPleinEcran(window, Preferences.reglages(this).pleinEcran)
         setContent {
             var reglages by remember { mutableStateOf(Preferences.reglages(this)) }
+            val kanban = remember { Preferences.kanban(this) }
             GromaTheme(darkTheme = reglages.theme.estSombre(isSystemInDarkTheme())) {
                 CompositionLocalProvider(LocalPleinEcran provides reglages.pleinEcran) {
                     var parametres by rememberSaveable { mutableStateOf(false) }
@@ -178,6 +181,7 @@ class MainActivity : AppCompatActivity() {
                             onRetirer = { e -> tache { message(depot.retirer(e), null) } },
                             onOuvrirQfield = ::ouvrirQfield,
                             onParametres = { parametres = true },
+                            kanban = kanban,
                         )
                     }
                 }
@@ -333,6 +337,14 @@ class MainActivity : AppCompatActivity() {
 }
 
 object Preferences {
+    fun kanban(ctx: Context) = ReglagesKanban(object : MagasinKanban {
+        private val p = prefs(ctx)
+        override fun lireTexte(cle: String) = p.getString(cle, null)
+        override fun ecrireTexte(cle: String, valeur: String) = p.edit().putString(cle, valeur).apply()
+        override fun lireBooleen(cle: String, parDefaut: Boolean) = p.getBoolean(cle, parDefaut)
+        override fun ecrireBooleen(cle: String, valeur: Boolean) = p.edit().putBoolean(cle, valeur).apply()
+    })
+
     fun prefs(ctx: Context) = ctx.getSharedPreferences("groma", Context.MODE_PRIVATE)
 
     fun reglages(ctx: Context): Reglages = prefs(ctx).let {

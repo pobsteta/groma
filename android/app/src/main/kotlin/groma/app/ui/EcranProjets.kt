@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Search
@@ -36,18 +37,25 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.PathData
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import groma.app.EntreeProjet
 import groma.app.R
+import groma.core.EtatKanban
+import groma.core.ReglagesKanban
 import java.text.Normalizer
 import java.util.Locale
 
@@ -73,11 +81,14 @@ fun EcranProjets(
     onRetirer: (EntreeProjet) -> Unit,
     onOuvrirQfield: (EntreeProjet) -> Unit,
     onParametres: () -> Unit,
+    kanban: ReglagesKanban,
 ) {
     var menu by remember { mutableStateOf(false) }
     var aPropos by remember { mutableStateOf(false) }
     var recherche by rememberSaveable { mutableStateOf("") }
     var voirTermines by rememberSaveable { mutableStateOf(false) }
+    var vueColonnes by remember { mutableStateOf(kanban.vueColonnes) }
+    val statuts = remember { mutableStateMapOf<String, EtatKanban>() }
     var details by remember { mutableStateOf<EntreeProjet?>(null) }
     var aRetirer by remember { mutableStateOf<EntreeProjet?>(null) }
     Scaffold(
@@ -86,6 +97,12 @@ fun EcranProjets(
             BandeauCompact(
                 titre = stringResource(R.string.app_name),
                 actions = {
+                    IconButton(onClick = { vueColonnes = !vueColonnes; kanban.vueColonnes = vueColonnes }) {
+                        Icon(
+                            if (vueColonnes) Icons.AutoMirrored.Filled.List else iconeColonnes,
+                            contentDescription = stringResource(if (vueColonnes) R.string.vue_liste else R.string.vue_colonnes),
+                        )
+                    }
                     Box {
                         IconButton(onClick = { menu = true }) {
                             Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.menu))
@@ -111,7 +128,7 @@ fun EcranProjets(
             }
             val trouves = if (recherche.isBlank()) projets else projets.filter { correspond(it, recherche) }
             val (termines, enCours) = trouves.partition { it.resume.termine }
-            val affiches = if (voirTermines) termines else enCours
+            val affiches = if (vueColonnes) trouves else if (voirTermines) termines else enCours
             val autres = if (voirTermines) enCours else termines
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
@@ -126,7 +143,7 @@ fun EcranProjets(
                     leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
                     modifier = Modifier.weight(1f),
                 )
-                FilterChip(
+                if (!vueColonnes) FilterChip(
                     modifier = Modifier.margeBouton(WindowInsetsSides.End),
                     selected = voirTermines,
                     onClick = { voirTermines = !voirTermines },
@@ -134,7 +151,7 @@ fun EcranProjets(
                     leadingIcon = if (voirTermines) ({ Icon(Icons.Filled.Check, contentDescription = null) }) else null,
                 )
             }
-            if (recherche.isNotBlank() && autres.isNotEmpty()) {
+            if (!vueColonnes && recherche.isNotBlank() && autres.isNotEmpty()) {
                 Text(
                     stringResource(if (voirTermines) R.string.projets_autres_en_cours else R.string.projets_autres_termines, autres.size),
                     style = MaterialTheme.typography.bodySmall,
@@ -142,19 +159,27 @@ fun EcranProjets(
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
             }
-            LazyColumn(
-                contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                items(affiches, key = { it.cle }) { e ->
-                    CarteProjet(
-                        e,
-                        onOuvrir = { onOuvrir(e) },
-                        onDetails = { details = e },
-                        onMettreAJour = { onMettreAJour(e) },
-                        onRetirer = { aRetirer = e },
-                        onOuvrirQfield = { onOuvrirQfield(e) },
-                    )
+            if (vueColonnes) {
+                VueKanban(
+                    cartes = affiches.map { e -> CarteKanban(e, statuts[e.cle] ?: kanban.statut(e.cle)) },
+                    onOuvrir = onOuvrir,
+                    onDeposer = { e, statut -> kanban.definirStatut(e.cle, statut); statuts[e.cle] = statut },
+                )
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(affiches, key = { it.cle }) { e ->
+                        CarteProjet(
+                            e,
+                            onOuvrir = { onOuvrir(e) },
+                            onDetails = { details = e },
+                            onMettreAJour = { onMettreAJour(e) },
+                            onRetirer = { aRetirer = e },
+                            onOuvrirQfield = { onOuvrirQfield(e) },
+                        )
+                    }
                 }
             }
         }
@@ -320,4 +345,18 @@ private fun normaliser(s: String): String =
 private fun correspond(e: EntreeProjet, recherche: String): Boolean {
     val n = normaliser(recherche.trim())
     return listOfNotNull(e.titre, e.cle, e.infos?.description, e.infos?.communes).any { normaliser(it).contains(n) }
+}
+
+/** Three columns, drawn here to avoid material-icons-extended (ViewColumn). */
+private val iconeColonnes: ImageVector by lazy {
+    ImageVector.Builder(
+        name = "VueColonnes", defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f,
+    ).addPath(
+        pathData = PathData {
+            moveTo(4f, 5f); horizontalLineTo(8f); verticalLineTo(19f); horizontalLineTo(4f); close()
+            moveTo(10f, 5f); horizontalLineTo(14f); verticalLineTo(19f); horizontalLineTo(10f); close()
+            moveTo(16f, 5f); horizontalLineTo(20f); verticalLineTo(19f); horizontalLineTo(16f); close()
+        },
+        fill = SolidColor(Color.Black),
+    ).build()
 }
