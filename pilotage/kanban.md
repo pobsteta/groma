@@ -8,7 +8,7 @@
 
 > **PLAN.md reste la source maître de l'avancement et des décisions prises avant la méthode** (choix de Pascal, 2026-10-23). Ce kanban ne suit que les missions confiées par `/imperatrice:boucle`.
 
-**Dernier cycle :** 3 _(augmenté de 1 à la fin de chaque `/boucle`, même quand elle n'a
+**Dernier cycle :** 4 _(augmenté de 1 à la fin de chaque `/boucle`, même quand elle n'a
 rien lancé. Une carte est immobile quand dernier cycle − N ≥ 2.)_
 
 _Modèle de carte :_
@@ -22,6 +22,7 @@ _Modèle de carte :_
 
 ## Bac à sable
 
+- `.claude/test-command` : `ANDROID_HOME` par défaut (`~/Android/Sdk`) ajouté au cycle 4 ; reste à vérifier que le hook de fin passe sous son délai de 630 s · depuis le cycle 4
 - Couleurs écrites en dur hors du thème (19 `Color(0x…)` dans `EcranCarte.kt` et `Gnss.kt`) : essai au soleil positif le 2026-10-24, débloquée ; reste à décider le sens (badges GNSS, SNR) · depuis le cycle 0
 - Bibliothèques `terrain` (`terrain-gnss`, `terrain-gpkg`, `terrain-carte`) à la place du code de `groma-core` (brief Marculus du 2026-10-17) · depuis le cycle 0
 
@@ -37,6 +38,15 @@ _Modèle de carte :_
 
 
 ## Terminé
+
+- [008](missions/008-vue-kanban-projets.md) · depuis le cycle 4
+  - Homme : dev (sonnet), appuyer
+  - Mission : vue Kanban des projets, colonnes de Marculus et Surculus, minimum imposé par l'avancement
+  - Moyens : `EtatKanban.kt` et `VueKanban.kt` de Surculus, `ResumeProjet` · PR #72 fusionnée (d93791b), aller-retour 1/3
+- [009](missions/009-plein-ecran-sans-bande.md) · depuis le cycle 4
+  - Homme : dev (sonnet), appuyer
+  - Mission : en plein écran, plus de bande vide côté caméra, sauf pour les boutons
+  - Moyens : `BandeauCompact.kt`, `Scaffold`, `margeBouton` · PR #71 fusionnée (46f4c1b), aller-retour 2/3
 
 - [007](missions/007-plein-ecran.md) · depuis le cycle 3
   - Homme : dev (sonnet), appuyer
@@ -86,3 +96,4 @@ l'inscrit avec ce qu'elle nous apprend._
 - cycle 1 · APK de la PR #58 (thème = jetons `terrain-style` v0.6.0) · pour Pascal, opérateur de terrain, essai au soleil le 2026-10-30 avec Marculus · texte des boutons à 7:1 au lieu de 5,17:1 et même vert que Marculus et Surculus (première livraison inscrite)
 - cycle 2 · Groma 0.11.0 (bandeau vert retrouvé, choix du thème Système / Clair / Sombre dans Paramètres, appliqué à toute l'appli) · pour Pascal, opérateur de terrain, sur le S23 Ultra · le vert revient (la livraison du cycle 1 l'avait perdu) et le thème se choisit dans l'appli au lieu de suivre le téléphone
 - cycle 3 · Groma 0.12.0 (réglage Plein écran dans Paramètres, accueil, carte et capture) · pour Pascal, opérateur de terrain, sur le S23 Ultra · plus de place à l'écran : barres de statut et de navigation masquées, rappelées au glissement
+- cycle 4 · Groma `main` d93791b (vue Kanban des projets, plein écran sans la bande de la caméra), APK de publication installé sur le S23 Ultra · pour Pascal, opérateur de terrain · l'avancement de chaque forêt d'un coup d'œil, et toute la largeur de l'écran en paysage
