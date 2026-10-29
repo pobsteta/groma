@@ -1,6 +1,5 @@
 package groma.app.ui
 
-import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -132,7 +131,6 @@ private fun EtatTraitement(etat: String) {
         else -> R.string.etat_a_faire to false
     }
     AssistChip(
-        modifier = Modifier.margeBouton(WindowInsetsSides.End),
         onClick = {},
         label = { Text(stringResource(libelle)) },
         colors = if (fait) AssistChipDefaults.assistChipColors(
