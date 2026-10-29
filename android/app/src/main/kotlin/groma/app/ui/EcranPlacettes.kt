@@ -53,6 +53,7 @@ fun EcranPlacettes(
     var menu by remember { mutableStateOf(false) }
     var aPropos by remember { mutableStateOf(false) }
     Scaffold(
+        contentWindowInsets = margesContenu(),
         topBar = {
             BandeauCompact(
                 titre = titre,
