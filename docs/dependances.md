@@ -26,7 +26,7 @@ par GeoPackage et GeoTIFF : ce dépôt n'importe pas son code R.
 | Modèle géomagnétique WMM2025 (coefficients `WMM2025.COF`) | core (`groma.declinaison`), `groma-core` (`Declinaison`) | **domaine public** (NOAA/NCEI, gouvernement des États-Unis) | fichier officiel de `WMM2025COF.zip` (https://www.ncei.noaa.gov/products/world-magnetic-model), époque 2025.0, valable jusqu'à 2030.0 ; une seule copie dans `core/src/groma/donnees/`, copiée en ressource Kotlin par Gradle ; algorithme réécrit, aucune bibliothèque ajoutée |
 | kotlinx-serialization, JUnit 5, sqlite-jdbc | tests Kotlin | Apache-2.0 / EPL-2.0 / Apache-2.0 | tests seulement |
 | boto3 | serveur (option S3) | Apache-2.0 | |
-| Police UnifrakturCook Bold | icône Android (rendue en PNG) | OFL-1.1 | téléchargée par `android/app/icone/generer_icone.py`, non versionnée ; seul le rendu est distribué |
+| Police New Rocker | icône Android (rendue en PNG) | OFL-1.1 | téléchargée par `android/app/icone/generer_icone.py`, non versionnée ; seul le rendu est distribué |
 
 ## Optionnelles, à surveiller
 
