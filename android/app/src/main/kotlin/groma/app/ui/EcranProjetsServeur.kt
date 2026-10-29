@@ -1,5 +1,6 @@
 package groma.app.ui
 
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -83,6 +84,7 @@ fun EcranProjetsServeur(
         try { lignes = charger() } catch (e: Exception) { erreur = e.message ?: e.toString() }
     }
     Scaffold(
+        contentWindowInsets = margesContenu(),
         topBar = {
             BandeauCompact(
                 titre = stringResource(R.string.serveur_titre),
@@ -178,7 +180,7 @@ private fun CarteServeur(l: LigneServeur, onTelecharger: () -> Unit, onAnnuler: 
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.weight(1f),
                     )
-                    TextButton(onClick = onAnnuler) { Text(stringResource(R.string.annuler)) }
+                    TextButton(onClick = onAnnuler, modifier = Modifier.margeBouton(WindowInsetsSides.End)) { Text(stringResource(R.string.annuler)) }
                 }
             } else {
                 if (info?.state == WorkInfo.State.FAILED) {
@@ -193,8 +195,8 @@ private fun CarteServeur(l: LigneServeur, onTelecharger: () -> Unit, onAnnuler: 
                 }
                 when (l.etat) {
                     EtatProjetServeur.A_JOUR -> {}
-                    EtatProjetServeur.ABSENT, EtatProjetServeur.PLUS_RECENT -> Button(onClick = onTelecharger) { Text(stringResource(R.string.serveur_telecharger)) }
-                    EtatProjetServeur.PLUS_ANCIEN -> OutlinedButton(onClick = onTelecharger) { Text(stringResource(R.string.serveur_telecharger)) }
+                    EtatProjetServeur.ABSENT, EtatProjetServeur.PLUS_RECENT -> Button(onClick = onTelecharger, modifier = Modifier.margeBouton(WindowInsetsSides.Start)) { Text(stringResource(R.string.serveur_telecharger)) }
+                    EtatProjetServeur.PLUS_ANCIEN -> OutlinedButton(onClick = onTelecharger, modifier = Modifier.margeBouton(WindowInsetsSides.Start)) { Text(stringResource(R.string.serveur_telecharger)) }
                 }
             }
         }
