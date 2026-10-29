@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
@@ -80,14 +81,14 @@ fun SectionRtk() {
     }
     if (!rtk.actif) return
 
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(Modifier.margeBouton(WindowInsetsSides.Start), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Choix(stringResource(R.string.rtk_bluetooth), rtk.transport == TransportRtk.BLUETOOTH) { maj(rtk.copy(transport = TransportRtk.BLUETOOTH)) }
         Choix(stringResource(R.string.rtk_tcp), rtk.transport == TransportRtk.TCP) { maj(rtk.copy(transport = TransportRtk.TCP)) }
     }
     when (rtk.transport) {
         TransportRtk.BLUETOOTH -> Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(rtk.appareilBtNom ?: stringResource(R.string.rtk_aucun_appareil), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-            OutlinedButton(onClick = {
+            OutlinedButton(modifier = Modifier.margeBouton(WindowInsetsSides.End), onClick = {
                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
                     ContextCompat.checkSelfPermission(ctx, Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED
                 ) choixAppareil = true
@@ -108,7 +109,7 @@ fun SectionRtk() {
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Champ(rtk.pointMontage, { maj(rtk.copy(pointMontage = it.trim())) }, stringResource(R.string.rtk_point_montage), Modifier.weight(1f))
-            Box {
+            Box(Modifier.margeBouton(WindowInsetsSides.End)) {
                 OutlinedButton(enabled = !chargement, onClick = {
                     chargement = true
                     scope.launch {
@@ -134,7 +135,7 @@ fun SectionRtk() {
         }
     }
 
-    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().padding(vertical = 6.dp).margeBouton(WindowInsetsSides.Start), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         Button(onClick = {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                 ContextCompat.checkSelfPermission(ctx, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
@@ -171,7 +172,7 @@ fun SectionRtk() {
 
     // Length of the centre measurement (averaged RTK fixed fixes).
     Text(stringResource(R.string.rtk_duree_centre), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 8.dp))
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    Row(Modifier.margeBouton(WindowInsetsSides.Start), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         listOf(5, 10, 30, 60).forEach { s -> Choix("$s s", rtk.dureeCentreS == s) { maj(rtk.copy(dureeCentreS = s)) } }
     }
 
@@ -222,7 +223,7 @@ private fun Interrupteur(titre: String, description: String, valeur: Boolean, on
             Text(titre, style = MaterialTheme.typography.titleMedium)
             Text(description, style = MaterialTheme.typography.bodySmall)
         }
-        Switch(checked = valeur, onCheckedChange = onChange)
+        Switch(modifier = Modifier.margeBouton(WindowInsetsSides.End), checked = valeur, onCheckedChange = onChange)
     }
 }
 

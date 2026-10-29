@@ -16,6 +16,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -32,6 +33,7 @@ import groma.app.carte.configurerOsmdroid
 import groma.app.gnss.ServiceGnssRtk
 import groma.app.gnss.SourcePosition
 import groma.app.ui.EcranCarte
+import groma.app.ui.LocalPleinEcran
 import groma.app.ui.EcranParametres
 import groma.app.ui.EcranPlacettes
 import groma.app.ui.EcranProjets
@@ -92,94 +94,96 @@ class MainActivity : AppCompatActivity() {
             var reglages by remember { mutableStateOf(Preferences.reglages(this)) }
             val kanban = remember { Preferences.kanban(this) }
             GromaTheme(darkTheme = reglages.theme.estSombre(isSystemInDarkTheme())) {
-                var parametres by rememberSaveable { mutableStateOf(false) }
-                var projetsServeur by rememberSaveable { mutableStateOf(false) }
-                var cle by rememberSaveable { mutableStateOf<String?>(null) }
-                var carte by rememberSaveable { mutableStateOf(false) }
-                // Leaving the project releases the RTK receiver (for QField, and the battery).
-                LaunchedEffect(cle) { if (cle == null) ServiceGnssRtk.arreter(this@MainActivity) }
-                val ouvert = remember(cle) { cle?.let(depot::projet) }
-                SideEffect { projetOuvert = ouvert }
-                when {
-                    parametres -> {
-                        BackHandler { parametres = false }
-                        EcranParametres(
-                            reglages = reglages,
-                            onChange = {
-                                reglages = it
-                                Preferences.memoriserReglages(this, it)
-                                appliquerTheme(it.theme)
-                                appliquerPleinEcran(window, it.pleinEcran)
-                            },
-                            onRetour = { parametres = false },
-                        )
-                    }
-                    projetsServeur -> {
-                        BackHandler { projetsServeur = false }
-                        EcranProjetsServeur(
-                            serveurConfigure = reglages.serveur.isNotBlank(),
-                            racineChoisie = depot.racine != null,
-                            charger = { withContext(Dispatchers.IO) { lignesServeur(reglages) } },
-                            onTelecharger = { m -> depot.racine?.let { TelechargementProjet.planifier(this, m, it) } },
-                            onAnnuler = { m -> TelechargementProjet.annuler(this, m.projetId) },
-                            onInstalle = ::actualiser,
-                            onParametres = { parametres = true },
-                            onChoisirRacine = { choisirRacine.launch(DOSSIER_PAR_DEFAUT) },
-                            onRetour = { projetsServeur = false },
-                        )
-                    }
-                    ouvert != null && carte -> {
-                        BackHandler { carte = false }
-                        val titre = projets.firstOrNull { it.cle == cle }?.titre ?: ouvert.dossier.name
-                        // Reloaded on resume, so a plot filmed from the map changes colour.
-                        val donnees by produceState<DonneesCarte?>(null, ouvert, rafraichir) {
-                            value = withContext(Dispatchers.IO) {
-                                try { ouvert.donneesCarte() } catch (e: Exception) { null }
-                            }
+                CompositionLocalProvider(LocalPleinEcran provides reglages.pleinEcran) {
+                    var parametres by rememberSaveable { mutableStateOf(false) }
+                    var projetsServeur by rememberSaveable { mutableStateOf(false) }
+                    var cle by rememberSaveable { mutableStateOf<String?>(null) }
+                    var carte by rememberSaveable { mutableStateOf(false) }
+                    // Leaving the project releases the RTK receiver (for QField, and the battery).
+                    LaunchedEffect(cle) { if (cle == null) ServiceGnssRtk.arreter(this@MainActivity) }
+                    val ouvert = remember(cle) { cle?.let(depot::projet) }
+                    SideEffect { projetOuvert = ouvert }
+                    when {
+                        parametres -> {
+                            BackHandler { parametres = false }
+                            EcranParametres(
+                                reglages = reglages,
+                                onChange = {
+                                    reglages = it
+                                    Preferences.memoriserReglages(this, it)
+                                    appliquerTheme(it.theme)
+                                    appliquerPleinEcran(window, it.pleinEcran)
+                                },
+                                onRetour = { parametres = false },
+                            )
                         }
-                        EcranCarte(
-                            titre = titre,
-                            donnees = donnees,
-                            dossierProjet = ouvert.dossier,
-                            onRetour = { carte = false },
-                            onOuvrirPlacette = ::demanderPlacette,
-                            onEnregistrerCentre = { plotId, centre ->
-                                withContext(Dispatchers.IO) { ouvert.ajouterCentre(plotId, centre) }.also { rafraichir++; ServicePartageQfield.demarrer(this@MainActivity) }
-                            },
-                        )
-                    }
-                    ouvert != null -> {
-                        BackHandler { cle = null }
-                        // The list may still be loading (activity recreated after a capture): follow it.
-                        val titre = projets.firstOrNull { it.cle == cle }?.titre ?: ouvert.dossier.name
-                        val placettes = remember(ouvert, rafraichir) { lignes(ouvert) }
-                        EcranPlacettes(
-                            titre = titre,
-                            placettes = placettes,
+                        projetsServeur -> {
+                            BackHandler { projetsServeur = false }
+                            EcranProjetsServeur(
+                                serveurConfigure = reglages.serveur.isNotBlank(),
+                                racineChoisie = depot.racine != null,
+                                charger = { withContext(Dispatchers.IO) { lignesServeur(reglages) } },
+                                onTelecharger = { m -> depot.racine?.let { TelechargementProjet.planifier(this, m, it) } },
+                                onAnnuler = { m -> TelechargementProjet.annuler(this, m.projetId) },
+                                onInstalle = ::actualiser,
+                                onParametres = { parametres = true },
+                                onChoisirRacine = { choisirRacine.launch(DOSSIER_PAR_DEFAUT) },
+                                onRetour = { projetsServeur = false },
+                            )
+                        }
+                        ouvert != null && carte -> {
+                            BackHandler { carte = false }
+                            val titre = projets.firstOrNull { it.cle == cle }?.titre ?: ouvert.dossier.name
+                            // Reloaded on resume, so a plot filmed from the map changes colour.
+                            val donnees by produceState<DonneesCarte?>(null, ouvert, rafraichir) {
+                                value = withContext(Dispatchers.IO) {
+                                    try { ouvert.donneesCarte() } catch (e: Exception) { null }
+                                }
+                            }
+                            EcranCarte(
+                                titre = titre,
+                                donnees = donnees,
+                                dossierProjet = ouvert.dossier,
+                                onRetour = { carte = false },
+                                onOuvrirPlacette = ::demanderPlacette,
+                                onEnregistrerCentre = { plotId, centre ->
+                                    withContext(Dispatchers.IO) { ouvert.ajouterCentre(plotId, centre) }.also { rafraichir++; ServicePartageQfield.demarrer(this@MainActivity) }
+                                },
+                            )
+                        }
+                        ouvert != null -> {
+                            BackHandler { cle = null }
+                            // The list may still be loading (activity recreated after a capture): follow it.
+                            val titre = projets.firstOrNull { it.cle == cle }?.titre ?: ouvert.dossier.name
+                            val placettes = remember(ouvert, rafraichir) { lignes(ouvert) }
+                            EcranPlacettes(
+                                titre = titre,
+                                placettes = placettes,
+                                version = version,
+                                onRetour = { cle = null },
+                                onPlacette = ::demanderPlacette,
+                                onCarte = { carte = true },
+                                onParametres = { parametres = true },
+                            )
+                        }
+                        else -> EcranProjets(
+                            projets = projets,
+                            racineChoisie = depot.racine != null,
+                            chargement = chargement,
                             version = version,
-                            onRetour = { cle = null },
-                            onPlacette = ::demanderPlacette,
-                            onCarte = { carte = true },
+                            onOuvrir = { e -> depot.dernierOuvert = e.cle; cle = e.cle; carte = false },
+                            onActualiser = ::actualiser,
+                            onChoisirRacine = { choisirRacine.launch(DOSSIER_PAR_DEFAUT) },
+                            onImporter = { importer.launch(null) },
+                            onProjetsServeur = { projetsServeur = true },
+                            serveurConfigure = reglages.serveur.isNotBlank(),
+                            onMettreAJour = { e -> tache { message(depot.mettreAJour(e), R.string.projet_mis_a_jour) } },
+                            onRetirer = { e -> tache { message(depot.retirer(e), null) } },
+                            onOuvrirQfield = ::ouvrirQfield,
                             onParametres = { parametres = true },
+                            kanban = kanban,
                         )
                     }
-                    else -> EcranProjets(
-                        projets = projets,
-                        racineChoisie = depot.racine != null,
-                        chargement = chargement,
-                        version = version,
-                        onOuvrir = { e -> depot.dernierOuvert = e.cle; cle = e.cle; carte = false },
-                        onActualiser = ::actualiser,
-                        onChoisirRacine = { choisirRacine.launch(DOSSIER_PAR_DEFAUT) },
-                        onImporter = { importer.launch(null) },
-                        onProjetsServeur = { projetsServeur = true },
-                        serveurConfigure = reglages.serveur.isNotBlank(),
-                        onMettreAJour = { e -> tache { message(depot.mettreAJour(e), R.string.projet_mis_a_jour) } },
-                        onRetirer = { e -> tache { message(depot.retirer(e), null) } },
-                        onOuvrirQfield = ::ouvrirQfield,
-                        onParametres = { parametres = true },
-                        kanban = kanban,
-                    )
                 }
             }
         }
