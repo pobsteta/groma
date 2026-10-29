@@ -69,3 +69,8 @@
 2026-10-29 · Claude (orchestrateur) · 008-009 · APK de publication de l'essai 71+72 installé sur le S23 Ultra (adb install -r, données gardées) pour l'essai de Pascal
 2026-10-29 · Pascal · 008-009 · décisions (« fais ce qu'il y a à faire », sur les propositions de l'orchestrateur) : vue colonnes sans la puce « Terminés » ; icônes dessinées gardées, pas de material-icons-extended ; capture et marge du haut en portrait inchangées ; ⋮ des cartes et puce « Terminés » gardent la marge de l'encoche en plein écran ; ANDROID_HOME par défaut dans .claude/test-command ; fusion et installation après reprise
 2026-10-29 · Claude (orchestrateur) · 008-009 · aller-retour 1/3 : renvoyées au dev, fiches complétées ; ordre de fusion : #71 puis #72 (PLAN.md 7l puis 7m)
+2026-10-29 · dev · 008 · aller-retour 1/3 : vue colonnes sur tous les projets (puce Terminés masquée), icônes dessinées gardées, imports explicites, PLAN 7m · 2198f5c
+2026-10-29 · relecteur · 008 · reprise 1/3 prête pour Pascal : CI 8/8 verte, 14 tests verts ; rebase sur #71 à l'orchestrateur
+2026-10-29 · dev · 009 · aller-retour 1/3 : margeBouton sur les boutons en bout de ligne (⋮, puces, Annuler/Télécharger, Coller/Afficher, interrupteurs), réindentation, KDoc · 730d0f9, 9ab3145
+2026-10-29 · relecteur · 009 · reprise 1/3 à reprendre : section RTK de Paramètres sans margeBouton ; côté Start à trancher ; fusion avec #72 : conflits mécaniques MainActivity.kt et EcranProjets.kt en plus de PLAN.md
+2026-10-29 · Claude (orchestrateur) · 009 · aller-retour 2/3 : règle « tout bouton au bord prend la marge de ce côté » (d'après « aucun bouton sous la caméra » de Pascal), SectionRtk.kt comprise, puce d'état sans marge

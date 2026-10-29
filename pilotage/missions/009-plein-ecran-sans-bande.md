@@ -87,3 +87,17 @@ faire », sur les propositions de l'orchestrateur) :
 4. Points mineurs du relecteur : réindenter le bloc `CompositionLocalProvider` de `MainActivity.kt`
    (l. 94) ; couper la ligne de KDoc de `GromaApp.kt` l. 37.
 5. Commits ajoutés sur la branche `fix/009-plein-ecran-sans-bande` (PR #71), pas de nouvelle PR.
+
+## Aller-retour 2/3 (2026-10-29)
+
+Relecture de la reprise 1/3 (730d0f9, 9ab3145) : à reprendre. Règle tranchée par l'orchestrateur,
+d'après la décision de Pascal « aucun bouton sous la caméra » : **tout bouton (ou interrupteur)
+au bord gauche ou droit du contenu prend `margeBouton` du côté de ce bord**, qu'il soit en bout de
+ligne ou aligné à gauche. Les champs de texte et les puces non cliquables vont jusqu'au bord.
+1. `SectionRtk.kt` (affichée dans Paramètres, donc dans le harnais) : interrupteurs de
+   `Interrupteur()` (l. 225, RTK actif, NTRIP), « Choisir » (l. 90), « Charger » (l. 112) →
+   `margeBouton(End)` ; boutons alignés à gauche (Bluetooth/TCP, Tester/Libérer) →
+   `margeBouton(Start)`.
+2. « Télécharger » de Projets du serveur garde `margeBouton(Start)` (conforme à la règle).
+3. Puce d'état des placettes (`AssistChip` sans action) : retirer la marge, ce n'est pas un bouton.
+4. Commits ajoutés sur `fix/009-plein-ecran-sans-bande` (PR #71), pas de nouvelle PR.
