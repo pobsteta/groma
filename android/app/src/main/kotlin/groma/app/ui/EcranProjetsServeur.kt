@@ -83,6 +83,7 @@ fun EcranProjetsServeur(
         try { lignes = charger() } catch (e: Exception) { erreur = e.message ?: e.toString() }
     }
     Scaffold(
+        contentWindowInsets = margesContenu(),
         topBar = {
             BandeauCompact(
                 titre = stringResource(R.string.serveur_titre),

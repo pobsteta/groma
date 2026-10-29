@@ -34,7 +34,7 @@ fun appliquerTheme(choix: ChoixTheme) {
  * Hides the status and navigation bars (they come back transiently on a swipe from the edge),
  * or shows them again at once. Insets then report 0 for the bars, so the layouts that apply
  * system-bar insets (BandeauCompact, the capture overlay) shrink their margins by themselves;
- * the display cutout inset is unaffected.
+ * the display cutout inset is unaffected, which is why BandeauCompact and the Scaffold bodies drop it themselves (LocalPleinEcran) apart from the bar buttons.
  */
 fun appliquerPleinEcran(window: Window, actif: Boolean) {
     val controleur = WindowCompat.getInsetsController(window, window.decorView)

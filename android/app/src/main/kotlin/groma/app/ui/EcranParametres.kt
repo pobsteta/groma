@@ -58,6 +58,7 @@ fun EcranParametres(reglages: Reglages, onChange: (Reglages) -> Unit, onRetour: 
     val pressePapiers = LocalClipboard.current
     val scope = rememberCoroutineScope()
     Scaffold(
+        contentWindowInsets = margesContenu(),
         topBar = {
             BandeauCompact(
                 titre = stringResource(R.string.param_titre),

@@ -37,17 +37,26 @@ fun BandeauCompact(
     navigationIcon: (@Composable () -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
+    val pleinEcran = LocalPleinEcran.current
+    // In full screen the title may reach the edge; the buttons alone stay clear of the cutout.
+    val margeBoutons: @Composable (WindowInsetsSides) -> Modifier = { cote ->
+        if (pleinEcran) Modifier.windowInsetsPadding(WindowInsets.displayCutout.only(cote)) else Modifier
+    }
     Surface(color = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary) {
         Row(
             modifier = modifier.fillMaxWidth()
                 // Top: status bar, or the camera cutout when full screen hides the status bar.
                 .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Top))
-                // Landscape: keep the buttons clear of the side navigation bar and the camera cutout.
-                .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal))
+                // Landscape: keep the buttons clear of the side navigation bar and, unless full screen
+                // (where only the buttons are kept clear, below), the camera cutout.
+                .windowInsetsPadding(
+                    if (pleinEcran) WindowInsets.navigationBars.only(WindowInsetsSides.Horizontal)
+                    else WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal),
+                )
                 .height(48.dp).padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            if (navigationIcon != null) navigationIcon() else Spacer(Modifier.width(12.dp))
+            if (navigationIcon != null) Row(margeBoutons(WindowInsetsSides.Start)) { navigationIcon() } else Spacer(Modifier.width(12.dp))
             Text(
                 titre,
                 style = MaterialTheme.typography.titleMedium,
@@ -56,7 +65,7 @@ fun BandeauCompact(
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f).padding(horizontal = 4.dp),
             )
-            actions()
+            Row(margeBoutons(WindowInsetsSides.End), verticalAlignment = Alignment.CenterVertically) { actions() }
         }
     }
 }

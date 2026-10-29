@@ -80,6 +80,7 @@ fun EcranProjets(
     var details by remember { mutableStateOf<EntreeProjet?>(null) }
     var aRetirer by remember { mutableStateOf<EntreeProjet?>(null) }
     Scaffold(
+        contentWindowInsets = margesContenu(),
         topBar = {
             BandeauCompact(
                 titre = stringResource(R.string.app_name),

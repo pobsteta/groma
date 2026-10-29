@@ -16,6 +16,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -32,6 +33,7 @@ import groma.app.carte.configurerOsmdroid
 import groma.app.gnss.ServiceGnssRtk
 import groma.app.gnss.SourcePosition
 import groma.app.ui.EcranCarte
+import groma.app.ui.LocalPleinEcran
 import groma.app.ui.EcranParametres
 import groma.app.ui.EcranPlacettes
 import groma.app.ui.EcranProjets
@@ -89,6 +91,7 @@ class MainActivity : AppCompatActivity() {
         setContent {
             var reglages by remember { mutableStateOf(Preferences.reglages(this)) }
             GromaTheme(darkTheme = reglages.theme.estSombre(isSystemInDarkTheme())) {
+              CompositionLocalProvider(LocalPleinEcran provides reglages.pleinEcran) {
                 var parametres by rememberSaveable { mutableStateOf(false) }
                 var projetsServeur by rememberSaveable { mutableStateOf(false) }
                 var cle by rememberSaveable { mutableStateOf<String?>(null) }
@@ -177,6 +180,7 @@ class MainActivity : AppCompatActivity() {
                         onParametres = { parametres = true },
                     )
                 }
+              }
             }
         }
     }
