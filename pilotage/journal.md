@@ -57,3 +57,6 @@
 2026-10-24 · Pascal · — · livraison du cycle 3 acceptée (« oui »)
 2026-10-24 · Claude (orchestrateur) · 007 · groma-0.12.0.apk installé sur le S23 Ultra (mise à jour par adb, données gardées)
 2026-10-24 · Claude (orchestrateur) · — · terrain v0.6.1 publiée (annoncée par Pascal) : vérifié, `terrain-style` inchangé depuis v0.6.0 (git diff --stat v0.6.0 v0.6.1 -- terrain-style vide ; primary #202F2B en clair, #E2F4ED en sombre) ; le brief « palette reste verte » n'y est pas traité · décision : pas de réadoption, 003 reste planifiée ; travail image GPU reporté sur main à jour, PR #64
+2026-10-29 · Pascal · — · icône : le G passe en New Rocker, comme Surculus et Ramulus · fait : PR #70 fusionnée (7dd2a00), APK de publication 0.12.0 réinstallé sur le S23 Ultra (adb install -r, données gardées)
+2026-10-29 · Pascal · 008 · demande : vue Kanban comme Marculus et Surculus ; décisions : mêmes colonnes, minimum « faite → Planifiée, tout fait et envoyé → Réalisée », bouton toujours visible et statut gardé sur le téléphone, comme Surculus · fait : fiche 008
+2026-10-29 · Pascal · 009 · écart · attendu : plein écran sur tout l'écran · vu : bande vide d'environ 130 px côté caméra en paysage (marge d'encoche de BandeauCompact et des Scaffold) · décision de Pascal : la supprimer en plein écran, sauf pour les boutons du bandeau · fait : fiche 009

@@ -27,6 +27,15 @@ _Modèle de carte :_
 
 ## Validé
 
+- [008](missions/008-vue-kanban-projets.md) · depuis le cycle 3
+  - Homme : dev (sonnet), appuyer
+  - Mission : vue Kanban des projets, colonnes de Marculus et Surculus, minimum imposé par l'avancement
+  - Moyens : `EtatKanban.kt` et `VueKanban.kt` de Surculus, `ResumeProjet` de Groma
+- [009](missions/009-plein-ecran-sans-bande.md) · depuis le cycle 3
+  - Homme : dev (sonnet), appuyer
+  - Mission : en plein écran, plus de bande vide côté caméra, sauf pour les boutons du bandeau
+  - Moyens : `BandeauCompact.kt`, `Scaffold` des écrans, capture adb du 2026-10-29
+
 ## Planifié
 
 - [003](missions/003-garde-fou-colorscheme.md) · depuis le cycle 2
