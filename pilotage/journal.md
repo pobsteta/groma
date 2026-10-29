@@ -74,3 +74,6 @@
 2026-10-29 · dev · 009 · aller-retour 1/3 : margeBouton sur les boutons en bout de ligne (⋮, puces, Annuler/Télécharger, Coller/Afficher, interrupteurs), réindentation, KDoc · 730d0f9, 9ab3145
 2026-10-29 · relecteur · 009 · reprise 1/3 à reprendre : section RTK de Paramètres sans margeBouton ; côté Start à trancher ; fusion avec #72 : conflits mécaniques MainActivity.kt et EcranProjets.kt en plus de PLAN.md
 2026-10-29 · Claude (orchestrateur) · 009 · aller-retour 2/3 : règle « tout bouton au bord prend la marge de ce côté » (d'après « aucun bouton sous la caméra » de Pascal), SectionRtk.kt comprise, puce d'état sans marge
+2026-10-29 · dev · 009 · aller-retour 2/3 : margeBouton sur SectionRtk (interrupteurs, Choisir, Charger en fin ; Bluetooth/TCP, Tester/Libérer, durées en début), puce d'état sans marge · 4245d97
+2026-10-29 · relecteur · 009 · reprise 2/3 prête pour Pascal : tests et CI verts ; question ouverte : flèche ▾ du choix de thème rangée parmi les champs (jusqu'au bord)
+2026-10-29 · Claude (orchestrateur) · 008-009 · fusion sur « fais ce qu'il y a à faire » de Pascal : #71 squash 46f4c1b ; main fusionnée dans la #72 (conflits MainActivity.kt, EcranProjets.kt, PLAN.md 7l/7m résolus à la main, tests et assembleDebug verts, CI 8/8) puis squash d93791b · fin du cycle 4
