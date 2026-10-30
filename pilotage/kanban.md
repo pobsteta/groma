@@ -8,7 +8,7 @@
 
 > **PLAN.md reste la source maître de l'avancement et des décisions prises avant la méthode** (choix de Pascal, 2026-10-23). Ce kanban ne suit que les missions confiées par `/imperatrice:boucle`.
 
-**Dernier cycle :** 4 _(augmenté de 1 à la fin de chaque `/boucle`, même quand elle n'a
+**Dernier cycle :** 5 _(augmenté de 1 à la fin de chaque `/boucle`, même quand elle n'a
 rien lancé. Une carte est immobile quand dernier cycle − N ≥ 2.)_
 
 _Modèle de carte :_
@@ -23,26 +23,25 @@ _Modèle de carte :_
 ## Bac à sable
 
 - `.claude/test-command` : `ANDROID_HOME` par défaut (`~/Android/Sdk`) ajouté au cycle 4 ; reste à vérifier que le hook de fin passe sous son délai de 630 s · depuis le cycle 4
-- Couleurs écrites en dur hors du thème (19 `Color(0x…)` dans `EcranCarte.kt` et `Gnss.kt`) : essai au soleil positif le 2026-10-24, débloquée ; reste à décider le sens (badges GNSS, SNR) · depuis le cycle 0
-- Bibliothèques `terrain` (`terrain-gnss`, `terrain-gpkg`, `terrain-carte`) à la place du code de `groma-core` (brief Marculus du 2026-10-17) · depuis le cycle 0
 
 ## Validé
 
+- Couleurs écrites en dur hors du thème (19 `Color(0x…)` dans `EcranCarte.kt` et `Gnss.kt`, badges GNSS, SNR) : les passer au thème sans changer leur rendu, pour qu'elles suivent le mode sombre et le style commun · validée par Pascal le 2026-10-30, fiche à écrire au cycle 6 · depuis le cycle 5
+- Bibliothèques `terrain` (`terrain-gnss`, `terrain-gpkg`, `terrain-carte`) à la place du code de `groma-core` (brief Marculus du 2026-10-17) : commencer par une, la plus simple à brancher après vérification de ce que chacune publie · validée par Pascal le 2026-10-30, découpage au cycle 6 · depuis le cycle 5
+
 ## Planifié
-
-- [010](missions/010-test-theme-terrain-style-071.md) · depuis le cycle 4
-  - Homme : testeur (sonnet), appuyer
-  - Mission : test d'égalité du thème de Groma avec `terrain-style` v0.7.1 (couleurs, formes, typographie), absorbe 003
-  - Moyens : `ThemeTerrainStyleTest.kt` (7 tests verts) · branche `feat/theme-terrain-style-071`
-- [011](missions/011-theme-terrain-style-071.md) · depuis le cycle 4
-  - Homme : dev (sonnet), appuyer
-  - Mission : `Theme.kt` lit couleurs, formes et typographie dans `terrain-style` v0.7.1 ; rien ne change à l'écran
-  - Moyens : `terrain-style` v0.7.1 (JitPack, GPL-3.0-or-later), tests de 010 · une PR avec 010, à essayer sur le S23 Ultra avant fusion
-
 
 
 ## Terminé
 
+- [010](missions/010-test-theme-terrain-style-071.md) · depuis le cycle 5
+  - Homme : testeur (sonnet), appuyer
+  - Mission : test d'égalité du thème de Groma avec `terrain-style` v0.7.1 (couleurs, formes, typographie), absorbe 003
+  - Moyens : `ThemeTerrainStyleTest.kt` (7 tests verts) · PR #77 fusionnée (b421a12)
+- [011](missions/011-theme-terrain-style-071.md) · depuis le cycle 5
+  - Homme : dev (sonnet), appuyer
+  - Mission : `Theme.kt` lit couleurs, formes et typographie dans `terrain-style` v0.7.1 ; rien ne change à l'écran
+  - Moyens : `terrain-style` v0.7.1 (JitPack, GPL-3.0-or-later), tests de 010 · PR #77 fusionnée (b421a12) après essai de Pascal sur le S23 Ultra, 0.14.0
 - [003](missions/003-garde-fou-colorscheme.md) · depuis le cycle 4
   - Homme : testeur (sonnet), appuyer
   - Mission : le test du thème échoue aussi si `ColorScheme` a un rôle que `Schema` n'a pas
@@ -105,3 +104,4 @@ l'inscrit avec ce qu'elle nous apprend._
 - cycle 2 · Groma 0.11.0 (bandeau vert retrouvé, choix du thème Système / Clair / Sombre dans Paramètres, appliqué à toute l'appli) · pour Pascal, opérateur de terrain, sur le S23 Ultra · le vert revient (la livraison du cycle 1 l'avait perdu) et le thème se choisit dans l'appli au lieu de suivre le téléphone
 - cycle 3 · Groma 0.12.0 (réglage Plein écran dans Paramètres, accueil, carte et capture) · pour Pascal, opérateur de terrain, sur le S23 Ultra · plus de place à l'écran : barres de statut et de navigation masquées, rappelées au glissement
 - cycle 4 · Groma `main` d93791b (vue Kanban des projets, plein écran sans la bande de la caméra), APK de publication installé sur le S23 Ultra · pour Pascal, opérateur de terrain · l'avancement de chaque forêt d'un coup d'œil, et toute la largeur de l'écran en paysage
+- cycle 5 · Groma 0.14.0 publiée (thème lu dans `terrain-style` v0.7.1) · pour Pascal, mainteneur de Groma, Marculus et Surculus · un changement de style fait dans terrain arrive tout seul dans Groma, sans recopie ; rien ne change à l'écran pour l'opérateur
