@@ -36,10 +36,10 @@ class EquivalenceTerrainCarteTest {
         "departement" to doubleArrayOf(4.5, 46.5, 5.9, 47.5),
     )
 
-    private fun g(e: DoubleArray) = Emprise(e[0], e[1], e[2], e[3])
+    private fun g(e: DoubleArray) = ReferenceGromaEmprise(e[0], e[1], e[2], e[3])
     private fun t(e: DoubleArray) = TerrainEmprise(e[0], e[1], e[2], e[3])
 
-    private fun assertMemeEmprise(a: Emprise, b: TerrainEmprise, msg: String) {
+    private fun assertMemeEmprise(a: ReferenceGromaEmprise, b: TerrainEmprise, msg: String) {
         assertEquals(a.ouest, b.ouest, "$msg ouest")
         assertEquals(a.sud, b.sud, "$msg sud")
         assertEquals(a.est, b.est, "$msg est")
@@ -48,10 +48,10 @@ class EquivalenceTerrainCarteTest {
 
     @Test
     fun constantes_de_telechargement() {
-        assertEquals(12, ZoneTuiles.ZOOM_MIN); assertEquals(12, TerrainZone.ZOOM_MIN)
-        assertEquals(18, ZoneTuiles.ZOOM_MAX); assertEquals(18, TerrainZone.ZOOM_MAX)
-        assertEquals(200.0, ZoneTuiles.MARGE_M); assertEquals(200.0, TerrainZone.MARGE_M)
-        assertEquals(30_000L, ZoneTuiles.NOMBRE_MAX); assertEquals(30_000L, TerrainZone.NOMBRE_MAX)
+        assertEquals(12, ReferenceGromaZoneTuiles.ZOOM_MIN); assertEquals(12, TerrainZone.ZOOM_MIN)
+        assertEquals(18, ReferenceGromaZoneTuiles.ZOOM_MAX); assertEquals(18, TerrainZone.ZOOM_MAX)
+        assertEquals(200.0, ReferenceGromaZoneTuiles.MARGE_M); assertEquals(200.0, TerrainZone.MARGE_M)
+        assertEquals(30_000L, ReferenceGromaZoneTuiles.NOMBRE_MAX); assertEquals(30_000L, TerrainZone.NOMBRE_MAX)
     }
 
     @Test
@@ -59,7 +59,7 @@ class EquivalenceTerrainCarteTest {
         val lons = listOf(-180.0, -179.999, -90.0, -0.0001, 0.0, 0.0001, 2.35, 5.0, 8.55, 90.0, 179.999, 180.0, 200.0, -200.0)
         val lats = listOf(-90.0, -85.06, -85.05112878, -45.0, -0.0001, 0.0, 0.0001, 41.35, 47.0, 48.85, 85.05112878, 85.06, 89.0, 90.0)
         for (z in 0..19) for (lon in lons) for (lat in lats) {
-            assertEquals(ZoneTuiles.tuile(lon, lat, z), TerrainZone.tuile(lon, lat, z), "tuile($lon, $lat, z=$z)")
+            assertEquals(ReferenceGromaZoneTuiles.tuile(lon, lat, z), TerrainZone.tuile(lon, lat, z), "tuile($lon, $lat, z=$z)")
         }
     }
 
@@ -80,12 +80,12 @@ class EquivalenceTerrainCarteTest {
     fun plages_et_nombre_identiques_sur_toutes_les_emprises_et_zooms() {
         for ((nom, e) in emprises) {
             for (zmin in 0..19) for (zmax in zmin..19) {
-                val a = ZoneTuiles(g(e), zmin, zmax)
+                val a = ReferenceGromaZoneTuiles(g(e), zmin, zmax)
                 val b = TerrainZone(t(e), zmin, zmax)
                 for (z in zmin..zmax) assertEquals(a.plage(z), b.plage(z), "$nom plage z=$z")
                 assertEquals(a.nombre, b.nombre, "$nom nombre $zmin..$zmax")
             }
-            val a = ZoneTuiles(g(e)); val b = TerrainZone(t(e))
+            val a = ReferenceGromaZoneTuiles(g(e)); val b = TerrainZone(t(e))
             assertEquals(a.zoomMin, b.zoomMin, "$nom zoomMin par défaut")
             assertEquals(a.zoomMax, b.zoomMax, "$nom zoomMax par défaut")
             assertEquals(a.nombre, b.nombre, "$nom nombre par défaut")
@@ -99,10 +99,10 @@ class EquivalenceTerrainCarteTest {
         assertEquals(1L, z12.nombre)
         assertEquals(listOf(TerrainTuile(12, 2104, 1440)), z12.tuiles().toList())
         assertEquals(1L, TerrainZone(p, 18, 18).nombre)
-        assertEquals(1L, ZoneTuiles(Emprise(5.0, 47.0, 5.0, 47.0), 18, 18).nombre)
+        assertEquals(1L, ReferenceGromaZoneTuiles(ReferenceGromaEmprise(5.0, 47.0, 5.0, 47.0), 18, 18).nombre)
         // Default zooms 12..18: seven zooms, one tile each.
         assertEquals(7L, TerrainZone(p).nombre)
-        assertEquals(7L, ZoneTuiles(Emprise(5.0, 47.0, 5.0, 47.0)).nombre)
+        assertEquals(7L, ReferenceGromaZoneTuiles(ReferenceGromaEmprise(5.0, 47.0, 5.0, 47.0)).nombre)
     }
 
     @Test
@@ -125,7 +125,7 @@ class EquivalenceTerrainCarteTest {
             assertTrue(xs.first <= n / 2 - 1, "z=$z: l'ouest reste dans la moitié ouest")
             assertEquals(TerrainZone.tuile(-0.02, 48.80, z).first, xs.first, "z=$z: première colonne = tuile de lon -0.02")
             assertTrue(xs.last >= n / 2, "z=$z: l'est passe la colonne n/2")
-            assertEquals(ZoneTuiles(g(e)).plage(z), TerrainZone(t(e)).plage(z), "z=$z")
+            assertEquals(ReferenceGromaZoneTuiles(g(e)).plage(z), TerrainZone(t(e)).plage(z), "z=$z")
         }
     }
 
@@ -134,7 +134,7 @@ class EquivalenceTerrainCarteTest {
         for (nom in listOf("point", "foret_1km", "greenwich_pile", "equateur_meridien", "antimeridien_est", "pole_nord")) {
             val e = emprises.getValue(nom)
             for ((zmin, zmax) in listOf(12 to 14, 17 to 18, 12 to 12, 18 to 18)) {
-                val a = ZoneTuiles(g(e), zmin, zmax).tuiles().map { Triple(it.z, it.x, it.y) }.toList()
+                val a = ReferenceGromaZoneTuiles(g(e), zmin, zmax).tuiles().map { Triple(it.z, it.x, it.y) }.toList()
                 val b = TerrainZone(t(e), zmin, zmax).tuiles().map { Triple(it.z, it.x, it.y) }.toList()
                 assertEquals(a, b, "$nom $zmin..$zmax")
                 assertEquals(TerrainZone(t(e), zmin, zmax).nombre, b.size.toLong(), "$nom $zmin..$zmax nombre = taille")
@@ -146,7 +146,7 @@ class EquivalenceTerrainCarteTest {
     fun marge_du_projet_identique() {
         val marges = listOf(null, 0.0, 50.0, 200.0, 500.0, 1000.0)
         for ((nom, e) in emprises) for (m in marges) {
-            val a = if (m == null) ZoneTuiles.projet(g(e)) else ZoneTuiles.projet(g(e), m)
+            val a = if (m == null) ReferenceGromaZoneTuiles.projet(g(e)) else ReferenceGromaZoneTuiles.projet(g(e), m)
             val b = if (m == null) TerrainZone.projet(t(e)) else TerrainZone.projet(t(e), m)
             assertMemeEmprise(a.emprise, b.emprise, "$nom marge=$m")
             assertEquals(a.zoomMin, b.zoomMin); assertEquals(a.zoomMax, b.zoomMax)
@@ -170,10 +170,10 @@ class EquivalenceTerrainCarteTest {
     fun limite_de_30000_tuiles_meme_decision() {
         var petit = 0; var refuse = 0
         for ((nom, e) in emprises) {
-            val a = ZoneTuiles.projet(g(e)).nombre
+            val a = ReferenceGromaZoneTuiles.projet(g(e)).nombre
             val b = TerrainZone.projet(t(e)).nombre
             assertEquals(a, b, nom)
-            assertEquals(a > ZoneTuiles.NOMBRE_MAX, b > TerrainZone.NOMBRE_MAX, "$nom décision de refus")
+            assertEquals(a > ReferenceGromaZoneTuiles.NOMBRE_MAX, b > TerrainZone.NOMBRE_MAX, "$nom décision de refus")
             if (b > TerrainZone.NOMBRE_MAX) refuse++ else petit++
         }
         // The set must exercise both sides of the limit, or this test proves nothing.
@@ -189,10 +189,10 @@ class EquivalenceTerrainCarteTest {
         var franchi = false
         var demi = 0.005
         while (demi < 1.0) {
-            val a = ZoneTuiles(Emprise(5.0 - demi, 47.0 - demi, 5.0 + demi, 47.0 + demi)).nombre
+            val a = ReferenceGromaZoneTuiles(ReferenceGromaEmprise(5.0 - demi, 47.0 - demi, 5.0 + demi, 47.0 + demi)).nombre
             val b = TerrainZone(TerrainEmprise(5.0 - demi, 47.0 - demi, 5.0 + demi, 47.0 + demi)).nombre
             assertEquals(a, b, "demi-côté=$demi")
-            assertEquals(a > ZoneTuiles.NOMBRE_MAX, b > TerrainZone.NOMBRE_MAX, "demi-côté=$demi")
+            assertEquals(a > ReferenceGromaZoneTuiles.NOMBRE_MAX, b > TerrainZone.NOMBRE_MAX, "demi-côté=$demi")
             if (b > TerrainZone.NOMBRE_MAX) franchi = true
             demi += 0.005
         }
@@ -202,7 +202,7 @@ class EquivalenceTerrainCarteTest {
     @Test
     fun zooms_invalides_refuses_pareillement() {
         for ((zmin, zmax) in listOf(-1 to 5, 13 to 12, 19 to 18, -3 to -2)) {
-            val ma = assertFailsWith<IllegalArgumentException>("groma $zmin..$zmax") { ZoneTuiles(Emprise(5.0, 47.0, 5.1, 47.1), zmin, zmax) }
+            val ma = assertFailsWith<IllegalArgumentException>("groma $zmin..$zmax") { ReferenceGromaZoneTuiles(ReferenceGromaEmprise(5.0, 47.0, 5.1, 47.1), zmin, zmax) }
             val mb = assertFailsWith<IllegalArgumentException>("terrain $zmin..$zmax") { TerrainZone(TerrainEmprise(5.0, 47.0, 5.1, 47.1), zmin, zmax) }
             assertEquals("Zooms invalides.", ma.message)
             assertEquals(ma.message, mb.message)
@@ -213,8 +213,8 @@ class EquivalenceTerrainCarteTest {
     fun emprise_inversee_meme_resultat() {
         // Incoherent extent (west > east, south > north): same outcome in both, whatever it is.
         val e = doubleArrayOf(5.1, 47.1, 5.0, 47.0)
-        assertEquals(ZoneTuiles(g(e)).nombre, TerrainZone(t(e)).nombre)
-        assertEquals(ZoneTuiles(g(e)).plage(15), TerrainZone(t(e)).plage(15))
+        assertEquals(ReferenceGromaZoneTuiles(g(e)).nombre, TerrainZone(t(e)).nombre)
+        assertEquals(ReferenceGromaZoneTuiles(g(e)).plage(15), TerrainZone(t(e)).plage(15))
     }
 
     // --- WMTS URLs ---------------------------------------------------------------------------

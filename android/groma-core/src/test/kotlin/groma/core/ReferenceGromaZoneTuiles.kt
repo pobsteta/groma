@@ -6,14 +6,22 @@ import kotlin.math.floor
 import kotlin.math.ln
 import kotlin.math.tan
 
+// FROZEN REFERENCE (mission 013): verbatim copy of the map code that Groma had in groma-core
+// (ZoneTuiles.kt, and Emprise of Carte.kt) before it was replaced by terrain-carte v0.7.1.
+// Only the class names carry the "ReferenceGroma" prefix. Do not edit: it is what
+// EquivalenceTerrainCarteTest compares terrain-carte against.
+
+/** Bounding box in WGS 84 degrees. */
+data class ReferenceGromaEmprise(val ouest: Double, val sud: Double, val est: Double, val nord: Double)
+
 /** One Web Mercator tile (XYZ scheme, as osmdroid and the IGN `PM_0_19` matrix set). */
-data class Tuile(val z: Int, val x: Int, val y: Int)
+data class ReferenceGromaTuile(val z: Int, val x: Int, val y: Int)
 
 /**
  * Tiles to download for working offline (brief 2026-10-14 carte RTK, § 5.2):
  * the project's extent plus a margin, from [zoomMin] to [zoomMax].
  */
-class ZoneTuiles(val emprise: Emprise, val zoomMin: Int = ZOOM_MIN, val zoomMax: Int = ZOOM_MAX) {
+class ReferenceGromaZoneTuiles(val emprise: ReferenceGromaEmprise, val zoomMin: Int = ZOOM_MIN, val zoomMax: Int = ZOOM_MAX) {
     init { require(zoomMin in 0..zoomMax) { "Zooms invalides." } }
 
     /** Column and row ranges at zoom [z]. */
@@ -26,10 +34,10 @@ class ZoneTuiles(val emprise: Emprise, val zoomMin: Int = ZOOM_MIN, val zoomMax:
     val nombre: Long get() = (zoomMin..zoomMax).sumOf { z -> plage(z).let { (xs, ys) -> xs.count().toLong() * ys.count() } }
 
     /** Every tile, zoom by zoom (low zooms first: a useful map early). */
-    fun tuiles(): Sequence<Tuile> = sequence {
+    fun tuiles(): Sequence<ReferenceGromaTuile> = sequence {
         for (z in zoomMin..zoomMax) {
             val (xs, ys) = plage(z)
-            for (x in xs) for (y in ys) yield(Tuile(z, x, y))
+            for (x in xs) for (y in ys) yield(ReferenceGromaTuile(z, x, y))
         }
     }
 
@@ -42,10 +50,10 @@ class ZoneTuiles(val emprise: Emprise, val zoomMin: Int = ZOOM_MIN, val zoomMax:
         const val NOMBRE_MAX = 30_000L
 
         /** Zone of a project: its extent widened by [margeM] metres on each side. */
-        fun projet(e: Emprise, margeM: Double = MARGE_M): ZoneTuiles {
+        fun projet(e: ReferenceGromaEmprise, margeM: Double = MARGE_M): ReferenceGromaZoneTuiles {
             val dLat = margeM / M_PAR_DEGRE
             val dLon = margeM / (M_PAR_DEGRE * cos(Math.toRadians((e.sud + e.nord) / 2)))
-            return ZoneTuiles(Emprise(e.ouest - dLon, e.sud - dLat, e.est + dLon, e.nord + dLat))
+            return ReferenceGromaZoneTuiles(ReferenceGromaEmprise(e.ouest - dLon, e.sud - dLat, e.est + dLon, e.nord + dLat))
         }
 
         /** Tile (x, y) holding (lon, lat) at zoom [z]. */

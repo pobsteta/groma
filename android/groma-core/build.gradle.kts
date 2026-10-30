@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm")
+    `java-library`
 }
 
 // Bytecode 17 (Android compatible), compiled with whichever JDK >= 17 runs Gradle.
@@ -25,6 +26,8 @@ sourceSets.main {
 }
 
 dependencies {
+    // Shared map code (Emprise, ZoneTuiles, Geoplateforme layers; JitPack). `api`: Emprise is part of DonneesCarte.
+    api("com.github.pobsteta.terrain:terrain-carte:v0.7.1")
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -32,8 +35,6 @@ dependencies {
     // SQLite JDBC driver: runs the GeoPackage write protocol against the
     // example GeoPackage built by GDAL, as the phone does with android.database.sqlite.
     testImplementation("org.xerial:sqlite-jdbc:3.53.4.0")
-    // Mission 012: terrain-carte (JitPack) only to check it matches Groma's own map code before mission 013 swaps it in.
-    testImplementation("com.github.pobsteta.terrain:terrain-carte:v0.7.1")
 }
 
 tasks.test {
