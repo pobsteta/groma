@@ -15,8 +15,8 @@ import fr.nemeton.terrain.carte.ZoneTuiles as TerrainZone
  * (ZoneTuiles, Emprise, WMTS URLs of Fonds.kt). Written before mission 013 swaps the code:
  * green now (two codes that already exist), and it must stay green afterwards.
  *
- * After 013 `groma.core.ZoneTuiles` is deleted: this file is then adapted by the reviewer
- * (the Groma side becomes the hand-written values below), not silently weakened.
+ * Mission 013 deleted `groma.core.ZoneTuiles`: the Groma side is now the frozen copy in
+ * ReferenceGromaZoneTuiles.kt; the hand-written values below keep both codes honest.
  */
 class EquivalenceTerrainCarteTest {
     // Extents (ouest, sud, est, nord) hand-picked from the field cases.
@@ -65,7 +65,7 @@ class EquivalenceTerrainCarteTest {
 
     @Test
     fun tuile_valeurs_ecrites_a_la_main() {
-        // Same hand-computed values as ZoneTuilesTest: the reference does not only agree with itself.
+        // Hand-computed values (from the former ZoneTuilesTest): the reference does not only agree with itself.
         assertEquals(2104 to 1440, TerrainZone.tuile(5.0, 47.0, 12))
         assertEquals(0 to 0, TerrainZone.tuile(-180.0, 89.0, 3))
         assertEquals(7 to 7, TerrainZone.tuile(180.0, -89.0, 3))
@@ -108,7 +108,7 @@ class EquivalenceTerrainCarteTest {
     @Test
     fun plage_valeurs_ecrites_a_la_main_foret_1km() {
         val b = TerrainZone(TerrainEmprise(4.98, 47.19, 5.02, 47.21), 17, 18)
-        // Hand values of ZoneTuilesTest: zoom 18, columns 134698..134727 (30), rows 91978..91999 (22).
+        // Hand values of the former ZoneTuilesTest: zoom 18, columns 134698..134727 (30), rows 91978..91999 (22).
         assertEquals((134698..134727) to (91978..91999), b.plage(18))
         val (xs17, ys17) = b.plage(17)
         assertEquals(30L * 22 + xs17.count().toLong() * ys17.count(), b.nombre)
