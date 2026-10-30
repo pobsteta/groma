@@ -65,6 +65,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.activity:activity-compose:1.13.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
+    implementation("com.github.pobsteta.terrain:terrain-style:v0.7.1") // shared Marculus style: colours, shapes, typography (JitPack)
     testImplementation(kotlin("test-junit"))
 }
 

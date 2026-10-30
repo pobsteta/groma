@@ -30,15 +30,23 @@ _Modèle de carte :_
 
 ## Planifié
 
-- [003](missions/003-garde-fou-colorscheme.md) · depuis le cycle 2
+- [010](missions/010-test-theme-terrain-style-071.md) · depuis le cycle 4
   - Homme : testeur (sonnet), appuyer
-  - Mission : le test du thème échoue aussi si `ColorScheme` a un rôle que `Schema` n'a pas
-  - Moyens : `ThemeTerrainStyleTest.kt` sur `main`, AAR `material3-android-1.4.0` · rendue (2d42339, branche `test/003-garde-fou-colorscheme`), sans PR : attend la réadoption de `terrain-style` (cap du 2026-10-24)
+  - Mission : test d'égalité du thème de Groma avec `terrain-style` v0.7.1 (couleurs, formes, typographie), absorbe 003
+  - Moyens : `ThemeTerrainStyleTest.kt` (7 tests verts) · branche `feat/theme-terrain-style-071`
+- [011](missions/011-theme-terrain-style-071.md) · depuis le cycle 4
+  - Homme : dev (sonnet), appuyer
+  - Mission : `Theme.kt` lit couleurs, formes et typographie dans `terrain-style` v0.7.1 ; rien ne change à l'écran
+  - Moyens : `terrain-style` v0.7.1 (JitPack, GPL-3.0-or-later), tests de 010 · une PR avec 010, à essayer sur le S23 Ultra avant fusion
 
 
 
 ## Terminé
 
+- [003](missions/003-garde-fou-colorscheme.md) · depuis le cycle 4
+  - Homme : testeur (sonnet), appuyer
+  - Mission : le test du thème échoue aussi si `ColorScheme` a un rôle que `Schema` n'a pas
+  - Moyens : `ThemeTerrainStyleTest.kt` sur `main`, AAR `material3-android-1.4.0` · rendue (2d42339, branche `test/003-garde-fou-colorscheme`), absorbée par 010
 - [008](missions/008-vue-kanban-projets.md) · depuis le cycle 4
   - Homme : dev (sonnet), appuyer
   - Mission : vue Kanban des projets, colonnes de Marculus et Surculus, minimum imposé par l'avancement
