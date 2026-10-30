@@ -32,6 +32,8 @@ dependencies {
     // SQLite JDBC driver: runs the GeoPackage write protocol against the
     // example GeoPackage built by GDAL, as the phone does with android.database.sqlite.
     testImplementation("org.xerial:sqlite-jdbc:3.53.4.0")
+    // Mission 012: terrain-carte (JitPack) only to check it matches Groma's own map code before mission 013 swaps it in.
+    testImplementation("com.github.pobsteta.terrain:terrain-carte:v0.7.1")
 }
 
 tasks.test {
