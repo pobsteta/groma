@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.13.0](https://github.com/pobsteta/groma/compare/v0.12.0...v0.13.0) (2026-10-30)
+
+
+### Nouveautés
+
+* **android:** icône G en New Rocker, comme Surculus et Ramulus ([#70](https://github.com/pobsteta/groma/issues/70)) ([7dd2a00](https://github.com/pobsteta/groma/commit/7dd2a008b6130c3c2dd4329affd9f68270adb694))
+* **android:** vue Kanban des projets, colonnes de Marculus et Surculus ([#72](https://github.com/pobsteta/groma/issues/72)) ([d93791b](https://github.com/pobsteta/groma/commit/d93791ba4d44b80f82f3cffb07672ada038b28a0))
+
+
+### Corrections
+
+* **android:** en plein écran, le bandeau monte jusqu'en haut en portrait ([#74](https://github.com/pobsteta/groma/issues/74)) ([d6d819e](https://github.com/pobsteta/groma/commit/d6d819eb668d64d64675db160b60ce722760ecd0))
+* **android:** plein écran jusqu'au bord, sans la bande de la caméra ([#71](https://github.com/pobsteta/groma/issues/71)) ([46f4c1b](https://github.com/pobsteta/groma/commit/46f4c1bd39986a3f07b1ab102e4822672067d17c))
+
+
+### Documentation
+
+* **pilotage:** cycle 4 (Kanban, plein écran sans bande) ; ANDROID_HOME par défaut dans test-command ([#73](https://github.com/pobsteta/groma/issues/73)) ([b6dd303](https://github.com/pobsteta/groma/commit/b6dd303f91be051045124fb9da2b2a4fb37a86f1))
+* **pilotage:** cycles 2 et 3 (anciennes couleurs, choix du thème, plein écran) ([#65](https://github.com/pobsteta/groma/issues/65)) ([0458303](https://github.com/pobsteta/groma/commit/0458303e62bccb183a6c72311bf852e79970556b))
+* **pilotage:** fusion de la [#74](https://github.com/pobsteta/groma/issues/74) et essai sur le terrain concluant ([#75](https://github.com/pobsteta/groma/issues/75)) ([a9b9ba3](https://github.com/pobsteta/groma/commit/a9b9ba3e02163ba17e56c9200037fbd681b5e217))
+
 ## [0.12.0](https://github.com/pobsteta/groma/compare/v0.11.0...v0.12.0) (2026-10-24)
 
 
