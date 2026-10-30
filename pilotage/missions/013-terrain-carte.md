@@ -74,3 +74,15 @@ aucune (limites de téléchargement reprises telles quelles : zooms 12 à 18, ma
 ## Comment saura-t-on que ça marche ?
 
 Même nombre de tuiles annoncé et carte hors ligne identique sur le téléphone, avec un code carte en moins dans Groma.
+
+## Précisions de l'orchestrateur après le rendu de 012 (2026-10-30)
+
+- **Test d'équivalence de 012 après la suppression :** `EquivalenceTerrainCarteTest.kt` référence
+  `groma.core.ZoneTuiles` et `groma.core.Emprise`. Avant de les supprimer de `src/main`, le dev les
+  copie tels quels dans `src/test` sous le nom `ReferenceGromaZoneTuiles` / `ReferenceGromaEmprise`
+  (référence figée, commentée comme telle) et ne change dans le test que les imports et ces noms :
+  aucune assertion ne bouge. Le diff du test doit le montrer.
+- **URL de `SourceGeoplateforme` :** pas de test JVM dans `:app` (osmdroid) ; `Fonds.kt` doit
+  construire ses URL avec `Geoplateforme.*.url(z, x, y)`, et la vérification se fait sur le téléphone
+  (fonds affichés, carte hors ligne).
+- **`docs/dependances.md` :** élargir la ligne `terrain-style` à `terrain-carte` (même licence, même dépôt).
