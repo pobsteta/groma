@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.14.1](https://github.com/pobsteta/groma/compare/v0.14.0...v0.14.1) (2026-10-30)
+
+
+### Documentation
+
+* **pilotage:** cycle 5 (thème terrain-style terminé, deux cartes du bac à sable validées) ([#78](https://github.com/pobsteta/groma/issues/78)) ([be768f1](https://github.com/pobsteta/groma/commit/be768f1f4984e68cb4796900ac977b22ff9eccb6))
+
 ## [0.14.0](https://github.com/pobsteta/groma/compare/v0.13.0...v0.14.0) (2026-10-30)
 
 
