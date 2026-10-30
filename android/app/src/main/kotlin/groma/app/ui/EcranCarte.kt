@@ -74,6 +74,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import fr.nemeton.terrain.carte.ZoneTuiles
 import groma.app.R
 import groma.app.carte.Boussole
 import groma.app.carte.CoucheGuidage
@@ -98,7 +99,6 @@ import groma.core.FixGnss
 import groma.core.Guidage
 import groma.core.CentreMesure
 import groma.core.MesureCentre
-import groma.core.ZoneTuiles
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import kotlinx.coroutines.Dispatchers

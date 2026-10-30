@@ -1,6 +1,9 @@
 package groma.app.carte
 
 import android.content.Context
+import fr.nemeton.terrain.carte.Attributions
+import fr.nemeton.terrain.carte.CoucheWmts
+import fr.nemeton.terrain.carte.Geoplateforme
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -9,9 +12,9 @@ import java.io.File
 
 /** Base maps of the map screen (brief 2026-10-14 carte RTK, § 5.1). */
 enum class Fond(val libelle: String, val attribution: String) {
-    PLAN_IGN("Plan IGN", "© IGN Géoplateforme, Licence Ouverte Etalab 2.0"),
-    ORTHO_IGN("Ortho IGN", "© IGN Géoplateforme, Licence Ouverte Etalab 2.0"),
-    OSM("OpenStreetMap", "© contributeurs OpenStreetMap (ODbL)");
+    PLAN_IGN("Plan IGN", Attributions.IGN),
+    ORTHO_IGN("Ortho IGN", Attributions.IGN),
+    OSM("OpenStreetMap", Attributions.OSM);
 
     val source: OnlineTileSourceBase
         get() = when (this) {
@@ -22,23 +25,20 @@ enum class Fond(val libelle: String, val attribution: String) {
 }
 
 /**
- * Tile of the IGN Géoplateforme WMTS (no key, Licence Ouverte Etalab 2.0).
- * The `PM_0_19` matrix set is osmdroid's Web Mercator grid: TILEROW/TILECOL
- * are its Y/X.
+ * Osmdroid source of a Géoplateforme WMTS layer (terrain-carte): the layer gives the name, the
+ * zoom range, the file extension and the tile URL, so the URL is written once, in `~/dev/terrain`.
  */
-private class SourceGeoplateforme(nom: String, private val couche: String, private val style: String, private val format: String) :
-    OnlineTileSourceBase(nom, 0, 19, 256, if (format == "image/png") ".png" else ".jpg", arrayOf("https://data.geopf.fr/wmts")) {
+private class SourceGeoplateforme(private val couche: CoucheWmts) :
+    OnlineTileSourceBase(couche.nom, couche.zoomMin, couche.zoomMax, 256, couche.extension, arrayOf(CoucheWmts.BASE)) {
     override fun getTileURLString(index: Long): String =
-        baseUrl + "?SERVICE=WMTS&REQUEST=GetTile&VERSION=1.0.0&LAYER=" + couche +
-            "&STYLE=" + style.replace(" ", "%20") + "&FORMAT=" + format + "&TILEMATRIXSET=PM_0_19" +
-            "&TILEMATRIX=" + MapTileIndex.getZoom(index) + "&TILEROW=" + MapTileIndex.getY(index) + "&TILECOL=" + MapTileIndex.getX(index)
+        couche.url(MapTileIndex.getZoom(index), MapTileIndex.getX(index), MapTileIndex.getY(index))
 }
 
-private val PLAN_IGN_SOURCE: OnlineTileSourceBase = SourceGeoplateforme("PlanIGN", "GEOGRAPHICALGRIDSYSTEMS.PLANIGNV2", "normal", "image/png")
-private val ORTHO_IGN_SOURCE: OnlineTileSourceBase = SourceGeoplateforme("OrthoIGN", "ORTHOIMAGERY.ORTHOPHOTOS", "normal", "image/jpeg")
+private val PLAN_IGN_SOURCE: OnlineTileSourceBase = SourceGeoplateforme(Geoplateforme.PLAN_IGN)
+private val ORTHO_IGN_SOURCE: OnlineTileSourceBase = SourceGeoplateforme(Geoplateforme.ORTHO_IGN)
 
 /** IGN cadastral parcels, drawn over the base map. */
-val SOURCE_CADASTRE: OnlineTileSourceBase = SourceGeoplateforme("CadastreIGN", "CADASTRALPARCELS.PARCELLAIRE_EXPRESS", "PCI vecteur", "image/png")
+val SOURCE_CADASTRE: OnlineTileSourceBase = SourceGeoplateforme(Geoplateforme.CADASTRE)
 
 /** Base map whose tiles may be downloaded: IGN only (OSM's tile policy forbids bulk downloads). */
 val Fond.telechargeable: Boolean get() = this != Fond.OSM

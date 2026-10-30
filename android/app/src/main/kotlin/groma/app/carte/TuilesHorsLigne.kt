@@ -2,7 +2,7 @@ package groma.app.carte
 
 import android.content.Context
 import android.graphics.drawable.Drawable
-import groma.core.Tuile
+import fr.nemeton.terrain.carte.Tuile
 import org.osmdroid.tileprovider.MapTileProviderBasic
 import org.osmdroid.tileprovider.modules.MapTileModuleProviderBase
 import org.osmdroid.tileprovider.tilesource.BitmapTileSourceBase

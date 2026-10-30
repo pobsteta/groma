@@ -8,7 +8,7 @@
 
 > **PLAN.md reste la source maître de l'avancement et des décisions prises avant la méthode** (choix de Pascal, 2026-10-23). Ce kanban ne suit que les missions confiées par `/imperatrice:boucle`.
 
-**Dernier cycle :** 5 _(augmenté de 1 à la fin de chaque `/boucle`, même quand elle n'a
+**Dernier cycle :** 6 _(augmenté de 1 à la fin de chaque `/boucle`, même quand elle n'a
 rien lancé. Une carte est immobile quand dernier cycle − N ≥ 2.)_
 
 _Modèle de carte :_
@@ -26,10 +26,20 @@ _Modèle de carte :_
 
 ## Validé
 
-- Couleurs écrites en dur hors du thème (19 `Color(0x…)` dans `EcranCarte.kt` et `Gnss.kt`, badges GNSS, SNR) : les passer au thème sans changer leur rendu, pour qu'elles suivent le mode sombre et le style commun · validée par Pascal le 2026-10-30, fiche à écrire au cycle 6 · depuis le cycle 5
-- Bibliothèques `terrain` (`terrain-gnss`, `terrain-gpkg`, `terrain-carte`) à la place du code de `groma-core` (brief Marculus du 2026-10-17) : commencer par une, la plus simple à brancher après vérification de ce que chacune publie · validée par Pascal le 2026-10-30, découpage au cycle 6 · depuis le cycle 5
-
 ## Planifié
+
+- [012](missions/012-test-terrain-carte.md) · depuis le cycle 6
+  - Homme : testeur (sonnet), appuyer
+  - Mission : tests d'équivalence de `terrain-carte` v0.7.1 avec le code carte de Groma (tuiles, emprise, URL WMTS)
+  - Moyens : `ZoneTuilesTest.kt`, `~/dev/terrain/terrain-carte`, brief Marculus du 2026-10-17 · une PR avec 013
+- [013](missions/013-terrain-carte.md) · depuis le cycle 6
+  - Homme : dev (sonnet), appuyer
+  - Mission : la carte de Groma utilise `terrain-carte` v0.7.1, sans changer son comportement
+  - Moyens : tests de 012, brief Marculus du 2026-10-17 · après 012, même branche
+- [014](missions/014-couleurs-etat-theme.md) · depuis le cycle 6
+  - Homme : afficheur (sonnet), **tenir**
+  - Mission : plan des 18 couleurs d'état en dur (`Gnss.kt`, `EcranCarte.kt`) vers le thème, avec contrastes et options de sens
+  - Moyens : `Contraste.kt`, `Schema.kt` de terrain-style, `BadgeFix.kt` de Marculus · plan à trancher par Pascal
 
 
 ## Terminé

@@ -36,3 +36,6 @@
 | [005](missions/005-test-choix-theme.md) tests du choix du thème | `testeur` | sonnet | appuyer | oui · oui · oui | 2 |
 | [006](missions/006-choix-theme-parametres.md) choix du thème dans les paramètres | `dev` | sonnet | appuyer | oui · oui · oui | 2 |
 | [007](missions/007-plein-ecran.md) plein écran dans les paramètres | `dev` | sonnet | appuyer | oui · oui · oui | 3 |
+| [012](missions/012-test-terrain-carte.md) tests d'équivalence `terrain-carte` | `testeur` | sonnet | appuyer | oui · oui · oui | 6 (proposé) |
+| [013](missions/013-terrain-carte.md) la carte utilise `terrain-carte` | `dev` | sonnet | appuyer | oui · oui · oui (après 012) | 6 (proposé) |
+| [014](missions/014-couleurs-etat-theme.md) plan des couleurs d'état au thème | `afficheur` | sonnet | **tenir** | oui · **non** · oui | 6 (proposé) |

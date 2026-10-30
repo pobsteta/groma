@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm")
+    `java-library`
 }
 
 // Bytecode 17 (Android compatible), compiled with whichever JDK >= 17 runs Gradle.
@@ -25,6 +26,8 @@ sourceSets.main {
 }
 
 dependencies {
+    // Shared map code (Emprise, ZoneTuiles, Geoplateforme layers; JitPack). `api`: Emprise is part of DonneesCarte.
+    api("com.github.pobsteta.terrain:terrain-carte:v0.7.1")
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

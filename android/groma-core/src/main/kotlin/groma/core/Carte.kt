@@ -1,5 +1,6 @@
 package groma.core
 
+import fr.nemeton.terrain.carte.Emprise
 import kotlin.math.hypot
 
 /** Plot on the map: planned point in WGS 84 (brief 2026-10-14 carte RTK, § 3). */
@@ -52,9 +53,6 @@ private fun centreEtiquette(polygones: List<List<List<Pair<Double, Double>>>>): 
     val anneau = polygones.maxBy { p -> p.first().let { r -> (r.maxOf { it.first } - r.minOf { it.first }) * (r.maxOf { it.second } - r.minOf { it.second }) } }.first()
     return Pair((anneau.minOf { it.first } + anneau.maxOf { it.first }) / 2, (anneau.minOf { it.second } + anneau.maxOf { it.second }) / 2)
 }
-
-/** Bounding box in WGS 84 degrees. */
-data class Emprise(val ouest: Double, val sud: Double, val est: Double, val nord: Double)
 
 /** Everything the map shows of one project, read once from the working copy. */
 data class DonneesCarte(

@@ -10,10 +10,10 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import fr.nemeton.terrain.carte.Emprise
+import fr.nemeton.terrain.carte.ZoneTuiles
 import groma.app.carte.TuilesHorsLigne
 import groma.app.carte.sourceParNom
-import groma.core.Emprise
-import groma.core.ZoneTuiles
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
