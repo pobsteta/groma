@@ -28,6 +28,7 @@ Source unique de l'état d'avancement. Mis à jour à chaque étape.
 | 3 | Schéma `inventaire_video.gpkg`, exemple, briefs nemeton et nemetonshiny | fait ; exemple validé avec les vraies fonctions de nemeton (14 attentes R) |
 | 4 | Pipeline serveur de bout en bout | fait sur données synthétiques (20 tests). COLMAP, VGGT et SAM 2 écrits mais **non exécutés** (pas de GPU ni de binaire ici) |
 | 4b | `benchmark/` | script prêt, **en attente d'une vraie placette** |
+| 4c | Banc d'essai de la segmentation des troncs (`benchmark/segmentation_troncs.py`) : SAM 2 (adaptateur actuel), SAM 3 et WeVisOne-VL contre des images clés annotées (rappel des troncs à IoU ≥ 0,5, IoU, corrections par image, temps et VRAM) | script prêt, 14 tests sur données synthétiques ; adaptateur SAM 2 découpé (`charger`, `masque_troncs`) sans changement de comportement ; **aucun modèle exécuté** (pas de GPU) ; en attente de 50 images clés annotées d'une placette test |
 | 5 | Application Android avec contrôle qualité | logique testée en Kotlin (29 tests) ; application **compilée en CI** (APK de debug), non testée sur appareil |
 | 6 | Calcul embarqué provisoire | écrit (`CalculEmbarque.kt`), à tester sur appareil |
 | 7 | Envoi, file d'attente, résultats pour nemetonshiny | fait côté serveur (envoi reprenable testé) ; `EnvoiWorker.kt` écrit |
