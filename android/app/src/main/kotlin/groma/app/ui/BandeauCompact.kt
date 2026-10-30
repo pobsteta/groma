@@ -42,8 +42,12 @@ fun BandeauCompact(
     Surface(color = MaterialTheme.colorScheme.primary, contentColor = MaterialTheme.colorScheme.onPrimary) {
         Row(
             modifier = modifier.fillMaxWidth()
-                // Top: status bar, or the camera cutout when full screen hides the status bar.
-                .windowInsetsPadding(WindowInsets.statusBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Top))
+                // Top: status bar and camera cutout; in full screen the band goes up to the edge, like
+                // Marculus (Pascal, 2026-10-29: the S23 Ultra camera hole sits between title and buttons).
+                .windowInsetsPadding(
+                    if (pleinEcran) WindowInsets.statusBars.only(WindowInsetsSides.Top)
+                    else WindowInsets.statusBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Top),
+                )
                 // Landscape: keep the buttons clear of the side navigation bar and, unless full screen
                 // (where only the buttons are kept clear, below), the camera cutout.
                 .windowInsetsPadding(
