@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.14.0](https://github.com/pobsteta/groma/compare/v0.13.0...v0.14.0) (2026-10-30)
+
+
+### Nouveautés
+
+* **android:** thème Groma = terrain-style v0.7.1 (couleurs, formes, typographie) ([#77](https://github.com/pobsteta/groma/issues/77)) ([b421a12](https://github.com/pobsteta/groma/commit/b421a12eafab4388b5b648afe01c3cd8b76ed808))
+* **benchmark:** banc d'essai de la segmentation des troncs (SAM 2, SAM 3, WeVisOne-VL) ([#69](https://github.com/pobsteta/groma/issues/69)) ([83a5840](https://github.com/pobsteta/groma/commit/83a5840cd55593a34e59edba2a886efdb3505d8a))
+
 ## [0.13.0](https://github.com/pobsteta/groma/compare/v0.12.0...v0.13.0) (2026-10-30)
 
 
