@@ -77,3 +77,6 @@
 2026-10-29 · dev · 009 · aller-retour 2/3 : margeBouton sur SectionRtk (interrupteurs, Choisir, Charger en fin ; Bluetooth/TCP, Tester/Libérer, durées en début), puce d'état sans marge · 4245d97
 2026-10-29 · relecteur · 009 · reprise 2/3 prête pour Pascal : tests et CI verts ; question ouverte : flèche ▾ du choix de thème rangée parmi les champs (jusqu'au bord)
 2026-10-29 · Claude (orchestrateur) · 008-009 · fusion sur « fais ce qu'il y a à faire » de Pascal : #71 squash 46f4c1b ; main fusionnée dans la #72 (conflits MainActivity.kt, EcranProjets.kt, PLAN.md 7l/7m résolus à la main, tests et assembleDebug verts, CI 8/8) puis squash d93791b · fin du cycle 4
+2026-10-29 · Pascal · 009 · cap · marge de l'encoche gardée en haut en portrait → bandeau jusqu'en haut en plein écran · pourquoi : « quand je clique sur plein écran, ça ne passe pas en plein écran » (barres masquées, marge restante en haut) ; flèche ▾ du thème laissée jusqu'au bord · fait : #74
+2026-10-30 · Claude (orchestrateur) · 009 · #74 installée sur le téléphone, validée par Pascal (« c'est bon, fusionne »), CI 8/8, squash d6d819e
+2026-10-30 · Pascal · 008-009 · essai sur le terrain concluant (vue Kanban des projets et plein écran)
