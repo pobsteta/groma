@@ -85,7 +85,7 @@ def main() -> None:
             conv = convergence_lambert93_deg(float(plan.loc[plan.plot_id == pid, "geometry"].to_crs(4326).x.iloc[0]))
             az_mag = (az_grille + conv - 2.4) % 360
             cibles.append({"plot_id": pid, "id_cible": id_cible, "azimut_mesure": round(az_mag, 1),
-                           "distance_mesuree_m": round(d, 2), "dbh_mesure_cm": a.dbh_cm,
+                           "distance_mesuree_m": round(d, 2), "dbh_mesure_cm": a.dbh_cm, "source_azimut": "boussole_visee",
                            "geometry": Point(p.centre[0] + d * a.x / d_tronc, p.centre[1] + d * a.y / d_tronc)})
 
     gpkg = creer_gpkg(

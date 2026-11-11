@@ -33,6 +33,9 @@ import groma.app.carte.configurerOsmdroid
 import groma.app.gnss.ServiceGnssRtk
 import groma.app.gnss.SourcePosition
 import groma.app.ui.EcranCarte
+import groma.app.ui.EcranCibles
+import groma.core.CiblePlacee
+import groma.core.ParametresPlacette
 import groma.app.ui.LocalPleinEcran
 import groma.app.ui.EcranParametres
 import groma.app.ui.EcranPlacettes
@@ -99,6 +102,7 @@ class MainActivity : AppCompatActivity() {
                     var projetsServeur by rememberSaveable { mutableStateOf(false) }
                     var cle by rememberSaveable { mutableStateOf<String?>(null) }
                     var carte by rememberSaveable { mutableStateOf(false) }
+                    var ciblesPlot by rememberSaveable { mutableStateOf<String?>(null) }
                     // Leaving the project releases the RTK receiver (for QField, and the battery).
                     LaunchedEffect(cle) { if (cle == null) ServiceGnssRtk.arreter(this@MainActivity) }
                     val ouvert = remember(cle) { cle?.let(depot::projet) }
@@ -131,6 +135,35 @@ class MainActivity : AppCompatActivity() {
                                 onRetour = { projetsServeur = false },
                             )
                         }
+                        ouvert != null && ciblesPlot != null -> {
+                            val plot = ciblesPlot!!
+                            BackHandler { ciblesPlot = null }
+                            val etat by produceState<EtatCibles?>(null, ouvert, plot) {
+                                value = withContext(Dispatchers.IO) {
+                                    try {
+                                        val p = ouvert.parametres(plot)
+                                        EtatCibles(p, ouvert.centrePourCibles(plot).mesure, ouvert.ciblesPlacees(plot, p.uniteAzimut))
+                                    } catch (e: Exception) { null }
+                                }
+                            }
+                            etat?.let { e ->
+                                EcranCibles(
+                                    plotId = plot,
+                                    unite = e.parametres.uniteAzimut,
+                                    rayonM = e.parametres.rayonM,
+                                    declinaisonDeg = e.parametres.declinaisonDeg,
+                                    convergenceDeg = e.parametres.convergenceDeg,
+                                    centreMesure = e.centreMesure,
+                                    initiales = e.cibles,
+                                    onPlacer = { id, az, d, dbh, source ->
+                                        withContext(Dispatchers.IO) { ouvert.placerCible(plot, id, az, d, dbh, source) }
+                                            .also { rafraichir++; ServicePartageQfield.demarrer(this@MainActivity) }
+                                    },
+                                    onFilmer = { demanderPlacette(plot) },
+                                    onRetour = { ciblesPlot = null },
+                                )
+                            }
+                        }
                         ouvert != null && carte -> {
                             BackHandler { carte = false }
                             val titre = projets.firstOrNull { it.cle == cle }?.titre ?: ouvert.dossier.name
@@ -146,6 +179,7 @@ class MainActivity : AppCompatActivity() {
                                 dossierProjet = ouvert.dossier,
                                 onRetour = { carte = false },
                                 onOuvrirPlacette = ::demanderPlacette,
+                                onOuvrirCibles = { ciblesPlot = it },
                                 onEnregistrerCentre = { plotId, centre ->
                                     withContext(Dispatchers.IO) { ouvert.ajouterCentre(plotId, centre) }.also { rafraichir++; ServicePartageQfield.demarrer(this@MainActivity) }
                                 },
@@ -335,6 +369,9 @@ class MainActivity : AppCompatActivity() {
             DocumentsContract.buildDocumentUri("com.android.externalstorage.documents", "primary:Download/groma")
     }
 }
+
+/** What the cibles view needs, loaded off the main thread. */
+private class EtatCibles(val parametres: ParametresPlacette, val centreMesure: Boolean, val cibles: List<CiblePlacee>)
 
 object Preferences {
     fun kanban(ctx: Context) = ReglagesKanban(object : MagasinKanban {

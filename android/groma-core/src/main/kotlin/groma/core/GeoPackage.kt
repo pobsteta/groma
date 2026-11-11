@@ -134,6 +134,40 @@ object GeoPackage {
         fid
     }
 
+    /**
+     * Writes a target placed in Groma (vue Cibles, schema 1.3.0) to `cibles`: one row per
+     * (plot_id, id_cible), replaced if the target is placed again (the old measure is not
+     * kept). Same R*Tree handling as [ajouterCentreMesure]: the GDAL triggers call
+     * ST_IsEmpty, missing from Android's SQLite, so they are set aside, the index row
+     * written here, then the triggers put back unchanged, in one transaction. A project
+     * prepared before 1.3.0 gets the `source_azimut` column added. Returns the new fid.
+     */
+    fun ecrireCible(
+        db: BaseSqlite, plotId: String, c: CiblePlacee, x: Double, y: Double, azimutUnite: Double,
+    ): Long = db.transactionImmediate {
+        val declencheurs = db.requete(
+            "SELECT name, sql FROM sqlite_master WHERE type = 'trigger' AND tbl_name = 'cibles' AND name LIKE 'rtree_%'",
+        )
+        for (d in declencheurs) db.executer("DROP TRIGGER \"${d["name"]}\"")
+        val colonnes = db.requete("PRAGMA table_info(cibles)").map { it["name"] }
+        if ("source_azimut" !in colonnes) db.executer("ALTER TABLE cibles ADD COLUMN source_azimut TEXT")
+        val rtree = "rtree_cibles_$GEOMETRIE"
+        val aRtree = db.requete("SELECT 1 AS un FROM sqlite_master WHERE name = ?", listOf(rtree)).isNotEmpty()
+        val anciennes = db.requete("SELECT fid FROM cibles WHERE plot_id = ? AND id_cible = ?", listOf(plotId, c.id))
+        for (a in anciennes) {
+            if (aRtree) db.executer("DELETE FROM $rtree WHERE id = ?", listOf(a["fid"]))
+            db.executer("DELETE FROM cibles WHERE fid = ?", listOf(a["fid"]))
+        }
+        db.executer(
+            "INSERT INTO cibles ($GEOMETRIE, plot_id, id_cible, azimut_mesure, distance_mesuree_m, dbh_mesure_cm, source_azimut) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            listOf(encoderPoint(x, y), plotId, c.id, azimutUnite, c.distanceM, c.dbhCm, c.source.code),
+        )
+        val fid = (db.requete("SELECT last_insert_rowid() AS fid").single()["fid"] as Number).toLong()
+        if (aRtree) db.executer("INSERT OR REPLACE INTO $rtree VALUES (?, ?, ?, ?, ?)", listOf(fid, x, x, y, y))
+        for (d in declencheurs) db.executer(d["sql"] as String)
+        fid
+    }
+
     /** Latest row of `centres_mesures` for each plot (or for [plotId] only): highest fid. */
     fun dernierCentreParPlacette(db: BaseSqlite, plotId: String? = null): List<Map<String, Any?>> =
         lirePoints(db, "centres_mesures", plotId)

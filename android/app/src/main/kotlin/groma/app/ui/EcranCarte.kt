@@ -133,6 +133,7 @@ fun EcranCarte(
     dossierProjet: File?,
     onRetour: () -> Unit,
     onOuvrirPlacette: (String) -> Unit,
+    onOuvrirCibles: (String) -> Unit,
     onEnregistrerCentre: suspend (String, CentreMesure) -> Double?,
 ) {
     val ctx = LocalContext.current
@@ -460,6 +461,7 @@ fun EcranCarte(
             FeuillePlacette(
                 pl, donnees, fix?.let { Guidage.calculer(it.position, pl) },
                 onYAller = { allerA(pl) },
+                onCibles = { choisie = null; onOuvrirCibles(pl.plotId) },
                 onOuvrir = { choisie = null; onOuvrirPlacette(pl.plotId) },
             )
         }
@@ -477,7 +479,7 @@ private fun Case(libelle: String, coche: Boolean, onChange: (Boolean) -> Unit) {
 
 /** Sheet of a tapped plot, with distance and azimuth from the position and « Y aller » (brief § 3, § 5.3). */
 @Composable
-private fun FeuillePlacette(p: PlacetteCarte, donnees: DonneesCarte?, guide: Guidage?, onYAller: () -> Unit, onOuvrir: () -> Unit) {
+private fun FeuillePlacette(p: PlacetteCarte, donnees: DonneesCarte?, guide: Guidage?, onYAller: () -> Unit, onCibles: () -> Unit, onOuvrir: () -> Unit) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(p.plotId, style = MaterialTheme.typography.headlineSmall)
         val etat = stringResource(
@@ -500,6 +502,7 @@ private fun FeuillePlacette(p: PlacetteCarte, donnees: DonneesCarte?, guide: Gui
         }
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
             OutlinedButton(onClick = onYAller) { Text(stringResource(R.string.carte_y_aller)) }
+            OutlinedButton(onClick = onCibles) { Text(stringResource(R.string.cibles_bouton)) }
             Button(onClick = onOuvrir) { Text(stringResource(R.string.filmer)) }
         }
     }
