@@ -243,4 +243,27 @@ Dans nemetonshiny, génère le projet QField puis « Envoyer au téléphone ».<
     <string name="serveur_installe">Installé dans le dossier des projets. Si le projet était déjà sur le téléphone, utilise « Mettre à jour » sur sa carte.</string>
     <string name="serveur_canal">Téléchargement des projets</string>
     <string name="serveur_notif_titre">Téléchargement : %1$s</string>
+    <string name="cibles_bouton">Cibles</string>
+    <string name="cibles_titre">Cibles · %1$s</string>
+    <string name="cibles_centre_prevu">Centre non mesuré : le plan part du centre prévu. Mesure le centre sur la carte avant de placer les cibles.</string>
+    <string name="cibles_boussole_visee">Boussole de visée</string>
+    <string name="cibles_boussole_telephone">Boussole du téléphone</string>
+    <string name="cibles_sans_capteur">Ce téléphone n’a pas de boussole : tape l’azimut lu à la boussole de visée.</string>
+    <string name="cibles_lecture">Cap : %1$s %2$s</string>
+    <string name="cibles_etalonnage_bon">Étalonnage : bon</string>
+    <string name="cibles_etalonnage_moyen">Étalonnage : moyen. Dessine des 8 en tenant le téléphone, loin des masses métalliques.</string>
+    <string name="cibles_etalonnage_faible">Étalonnage : faible. Dessine des 8 avec le téléphone, loin des masses métalliques.</string>
+    <string name="cibles_etalonnage_a_faire">Étalonnage : à faire. Dessine des 8 avec le téléphone, loin des masses métalliques.</string>
+    <string name="cibles_prendre_cap">Prendre ce cap</string>
+    <string name="cibles_azimut">Azimut magnétique (%1$s)</string>
+    <string name="cibles_source_visee">Source : boussole de visée</string>
+    <string name="cibles_source_telephone">Source : boussole du téléphone</string>
+    <string name="cibles_distance">Distance (m)</string>
+    <string name="cibles_diametre">Diamètre (cm)</string>
+    <string name="cibles_placer">Placer %1$s</string>
+    <string name="cibles_saisie_incomplete">Renseigne l’azimut, la distance et le diamètre.</string>
+    <string name="cibles_erreur">Cible non enregistrée : %1$s</string>
+    <string name="cibles_alerte_ecart">%1$s : moins de %2$d° d’écart en azimut. Répartis les cibles autour du centre (120° idéalement).</string>
+    <string name="cibles_alerte_proche">%1$s : à moins de %2$d m du centre. Place la cible plus loin (8 à 15 m).</string>
+    <string name="cibles_alerte_moins_de_trois">Moins de trois cibles placées : l’orientation de la placette sera moins sûre.</string>
 </resources>

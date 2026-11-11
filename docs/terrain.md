@@ -5,6 +5,9 @@
 * Smartphone Samsung compatible ARCore avec Depth API, sans LiDAR.
 * Récepteur GNSS RTK SparkFun (u-blox ZED-F9P) sur canne au centre de la
   placette, relié à QField en Bluetooth.
+* Boussole de visée (recommandée pour l'azimut des cibles : le téléphone, lui,
+  se laisse tromper par les masses métalliques) et télémètre laser (distance
+  horizontale du centre à la cible) ; ruban de diamètre.
 * Cibles ArUco du dictionnaire `4x4_50` : **C0 = identifiant 0** sur la canne
   du RTK, à 1,30 m ; **C1, C2, C3 = identifiants 1, 2, 3** agrafées à 1,30 m
   sur trois arbres, face au centre. Planche prête à imprimer, une cible par
@@ -304,10 +307,31 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    `qualite_gnss`, `precision_h_m`, `ecart_prevu_m` et `date_mesure`.
    **Libérer le récepteur** avant de passer à QField. Le centre peut aussi
    être saisi dans QField, comme avant.
-2. Poser C1-C3 sur trois arbres bien répartis (idéalement à 120° les uns des
-   autres, entre 5 et 15 m). Pour chacune, saisir dans `cibles` : azimut lu à
-   la boussole de visée **dans l'unité de la placette**, distance horizontale
-   du centre à la cible, diamètre de l'arbre au ruban.
+2. Poser C1-C3 sur trois arbres bien répartis (idéalement à **120°** les uns
+   des autres, entre **8 et 15 m** du centre). Puis, dans Groma, bouton
+   **Cibles** de la placette, dans la liste des placettes ou sur la carte du
+   projet (feuille de la placette) (c'est ici, et plus dans QField, que les
+   cibles se saisissent). Le plan de la placette s'affiche, nord en haut,
+   avec le cercle du rayon et C0 au centre (le dernier centre mesuré ; sans
+   centre mesuré, le centre prévu, avec une mention en rouge). Pour chaque
+   cible : choisir C1, C2 ou C3, taper l'**azimut magnétique lu à la boussole
+   de visée** dans l'unité de la placette (source `boussole_visee`, par
+   défaut) ou, en option, lire le cap à la boussole du téléphone (« Prendre
+   ce cap », source `boussole_telephone` ; ne l'utiliser que si l'étalonnage
+   affiché est « bon »), puis la distance horizontale au télémètre et le
+   diamètre au ruban, et toucher **Placer**. La cible apparaît sur le plan.
+   Groma alerte (sans jamais refuser la saisie) si deux cibles sont à moins
+   de 60° d'écart, si une cible est à moins de 8 m du centre, ou s'il y a
+   moins de trois cibles. Replacer une cible remplace la mesure précédente.
+   Un degré d'erreur d'azimut décale la cible de 26 cm à 15 m : viser avec
+   soin. Les cibles sont écrites dans la couche `cibles` du projet de Groma
+   (schéma 1.3.0, colonne `source_azimut`) ; la source de chaque azimut part
+   aussi au serveur avec le paquet (`cibles_mesurees`). Une distance ou un
+   diamètre de 0 est accepté (diamètre 0 : non mesuré au ruban).
+   *Projets déjà générés :* la couche `cibles` reste éditable dans la copie
+   de QField, mais Groma ne relit pas cette copie : une cible saisie ou
+   modifiée dans QField n'est pas reprise. Les cibles déjà présentes dans le
+   projet de Groma restent lues et affichées, et peuvent être replacées.
 3. Dans Groma, choisir la placette et filmer : départ et arrivée à la canne
    (fermeture de boucle), trois tours concentriques environ à 4, 10 et 16 m,
    en regardant alternativement vers l'extérieur et vers le centre, téléphone

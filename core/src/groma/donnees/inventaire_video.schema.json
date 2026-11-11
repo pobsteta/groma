@@ -1,6 +1,6 @@
 {
   "nom": "inventaire_video",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "crs": 2154,
   "description": "Schéma du GeoPackage inventaire_video.gpkg produit par nemeton (sous-onglet Terrain > Inventaire vidéo) et complété sur le terrain par QField (saisie) et Groma (détections). Source unique : Python (groma), Kotlin (application Groma) et brief nemeton.",
   "domaines": {
@@ -10,6 +10,7 @@
     "etat_traitement": ["a_faire", "provisoire", "envoye", "definitif"],
     "qualite_gnss": ["fix", "float"],
     "id_cible": ["C1", "C2", "C3"],
+    "source_azimut": ["boussole_visee", "boussole_telephone"],
     "statut": ["vivant", "mort", "chablis", "coupe"],
     "qualite": ["A", "B", "C", "D"],
     "h_source": ["mnh", "mesuree", "aucune"],
@@ -66,14 +67,15 @@
       "nom": "cibles",
       "geometrie": "POINT",
       "index_spatial": true,
-      "lecture_seule": false,
-      "remarque": "Mesures manuelles depuis le centre. Azimut magnétique lu à la boussole de visée, dans l'unité de la placette.",
+      "lecture_seule": true,
+      "remarque": "Cibles C1 à C3 placées dans Groma (vue Cibles) depuis le centre ; plus de saisie dans QField. Azimut magnétique dans l'unité de la placette, lu à la boussole de visée (tapé) ou à la boussole du téléphone. Une ligne par plot_id et id_cible, remplacée si la cible est replacée ; la géométrie (Lambert 93) est calculée par Groma.",
       "colonnes": [
         {"nom": "plot_id", "type": "TEXT", "requis": true},
         {"nom": "id_cible", "type": "TEXT", "domaine": "id_cible", "requis": true},
         {"nom": "azimut_mesure", "type": "REAL", "min": 0, "max": 400},
         {"nom": "distance_mesuree_m", "type": "REAL", "min": 0, "max": 60},
-        {"nom": "dbh_mesure_cm", "type": "REAL", "min": 0, "max": 1000}
+        {"nom": "dbh_mesure_cm", "type": "REAL", "min": 0, "max": 1000},
+        {"nom": "source_azimut", "type": "TEXT", "domaine": "source_azimut"}
       ]
     },
     {

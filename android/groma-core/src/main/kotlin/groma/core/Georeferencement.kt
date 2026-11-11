@@ -9,7 +9,11 @@ import kotlin.math.sqrt
 /** Ray (origin, unit direction) in the local frame, z up. */
 data class Rayon(val o: DoubleArray, val d: DoubleArray)
 
-data class CibleMesuree(val idCible: String, val azimutMesure: Double, val distanceMesureeM: Double, val dbhMesureCm: Double?)
+/** [sourceAzimut] is a code of the schema domain `source_azimut` (empty read as `boussole_visee`). */
+data class CibleMesuree(
+    val idCible: String, val azimutMesure: Double, val distanceMesureeM: Double, val dbhMesureCm: Double?,
+    val sourceAzimut: String = SourceAzimut.BOUSSOLE_VISEE.code,
+)
 
 /** Local -> Lambert-93 transform with a fixed point (port of groma/georeferencement.py, scale left at 1 on the phone). */
 data class Georef(

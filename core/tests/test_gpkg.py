@@ -29,6 +29,18 @@ def gpkg(tmp_path):
     return creer_gpkg(tmp_path / "inventaire_video.gpkg", placettes)
 
 
+def test_schema_cibles_saisies_dans_groma(gpkg):
+    """Mission 016: targets placed in Groma, read-only in QField, with the azimuth source."""
+    s = charger_schema()
+    assert s["version"] == "1.3.0"
+    assert s["domaines"]["source_azimut"] == ["boussole_visee", "boussole_telephone"]
+    cibles = next(c for c in s["couches"] if c["nom"] == "cibles")
+    assert cibles["lecture_seule"] is True
+    col = next(c for c in cibles["colonnes"] if c["nom"] == "source_azimut")
+    assert col["domaine"] == "source_azimut"
+    assert "source_azimut" in gpd.read_file(gpkg, layer="cibles").columns
+
+
 def test_schema_noms_nmt():
     for c in charger_schema()["couches"]:
         assert len(c["nom"]) <= 30

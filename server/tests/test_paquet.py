@@ -18,3 +18,17 @@ def test_lecture_paquet(paquet_synthetique):
         assert p.existe(m.lidar.mnt) and p.existe(m.lidar.houppiers)
     finally:
         p.fermer()
+
+
+def test_source_azimut_des_cibles():
+    import pytest
+    from pydantic import ValidationError
+
+    from groma_server.paquet import CibleMesuree
+
+    base = {"id_cible": "C1", "azimut_mesure": 120.0, "distance_mesuree_m": 12.0}
+    # Older phones send no source: read as the sighting compass.
+    assert CibleMesuree(**base).source_azimut == "boussole_visee"
+    assert CibleMesuree(**base, source_azimut="boussole_telephone").source_azimut == "boussole_telephone"
+    with pytest.raises(ValidationError):
+        CibleMesuree(**base, source_azimut="gps")

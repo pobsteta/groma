@@ -1,7 +1,11 @@
 package groma.app
 
 import android.database.sqlite.SQLiteDatabase
+import groma.core.Azimut
 import groma.core.CentreMesure
+import groma.core.CiblePlacee
+import groma.core.PlacementCible
+import groma.core.SourceAzimut
 import groma.core.CibleMesuree
 import groma.core.CleProjet
 import groma.core.Declinaison
@@ -72,8 +76,44 @@ class Projet(val dossier: File) {
         GeoPackage.lirePoints(SqliteAndroid(db), "cibles", plotId).mapNotNull {
             val az = (it["azimut_mesure"] as? Number)?.toDouble() ?: return@mapNotNull null
             val d = (it["distance_mesuree_m"] as? Number)?.toDouble() ?: return@mapNotNull null
-            CibleMesuree(it["id_cible"] as String, az, d, (it["dbh_mesure_cm"] as? Number)?.toDouble())
+            val source = (it["source_azimut"] as? String)?.takeIf { s -> s.isNotBlank() } ?: SourceAzimut.BOUSSOLE_VISEE.code
+            CibleMesuree(it["id_cible"] as String, az, d, (it["dbh_mesure_cm"] as? Number)?.toDouble(), source)
         }
+    }
+
+    /** Centre of the cibles view: latest measured centre, else the planned point ([mesure] false). */
+    fun centrePourCibles(plotId: String): CentreCibles = ouvrir().use { db ->
+        val s = SqliteAndroid(db)
+        val mesure = GeoPackage.dernierCentreParPlacette(s, plotId).firstOrNull()
+        val p = GeoPackage.lirePoints(s, "placettes", plotId).single()
+        val c = mesure ?: p
+        CentreCibles(c["x"] as Double, c["y"] as Double, mesure != null)
+    }
+
+    /** Targets already in `cibles` (placed here or read from an existing project), azimuth back in degrees. */
+    fun ciblesPlacees(plotId: String, unite: String): List<CiblePlacee> = ouvrir().use { db ->
+        GeoPackage.lirePoints(SqliteAndroid(db), "cibles", plotId).mapNotNull {
+            val id = it["id_cible"] as? String ?: return@mapNotNull null
+            val az = (it["azimut_mesure"] as? Number)?.toDouble() ?: return@mapNotNull null
+            val d = (it["distance_mesuree_m"] as? Number)?.toDouble() ?: return@mapNotNull null
+            val dbh = (it["dbh_mesure_cm"] as? Number)?.toDouble() ?: return@mapNotNull null
+            val src = SourceAzimut.entries.firstOrNull { s -> s.code == it["source_azimut"] } ?: SourceAzimut.BOUSSOLE_VISEE
+            CiblePlacee(id, Azimut.depuisUnite(az, unite), d, dbh, src)
+        }.sortedBy { it.id }
+    }
+
+    /**
+     * Places a target: [azimut] typed (or read) in the plot's unit; the Lambert-93 position is
+     * computed from the centre and written to `cibles` (one row per plot and target).
+     */
+    fun placerCible(plotId: String, id: String, azimut: Double, distanceM: Double, dbhCm: Double, source: SourceAzimut): CiblePlacee {
+        val p = parametres(plotId)
+        PlacementCible.controler(id, azimut, p.uniteAzimut, distanceM, dbhCm)
+        val centre = centrePourCibles(plotId)
+        val (x, y) = PlacementCible.position(Pair(centre.x, centre.y), azimut, p.uniteAzimut, p.declinaisonDeg, p.convergenceDeg, distanceM)
+        val c = CiblePlacee(id, Azimut.depuisUnite(azimut, p.uniteAzimut), distanceM, dbhCm, source)
+        ouvrir().use { GeoPackage.ecrireCible(SqliteAndroid(it), plotId, c, x, y, azimut) }
+        return c
     }
 
     fun houppiers(plotId: String): List<Houppier> = ouvrir().use { db ->
@@ -87,3 +127,6 @@ class Projet(val dossier: File) {
 
     private fun raster(nom: String): Grille? = File(dossier, "rasters/$nom").takeIf { it.exists() }?.let { GeoTiff.lire(it.readBytes()) }
 }
+
+/** Centre used by the cibles view; [mesure] false when only the planned point is known. */
+data class CentreCibles(val x: Double, val y: Double, val mesure: Boolean)
