@@ -29,11 +29,11 @@ _Modèle de carte :_
 - [015](missions/015-test-vue-cibles.md) · depuis le cycle 6
   - Homme : testeur (sonnet), appuyer
   - Mission : tests de `PlacementCible` (position depuis le centre, source de l'azimut, alertes de répartition)
-  - Moyens : `groma.core.Declinaison`, `georeferencement.py`, `SaisiePointage.kt` de Surculus (lecture)
+  - Moyens : `groma.core.Declinaison`, `georeferencement.py`, `SaisiePointage.kt` de Surculus (lecture) · rendue (61 tests, reprise 1/3), relue « prêt », dans la PR #87
 - [016](missions/016-vue-cibles.md) · depuis le cycle 6
   - Homme : dev (sonnet), appuyer
   - Mission : vue « Cibles » : C1-C3 placées dans Groma (plus dans QField), plan nord en haut, boussole de visée par défaut ou du téléphone
-  - Moyens : tests de 015, vue Pointer de Surculus, écriture GeoPackage de `centres_mesures` ; schéma `source_azimut`, brief nemeton ; essai de Pascal sur le S23 Ultra
+  - Moyens : tests de 015, vue Pointer de Surculus, écriture GeoPackage de `centres_mesures` ; schéma `source_azimut`, brief nemeton ; essai de Pascal sur le S23 Ultra · relue « prêt » (5 points non bloquants), **PR #87 en brouillon, essai sur le S23 Ultra à faire**
 
 ## Planifié
 
