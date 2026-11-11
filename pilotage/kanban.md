@@ -26,6 +26,15 @@ _Modèle de carte :_
 
 ## Validé
 
+- [024](missions/024-test-centre-telephone.md) · depuis le cycle 7
+  - Homme : testeur (sonnet), appuyer
+  - Mission : tests du centre au GNSS du téléphone (confirmation, moyenne 30 s, qualité `telephone`, jamais sur un centre RTK sans confirmation)
+  - Moyens : `MesureCentre` et ses tests
+- [025](missions/025-centre-telephone-ajout-complet.md) · depuis le cycle 7
+  - Homme : dev (sonnet), appuyer
+  - Mission : centre au GNSS du téléphone ; fiche complète (essence visible, note, photos) pour un arbre ajouté
+  - Moyens : tests de 024, `EcranCarte`, `FicheArbre`, `EtatPhotos` ; essai de Pascal
+
 ## Planifié
 
 
