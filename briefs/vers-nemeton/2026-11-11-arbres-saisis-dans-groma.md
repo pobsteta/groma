@@ -23,9 +23,12 @@ vidéo, comme une hauteur mesurée (`h_source = mesuree`) l'est sur le MNH.
   `estime` (défaut), `mesure`. Origine `groma`.
   * `estime` : le diamètre `dbh_cm` est celui de la vidéo (il suit les
     détections) ;
-  * `mesure` : le diamètre est celui du ruban, saisi dans Groma ou dans
-    QField ; il n'est écrasé ni par une nouvelle détection ni par le
+  * `mesure` : le diamètre est celui du ruban, **saisi dans Groma seulement**
+    (décision de Pascal du 2026-11-11) ; il n'est écrasé ni par une nouvelle détection ni par le
     rapprochement définitif.
+* `dbh_cm` et `dbh_source` sont **en lecture seule dans QField**
+  (`lecture_seule: true` dans le schéma) : le ruban se tape dans Groma,
+  qui reste seul à écrire ces deux colonnes (déclencheurs et saisie).
 * Colonnes existantes inchangées. `essence_arbre`, `dbh_cm`, `statut`,
   `qualite` gardent leur domaine ; ce qui change est **qui peut les
   écrire** : Groma, en plus de QField.
@@ -37,8 +40,8 @@ vidéo, comme une hauteur mesurée (`h_source = mesuree`) l'est sur le MNH.
 ## 3. À faire dans nemeton
 
 1. Créer la colonne `dbh_source` de `arbres` (domaine `estime` / `mesure`,
-   défaut `estime`), **lecture seule dans le formulaire QField** (comme
-   `h_source`) ; recopier le schéma 1.4.0 et le fichier `declencheurs.sql`
+   défaut `estime`) ; **`dbh_source` et `dbh_cm` en lecture seule dans le
+   formulaire QField** (comme `h_source`) ; recopier le schéma 1.4.0 et le fichier `declencheurs.sql`
    dans `inst/inventaire_video/`, et l'exemple de référence
    `exemples/inventaire_video/` (régénéré dans ce dépôt).
 2. `valider_inventaire_video()` : contrôler le domaine de `dbh_source`
@@ -64,10 +67,11 @@ vidéo, comme une hauteur mesurée (`h_source = mesuree`) l'est sur le MNH.
 Groma ajoute la colonne `dbh_source` (défaut `estime`) à la couche `arbres`
 de **sa** copie, et recrée les deux déclencheurs de `detections` à
 l'identique de `declencheurs.sql`, à la première saisie d'un arbre. La copie
-de QField reste sans `dbh_source` : le plugin ne recopie alors que
-l'essence, le statut et la qualité (le diamètre au ruban a besoin de la
-colonne `dbh_source` de QField, donc d'un projet régénéré avec le schéma
-1.4.0). Groma ne relit jamais la copie de QField.
+de QField d'un projet antérieur à 1.4.0 n'a pas `dbh_source` : **le plugin
+ne recopie alors ni `dbh_cm` ni `dbh_source`**, seulement l'essence, le
+statut et la qualité, et un diamètre déjà tapé dans QField y reste. Le
+ruban recopié vers QField demande un projet régénéré avec le schéma 1.4.0.
+Groma ne relit jamais la copie de QField.
 
 ## 5. Ce que Groma garantit (testé dans `groma_nemeton`)
 

@@ -169,6 +169,19 @@ Item {
     return res
   }
 
+  // Layer WITHOUT `dbh_source` (project generated before schema 1.4.0): QField's
+  // source is then unknown, and aRecopier would read it as empty and overwrite a
+  // tape diameter typed in QField. So neither dbh_cm nor dbh_source is copied
+  // there (brief nemeton section 4). Done here, not in aRecopier, whose pure rule
+  // (RecopieQfield.aRecopier, RecopieQfieldTest) stays the same on both sides;
+  // Kotlin side: nothing to do, the plugin is the only writer of QField's copy.
+  function sansDiametreSiPasDeSource(r, aDbhSource) {
+    if (aDbhSource) return r
+    const res = {}
+    for (const k of Object.keys(r)) if (k !== "dbh_cm" && k !== "dbh_source") res[k] = r[k]
+    return res
+  }
+
   // The five attributes of QField's tree (NULL comes back null: `vide` copes).
   function attributsArbre(f, fields) {
     const a = {}
@@ -186,6 +199,7 @@ Item {
     const layer = couche("arbres")
     if (!layer) return { erreur: qsTr("couche « arbres » absente") }
     const fields = layer.fields
+    const aDbhSource = fields.indexOf("dbh_source") >= 0
     const parUuid = {}
     for (const s of saisies) parUuid[String(s.uuid)] = s
     // Plan first, edit afterwards: no edit session when there is nothing to copy.
@@ -195,7 +209,7 @@ Item {
       const f = it.next()
       const g = parUuid[String(f.attribute("uuid"))]
       if (!g) continue
-      const r = aRecopier(g, attributsArbre(f, fields))
+      const r = sansDiametreSiPasDeSource(aRecopier(g, attributsArbre(f, fields)), aDbhSource)
       if (Object.keys(r).length > 0) plan.push({ fid: f.id, valeurs: r })
     }
     it.close()
@@ -207,7 +221,8 @@ Item {
     for (const p of plan) {
       for (const k of Object.keys(p.valeurs)) {
         const i = fields.indexOf(k)
-        if (i >= 0 && layer.changeAttributeValue(p.fid, i, p.valeurs[k])) recopies++
+        // dbh_cm and dbh_source go together: counted as ONE attribute (counted on dbh_cm).
+        if (i >= 0 && layer.changeAttributeValue(p.fid, i, p.valeurs[k]) && k !== "dbh_source") recopies++
       }
     }
     if (!layer.commitChanges()) {

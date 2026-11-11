@@ -3,6 +3,10 @@ package groma.core
 /**
  * Copy rule of the QField plugin (`qfield/inventaire_video.qml`, function `aRecopier`, which
  * reproduces this one line for line: change both together). Never overwrites an entry made in QField.
+ *
+ * Not part of this pure rule, handled by the plugin (`sansDiametreSiPasDeSource`): a QField layer
+ * without the `dbh_source` column (project generated before schema 1.4.0) gets neither `dbh_cm` nor
+ * `dbh_source`, since its source would read as empty and a tape diameter typed in QField be overwritten.
  */
 object RecopieQfield {
     val ATTRIBUTS = listOf("essence_arbre", "dbh_cm", "dbh_source", "statut", "qualite")

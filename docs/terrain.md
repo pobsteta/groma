@@ -360,9 +360,11 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    **Enregistrer et arbre suivant** passe à l'arbre suivant dans l'ordre des
    numéros, pour enchaîner au ruban. Une valeur refusée est expliquée sous le
    champ et rien n'est écrit. Ce qui est saisi : l'essence (`essence_arbre`, code BD Forêt v2), le **diamètre au ruban**
-   (`dbh_cm`, virgule ou point décimal ; il passe `dbh_source` à `mesure`),
-   le statut et la qualité ; **dans QField** les notes et les photos, et au
-   besoin tout le reste. Les arbres provisoires apparaissent dans la couche
+   (`dbh_cm`, virgule ou point décimal ; il passe `dbh_source` à `mesure` ;
+   **le ruban se saisit seulement dans Groma**, `dbh_cm` et `dbh_source`
+   sont en lecture seule dans QField), le statut et la qualité ; **dans
+   QField** les notes et les photos, et au besoin l'essence, le statut et
+   la qualité. Les arbres provisoires apparaissent dans la couche
    `arbres` de QField. Un diamètre au ruban n'est jamais écrasé : ni par
    une nouvelle capture, ni par le calcul définitif du serveur (l'alerte
    `ecart_dbh` reste émise s'il diffère de 10 cm **et** de 50 %) ; vider le
@@ -437,7 +439,9 @@ transport entre les deux bacs à sable. Options, par ordre de préférence :
      reproduite ligne à ligne dans le plugin) : essence et qualité seulement
      si vides dans QField ; statut seulement si vide ou `vivant` dans QField ;
      diamètre et `dbh_source` ensemble, seulement si Groma a un diamètre au
-     ruban et QField une source vide ou `estime` (le `dbh_cm` de QField n'est
+     ruban et QField une source vide ou `estime`, et jamais dans un projet
+     QField antérieur à 1.4.0 (sans colonne `dbh_source` : un diamètre tapé
+     dans QField y reste) (le `dbh_cm` de QField n'est
      jamais vide : il porte l'estimation de la vidéo) ; une édition validée
      par couche ;
    * n'écrit rien si la couche est déjà en cours d'édition (il ne valide
