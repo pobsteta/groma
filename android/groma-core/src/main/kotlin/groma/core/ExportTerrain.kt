@@ -164,9 +164,9 @@ class ExportTerrain(private val ouvrir: (File) -> BaseSqlite) {
                 return brut.split(';').joinToString(";") { j ->
                     val t = j.trim()
                     if (t.isEmpty()) j else {
-                        // A photo not found is not packed but keeps its (rewritten) path: nothing is lost.
-                        if (resoudre(dossierProjet, t) == null) manquantes.add(t)
-                        "$DOSSIER_PHOTOS/${nom(t)}"
+                        // A photo not found (or outside the project) is never read nor packed: it keeps
+                        // its original path, listed in photosManquantes. A found one is rewritten.
+                        if (resoudre(dossierProjet, t) == null) { manquantes.add(t); t } else "$DOSSIER_PHOTOS/${nom(t)}"
                     }
                 }
             }

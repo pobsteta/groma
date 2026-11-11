@@ -433,7 +433,9 @@ intégrer sans passer par la copie de QField (brief
     un fichier de QField reste dans le projet. Une photo prise puis abandonnée
     (fiche fermée sans enregistrer) est supprimée.
   * **Envoi** : l'enregistrement relance l'envoi de terrain ; les photos
-    entrent dans l'archive (`photos/`) et dans l'empreinte.
+    entrent dans l'archive (`photos/`) et dans l'empreinte. Une photo
+    introuvable n'est pas emballée et garde son chemin d'origine dans
+    `terrain.gpkg` (jamais lue hors du dossier du projet).
   * **À vérifier** : deux arbres, chacun avec une note et une photo ; attendre
     « Terrain envoyé à … » ; l'archive du serveur contient les deux photos.
 * **Quand** : après chaque enregistrement (fiche d'arbre, arbre ajouté ou supprimé, cible, centre),

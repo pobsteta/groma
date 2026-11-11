@@ -38,8 +38,11 @@ placette : l'archive « terrain ». Elle est renvoyée à chaque modification
     photos ; celles prises dans Groma s'appellent
     `<plot_id>_<tree_id>_<AAAAMMJJ-HHMMSS>.jpg` (mission 022), JPEG de 2048 px
     au plus ; `arbres.notes` est un texte libre de 2000 caractères au plus. Une photo
-    introuvable n'est pas emballée, mais son chemin (réécrit en
-    `photos/<nom>`) reste.
+    introuvable (ou dont le chemin est absolu ou contient `..`) n'est jamais
+    lue ni emballée et **garde son chemin d'origine** dans `terrain.gpkg` (décision
+    de Pascal du 2026-11-11) ; seules les photos emballées sont réécrites en
+    `photos/<nom>`. Plusieurs photos par arbre, séparées par « ; » : gardé
+    (le widget photo de QField n'en gère qu'un, remarque du schéma).
 
 ## 3. À faire dans nemeton
 
