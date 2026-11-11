@@ -8,7 +8,7 @@ grises tant que l'essence n'est pas saisie, comme Marculus) et ouvrir au toucher
 saisit essence, diamètre au ruban, statut et qualité, parce que Pascal veut tout saisir dans Groma
 (décision du 2026-11-11).
 
-**Redite par l'agent :** _à compléter par l'agent avant d'agir — s'il n'y arrive pas, il s'arrête._
+**Redite par l'agent :** afficher les arbres de la placette (lus dans `arbres`, hors faux positifs) en pastilles sur le plan de la vue renommée « Placette », couleur du groupe d'essence (grise sans essence), taille selon le diamètre, contour pour un diamètre au ruban, et ouvrir au toucher une fiche (essence BD Forêt v2, ruban, statut, qualité, « Arbre suivant ») qui écrit par `Projet.modifierArbre` (018), pour que Pascal saisisse tout dans Groma sans passer par QField.
 
 ## Les trois questions (règle de staffing)
 
