@@ -23,6 +23,7 @@ dev = ["pytest>=8", "httpx>=0.27"]
 
 [project.scripts]
 groma-worker = "groma_server.worker:main"
+groma-cibles = "groma_server.planche_cibles:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
