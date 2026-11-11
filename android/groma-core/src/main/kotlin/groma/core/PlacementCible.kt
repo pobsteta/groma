@@ -48,8 +48,8 @@ object PlacementCible {
     fun controler(id: String, azimut: Double, unite: String, distanceM: Double, dbhCm: Double) {
         require(id in IDENTIFIANTS) { "Identifiant de cible inconnu : « $id » (C1, C2 ou C3)." }
         controlerAzimutDistance(azimut, unite, distanceM)
-        require(dbhCm.isFinite() && dbhCm > 0.0 && dbhCm <= DIAMETRE_MAX_CM) {
-            "Le diamètre doit être compris entre 0 (exclu) et ${DIAMETRE_MAX_CM.toInt()} cm."
+        require(dbhCm.isFinite() && dbhCm >= 0.0 && dbhCm <= DIAMETRE_MAX_CM) {
+            "Le diamètre doit être compris entre 0 et ${DIAMETRE_MAX_CM.toInt()} cm."
         }
     }
 
@@ -62,8 +62,8 @@ object PlacementCible {
         require(azimut.isFinite() && azimut >= 0.0 && azimut < max) {
             "L'azimut doit être compris entre 0 et $max (exclu) en $unite."
         }
-        require(distanceM.isFinite() && distanceM > 0.0 && distanceM <= DISTANCE_MAX_M) {
-            "La distance doit être comprise entre 0 (exclu) et ${DISTANCE_MAX_M.toInt()} m."
+        require(distanceM.isFinite() && distanceM >= 0.0 && distanceM <= DISTANCE_MAX_M) {
+            "La distance doit être comprise entre 0 et ${DISTANCE_MAX_M.toInt()} m."
         }
     }
 

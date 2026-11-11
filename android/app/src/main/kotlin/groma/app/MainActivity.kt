@@ -196,6 +196,7 @@ class MainActivity : AppCompatActivity() {
                                 version = version,
                                 onRetour = { cle = null },
                                 onPlacette = ::demanderPlacette,
+                                onCibles = { ciblesPlot = it },
                                 onCarte = { carte = true },
                                 onParametres = { parametres = true },
                             )

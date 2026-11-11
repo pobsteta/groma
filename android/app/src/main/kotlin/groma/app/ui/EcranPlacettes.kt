@@ -22,6 +22,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -47,6 +48,7 @@ fun EcranPlacettes(
     version: String,
     onRetour: () -> Unit,
     onPlacette: (String) -> Unit,
+    onCibles: (String) -> Unit,
     onCarte: () -> Unit,
     onParametres: () -> Unit,
 ) {
@@ -92,7 +94,7 @@ fun EcranPlacettes(
                     contentPadding = PaddingValues(start = 12.dp, end = 12.dp, bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    items(placettes, key = { it.plotId }) { p -> CartePlacette(p) { onPlacette(p.plotId) } }
+                    items(placettes, key = { it.plotId }) { p -> CartePlacette(p, onCibles = { onCibles(p.plotId) }) { onPlacette(p.plotId) } }
                 }
             }
         }
@@ -101,7 +103,7 @@ fun EcranPlacettes(
 }
 
 @Composable
-private fun CartePlacette(p: LignePlacette, onOuvrir: () -> Unit) {
+private fun CartePlacette(p: LignePlacette, onCibles: () -> Unit, onOuvrir: () -> Unit) {
     ElevatedCard(onClick = onOuvrir, modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
@@ -117,6 +119,7 @@ private fun CartePlacette(p: LignePlacette, onOuvrir: () -> Unit) {
                     )
                 }
             }
+            OutlinedButton(onClick = onCibles, modifier = Modifier.padding(end = 8.dp)) { Text(stringResource(R.string.cibles_bouton)) }
             EtatTraitement(p.etat)
         }
     }

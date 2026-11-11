@@ -128,6 +128,7 @@ def _traiter_nuage(nuage: Nuage, paquet: Paquet, geo: Georeferencement, mnt: Ras
         controle.append({
             "id_cible": k,
             "tree_id": meilleur[1]["num_provisoire"] if meilleur else None,
+            "source_azimut": m.source_azimut,
             "dbh_mesure_cm": m.dbh_mesure_cm,
             "dbh_estime_cm": meilleur[1]["dbh_cm"] if meilleur else None,
             "ecart_dbh_cm": round(meilleur[1]["dbh_cm"] - m.dbh_mesure_cm, 1) if meilleur and m.dbh_mesure_cm else None,

@@ -252,6 +252,7 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
     private fun manifeste(p: groma.core.ParametresPlacette): JSONObject {
         val cibles = JSONArray(projet.cibles(plotId).map {
             JSONObject().put("id_cible", it.idCible).put("azimut_mesure", it.azimutMesure).put("distance_mesuree_m", it.distanceMesureeM).put("dbh_mesure_cm", it.dbhMesureCm)
+                .put("source_azimut", it.sourceAzimut)
         })
         return JSONObject()
             .put("date", java.time.Instant.now().toString())

@@ -104,7 +104,7 @@ class PlacementCibleTest {
 
     @Test fun saisieNominaleAcceptee() = accepte()
 
-    @Test fun distanceNulleRefusee() = refus(d = 0.0)
+    @Test fun distanceNulleAcceptee() = accepte(d = 0.0) // décision de Pascal du 2026-11-11 (schéma : min 0)
     @Test fun distanceNegativeRefusee() = refus(d = -1.0)
     @Test fun distanceAuDessusDe60Refusee() = refus(d = 60.01)
     @Test fun distanceExactement60Acceptee() = accepte(d = 60.0)
@@ -122,7 +122,7 @@ class PlacementCibleTest {
     @Test fun azimutNaNRefuse() = refus(az = Double.NaN)
     @Test fun uniteInconnueRefusee() = refus(u = "rad")
 
-    @Test fun diametreNulRefuse() = refus(dbh = 0.0)
+    @Test fun diametreNulAccepte() = accepte(dbh = 0.0) // décision de Pascal du 2026-11-11 (schéma : min 0)
     @Test fun diametreNegatifRefuse() = refus(dbh = -5.0)
     @Test fun diametreAuDessusDe1000Refuse() = refus(dbh = 1000.1)
     @Test fun diametreExactement1000Accepte() = accepte(dbh = 1000.0)

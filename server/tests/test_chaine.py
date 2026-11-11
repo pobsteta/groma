@@ -36,6 +36,7 @@ def test_chaine_bout_en_bout(paquet_synthetique, tmp_path):
     assert r.rapport["duree_traitement_s"] < 15 * 60
     assert r.rapport["georeferencement"]["rotation_deg"] == pytest.approx(sc.rotation_deg, abs=0.5)
     assert all(abs(c["ecart_dbh_cm"]) <= 2.0 for c in r.rapport["cibles"])
+    assert all(c["source_azimut"] == "boussole_visee" for c in r.rapport["cibles"])
     assert r.rapport["sol"]["source"] == "mnt" and r.rapport["sol"]["dispersion_mnt_m"] < 0.05
     assert r.rapport["controle_houppiers"]["alerte"] is False
     assert r.rapport["placette"]["exposition"] in ("W", "NW", "SW")

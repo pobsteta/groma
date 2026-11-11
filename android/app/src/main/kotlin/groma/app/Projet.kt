@@ -76,7 +76,8 @@ class Projet(val dossier: File) {
         GeoPackage.lirePoints(SqliteAndroid(db), "cibles", plotId).mapNotNull {
             val az = (it["azimut_mesure"] as? Number)?.toDouble() ?: return@mapNotNull null
             val d = (it["distance_mesuree_m"] as? Number)?.toDouble() ?: return@mapNotNull null
-            CibleMesuree(it["id_cible"] as String, az, d, (it["dbh_mesure_cm"] as? Number)?.toDouble())
+            val source = (it["source_azimut"] as? String)?.takeIf { s -> s.isNotBlank() } ?: SourceAzimut.BOUSSOLE_VISEE.code
+            CibleMesuree(it["id_cible"] as String, az, d, (it["dbh_mesure_cm"] as? Number)?.toDouble(), source)
         }
     }
 

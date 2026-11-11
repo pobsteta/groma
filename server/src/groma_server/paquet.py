@@ -22,7 +22,7 @@ import json
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -60,6 +60,8 @@ class CibleMesuree(BaseModel):
     azimut_mesure: float
     distance_mesuree_m: float
     dbh_mesure_cm: float | None = None
+    # Schema domain `source_azimut`; absent (older phones) means the sighting compass.
+    source_azimut: Literal["boussole_visee", "boussole_telephone"] = "boussole_visee"
 
 
 class DetectionCible(BaseModel):

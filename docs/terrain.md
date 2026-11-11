@@ -308,8 +308,9 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    **Libérer le récepteur** avant de passer à QField. Le centre peut aussi
    être saisi dans QField, comme avant.
 2. Poser C1-C3 sur trois arbres bien répartis (idéalement à **120°** les uns
-   des autres, entre **8 et 15 m** du centre). Puis, dans Groma, carte du
-   projet → placette → **Cibles** (c'est ici, et plus dans QField, que les
+   des autres, entre **8 et 15 m** du centre). Puis, dans Groma, bouton
+   **Cibles** de la placette, dans la liste des placettes ou sur la carte du
+   projet (feuille de la placette) (c'est ici, et plus dans QField, que les
    cibles se saisissent). Le plan de la placette s'affiche, nord en haut,
    avec le cercle du rayon et C0 au centre (le dernier centre mesuré ; sans
    centre mesuré, le centre prévu, avec une mention en rouge). Pour chaque
@@ -324,7 +325,9 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    moins de trois cibles. Replacer une cible remplace la mesure précédente.
    Un degré d'erreur d'azimut décale la cible de 26 cm à 15 m : viser avec
    soin. Les cibles sont écrites dans la couche `cibles` du projet de Groma
-   (schéma 1.3.0, colonne `source_azimut`).
+   (schéma 1.3.0, colonne `source_azimut`) ; la source de chaque azimut part
+   aussi au serveur avec le paquet (`cibles_mesurees`). Une distance ou un
+   diamètre de 0 est accepté (diamètre 0 : non mesuré au ruban).
    *Projets déjà générés :* la couche `cibles` reste éditable dans la copie
    de QField, mais Groma ne relit pas cette copie : une cible saisie ou
    modifiée dans QField n'est pas reprise. Les cibles déjà présentes dans le
