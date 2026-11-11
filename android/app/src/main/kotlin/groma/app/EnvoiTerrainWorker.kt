@@ -61,6 +61,7 @@ class EnvoiTerrainWorker(ctx: Context, params: WorkerParameters) : CoroutineWork
             }
             val reprise = etat.takeIf { it.exists() && zip.exists() }?.readLines()?.takeIf { it.size == 2 && it[0] == empreinte }
             var id = reprise?.get(1)
+            if (isStopped) return@withContext Result.retry() // cancelled (REPLACE): the next worker owns the files
             if (id == null) {
                 zip.delete()
                 export.archiver(gpkg, dossier, plotId, zip)
@@ -71,18 +72,21 @@ class EnvoiTerrainWorker(ctx: Context, params: WorkerParameters) : CoroutineWork
             RandomAccessFile(zip, "r").use { f ->
                 val tampon = ByteArray(TAILLE_MORCEAU)
                 while (recu < f.length()) {
+                    if (isStopped) return@withContext Result.retry()
                     f.seek(recu)
                     val n = f.read(tampon)
                     recu = JSONObject(requete("PUT", "$serveur/televersements/$id?offset=$recu", jeton, tampon.copyOf(n))).getLong("recu")
                 }
             }
+            if (isStopped) return@withContext Result.retry() // never finish, nor touch the state of the next one
             requete("POST", "$serveur/televersements/$id/terminer", jeton)
+            if (isStopped) return@withContext Result.retry()
             prefs.edit().putString(PREF_EMPREINTE + cle, empreinte).putLong(PREF_ENVOYE_MAJ + cle, maj)
                 .putLong(PREF_ENVOYE_LE + cle, System.currentTimeMillis()).apply()
             etat.delete(); zip.delete()
             Result.success()
         } catch (e: java.io.FileNotFoundException) {
-            etat.delete() // upload id unknown on the server: start again
+            if (!isStopped) etat.delete() // upload id unknown on the server: start again
             Result.retry()
         } catch (e: java.io.IOException) {
             Result.retry()

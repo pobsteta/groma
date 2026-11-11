@@ -83,6 +83,14 @@ est un numéro normal ; non apparié, il est conservé (`a_verifier`,
 ## 5. Ce que Groma fait, et ce qu'il ne fait pas
 
 Groma n'envoie ni le contenu des couches `houppiers`, `parcelles`, `ugf`,
-ni les rasters. Les notes et les photos d'arbre saisies dans Groma relèvent
-de la mission 022. Rien n'est supprimé côté serveur : le dernier envoi
+ni les rasters. Les notes et les photos d'arbre saisies dans Groma
+voyagent dans l'archive (§ 2). Rien n'est supprimé côté serveur : le dernier envoi
 complet remplace le précédent.
+
+## 6. Sécurité de l'extraction
+
+Le serveur refuse (422) une archive dont une entrée a un nom absolu, une
+barre oblique inverse, un lecteur (`C:`) ou un composant `..`. `nemeton`
+doit néanmoins **assainir les noms à l'extraction** (ne jamais écrire hors du
+dossier de destination, ne garder que `terrain.gpkg` et `photos/<nom>`), l'archive
+étant une entrée externe.

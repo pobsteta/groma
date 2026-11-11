@@ -54,20 +54,44 @@ from typing import Literal
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .config import Config
 from .file_attente import FileAttente
 from .projets_qfield import ErreurProjet, Fichier, ProjetsQfield
 from .worker import archiver, prefixe_resultats
 
-PLOT_ID = re.compile(r"^[A-Za-z0-9_.-]{1,64}$")
+class _Identifiant:
+    """Identifier pattern; ``.``, ``..`` and any all-dots name are refused (they are path components)."""
+
+    _motif = re.compile(r"^[A-Za-z0-9_.-]{1,64}$")
+    pattern = r"^[A-Za-z0-9_.-]{1,64}$"
+
+    def match(self, valeur: str):
+        return self._motif.match(valeur) if valeur.strip(".") else None
+
+
+PLOT_ID = _Identifiant()
+
+
+def _sous(base: Path, chemin: Path) -> Path:
+    """[chemin] itself, once checked to stay under [base] (defence in depth after the pattern)."""
+    if not chemin.resolve().is_relative_to(base.resolve()):
+        raise HTTPException(422, "Chemin hors du dossier de données.")
+    return chemin
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
 class DemandeTeleversement(BaseModel):
     projet_id: str = Field(default="", pattern=r"^(|[A-Za-z0-9_.-]{1,64})$")
     plot_id: str = Field(pattern=PLOT_ID.pattern)
+
+    @field_validator("projet_id", "plot_id")
+    @classmethod
+    def _pas_de_points(cls, v: str) -> str:
+        if v and not v.strip("."):
+            raise ValueError("Identifiant invalide.")
+        return v
     taille: int = Field(gt=0)
     sha256: str = Field(pattern=SHA256.pattern)
     # "paquet" = video package (GPU task); "terrain" = field entries of one plot (no task).
@@ -138,7 +162,7 @@ def creer_app(config: Config | None = None) -> FastAPI:
 
     def chemin_terrain(projet_id: str, plot_id: str) -> Path:
         # "~defaut" cannot be produced by PLOT_ID, so it never collides with a real project.
-        return dossier_terrain / (projet_id or "~defaut") / f"{plot_id}.terrain.zip"
+        return _sous(dossier_terrain, dossier_terrain / (projet_id or "~defaut") / f"{plot_id}.terrain.zip")
 
     def date_terrain(chemin: Path) -> str:
         return datetime.fromtimestamp(chemin.stat().st_mtime, timezone.utc).isoformat(timespec="seconds")
@@ -146,8 +170,12 @@ def creer_app(config: Config | None = None) -> FastAPI:
     def terminer_terrain(part: Path, m: dict, tid: str) -> dict:
         try:
             with zipfile.ZipFile(part) as z:
-                if "terrain.gpkg" not in z.namelist():
+                noms = z.namelist()
+                if "terrain.gpkg" not in noms:
                     raise ValueError("terrain.gpkg absent")
+                for n in noms:
+                    if n.startswith("/") or "\\" in n or ".." in n.split("/") or re.match(r"^[A-Za-z]:", n):
+                        raise ValueError(f"nom d'entrée refusé : {n!r}")
         except (zipfile.BadZipFile, ValueError, OSError) as e:
             raise HTTPException(422, f"Archive de terrain illisible : {e}") from e
         projet_id = m.get("projet_id", "")
@@ -199,7 +227,7 @@ def creer_app(config: Config | None = None) -> FastAPI:
         if m.get("type") == "terrain":
             return terminer_terrain(part, m, tid)
         projet_id = m.get("projet_id", "")
-        cible = dossier_paquets / (projet_id or "_") / f"{m['plot_id']}_{tid}.groma.zip"
+        cible = _sous(dossier_paquets, dossier_paquets / (projet_id or "_") / f"{m['plot_id']}_{tid}.groma.zip")
         cible.parent.mkdir(exist_ok=True)
         part.replace(cible)
         (dossier_tel / f"{tid}.json").unlink()
@@ -329,7 +357,8 @@ def creer_app(config: Config | None = None) -> FastAPI:
         return t
 
     def dossier_resultats(t: dict) -> Path:
-        return cfg.dossier_donnees / "resultats" / prefixe_resultats(t)
+        base = cfg.dossier_donnees / "resultats"
+        return _sous(base, base / prefixe_resultats(t))
 
     @app.post("/worker/prendre", dependencies=[Depends(auth_worker)])
     def prendre():
