@@ -52,6 +52,11 @@ _Modèle de carte :_
   - Mission : notes et photos d'arbre dans la fiche de Groma, parties avec l'envoi de terrain
   - Moyens : `FicheArbre.kt`, `modifierArbre`, convention photo de QField ; essai de Pascal
 
+- [023](missions/023-arbre-oublie.md) · depuis le cycle 7
+  - Homme : dev (sonnet), appuyer
+  - Mission : ajouter dans Groma un arbre oublié par la vidéo (azimut, distance, ruban obligatoire), `methode = terrain`
+  - Moyens : tests de 020 (point 5), `PlacementCible`, `FicheArbre` ; essai de Pascal
+
 ## Planifié
 
 

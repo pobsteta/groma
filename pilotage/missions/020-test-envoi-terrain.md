@@ -28,7 +28,7 @@ _Rempli par Pascal seul, avant de lire le travail de l'agent._
 
 - **Agent :** `testeur`
 - **Modèle :** sonnet
-- **Ce qui ne lui est pas demandé :** le code (021, 022) ; modifier `nemeton` ou `nemetonshiny`.
+- **Ce qui ne lui est pas demandé :** le code (021, 022, 023) ; modifier `nemeton` ou `nemetonshiny`.
 
 ## Décisions de Pascal (2026-11-11)
 
@@ -58,7 +58,16 @@ _Rempli par Pascal seul, avant de lire le travail de l'agent._
   4. **idempotence côté téléphone** (Kotlin) : une empreinte (SHA-256 du contenu extrait, hors dates de
      fichier) ne change pas sans modification ; elle change après `modifierArbre`, `ecrireCible`,
      `ajouterCentreMesure`.
-- **Ne doit pas :** lire le code de 021-022 ; toucher à `main` ; modifier le schéma ; modifier les
+  5. **arbre oublié ajouté dans Groma** (mission 023, décision de Pascal du 2026-11-11) : API fixée en
+     tête du test (ex. `GeoPackage.ajouterArbre`) : position depuis le centre mesuré par azimut et
+     distance (même calcul que `PlacementCible.position`), diamètre au ruban **obligatoire**
+     (`dbh_source = mesure`), essence, statut, qualité facultatifs ; `uuid` neuf ; `methode` d'une
+     nouvelle valeur de domaine (`terrain`, à ajouter par 023) ; `etat_detection = provisoire` ;
+     numéro provisoire distinct de ceux de la vidéo (ex. `A1`, `A2`) ; les déclencheurs ne le touchent
+     pas ; `rapprocher` (Python) : apparié à un arbre définitif, il garde son ruban et ses saisies ;
+     non apparié, il est conservé (`a_verifier`), jamais supprimé (règle 5) ; il figure dans
+     l'archive de terrain.
+- **Ne doit pas :** lire le code de 021-023 ; toucher à `main` ; modifier le schéma ; modifier les
   tests existants du téléversement vidéo.
 - **Sources autorisées :** `server/`, `core/`, `android/groma-core/`, `android/app/.../EnvoiWorker.kt`
   (lecture), `docs/serveur.md`, `docs/terrain.md`, `qfield/` (convention des photos).
