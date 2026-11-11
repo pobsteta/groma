@@ -39,3 +39,5 @@
 | [012](missions/012-test-terrain-carte.md) tests d'équivalence `terrain-carte` | `testeur` | sonnet | appuyer | oui · oui · oui | 6 (proposé) |
 | [013](missions/013-terrain-carte.md) la carte utilise `terrain-carte` | `dev` | sonnet | appuyer | oui · oui · oui (après 012) | 6 (proposé) |
 | [014](missions/014-couleurs-etat-theme.md) plan des couleurs d'état au thème | `afficheur` | sonnet | **tenir** | oui · **non** · oui | 6 (proposé) |
+| [015](missions/015-test-vue-cibles.md) tests de la vue « Cibles » | `testeur` | sonnet | appuyer | oui · oui · oui | 7 (validé le 2026-11-11) |
+| [016](missions/016-vue-cibles.md) vue « Cibles » dans Groma | `dev` | sonnet | appuyer | oui · oui · oui (après 015) | 7 (validé le 2026-11-11) |

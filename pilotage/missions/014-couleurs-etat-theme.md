@@ -76,3 +76,11 @@ aucune (plan seul, pas de PR de code).
 ## Comment saura-t-on que ça marche ?
 
 Pascal choisit une option en lisant le plan, et la mission de code peut s'écrire sans autre question.
+
+## Aller-retour 1/3 (relecteur, 2026-10-30)
+
+À reprendre dans `014-plan.md` (le reste est juste et n'est pas à refaire) :
+
+1. **Fond réel des dialogues.** Les puces SNR (`Gnss.kt:72`, `147`) et « Fini » (`EcranCarte.kt:633`, `665`) sont dans un `AlertDialog`, dont le fond Material 3 (BOM 2026.09) est `surfaceContainerHigh` : ECE6F0 en clair, 2B2930 en sombre, et non `surface`. Refaire les tableaux SNR et la ligne 18 sur ce fond (actuel : SNR < 25 = 2,88 et ≥ 45 = 2,80 en sombre, échecs ; « Fini » 4,19 en clair, échec). Dire dans les limites que « Arrivé » (`EcranCarte.kt:533`) est sur une `Surface(tonalElevation = 3.dp)`, légèrement teintée.
+2. **Recommandation en partition.** Une recommandation ligne par ligne, sans recouvrement, couvrant les 18 lignes (les lignes 4 à 8 sont toutes le badge ; la ligne 8 n'est classée nulle part), pour que la mission de code s'écrive sans autre question.
+3. **Corrections mineures.** Plan l. 50 : « 2,8 à 3,6:1 en sombre » est faux pour 9E9D24 (6,47 sur 141218). Plan l. 63 : l'option A ne répare qu'une puce sur trois (l'absente, via `outline`), pas deux.
