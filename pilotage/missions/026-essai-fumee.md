@@ -11,7 +11,11 @@ tournent tous sur la JVM (sqlite-jdbc) alors que le SQLite d'Android diffère (v
 `ST_*`), et que Pascal veut que l'application soit essayée comme Surculus sait le faire (demande du
 2026-11-11).
 
-**Redite par l'agent :** _à compléter par l'agent avant d'agir — s'il n'y arrive pas, il s'arrête._
+**Redite par l'agent :** Ajouter un type de build `fumee` (copie de la release, identifiant `fr.nemeton.groma.fumee`, donc à côté de
+l'application de Pascal et jamais à sa place) et des tests instrumentés qui jouent le code d'écriture de `groma-core`
+sur le SQLite d'Android (et lancent `MainActivity`), sur émulateur puis téléphone, avec une vérification qui échoue si
+aucun test ne tourne et une étape d'émulateur avant la publication de l'APK, pour qu'une release soit essayée sur un
+vrai SQLite d'Android et que Pascal puisse rejouer l'essai sans risque pour ses données de terrain.
 
 ## Les trois questions (règle de staffing)
 
