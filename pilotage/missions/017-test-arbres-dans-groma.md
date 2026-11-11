@@ -8,7 +8,7 @@ priorité sur les mesures automatiques (déclencheurs, rapprochement définitif)
 QField par le serveur local, parce que Pascal veut tout saisir dans Groma, sur le plan de la placette
 (décision du 2026-11-11), sans jamais perdre un attribut saisi sur le terrain (règle 5).
 
-**Redite par l'agent :** _à compléter par l'agent avant d'agir — s'il n'y arrive pas, il s'arrête._
+**Redite par l'agent :** écrire, avant tout code, les tests (Python, Kotlin `groma-core`) qui fixent la saisie dans Groma de l'essence, du diamètre au ruban (`dbh_source`, jamais écrasé), du statut et de la qualité, leur conservation par les déclencheurs et le rapprochement, leur envoi à QField par le serveur local et la règle de recopie sans écrasement, pour que 018-019 les fassent passer sans les modifier.
 
 ## Les trois questions (règle de staffing)
 
