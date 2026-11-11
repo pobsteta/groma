@@ -11,15 +11,16 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.core.content.ContextCompat
 import groma.app.PhotoArbre
+import groma.core.EtatPhotos
 import groma.core.PhotosArbre
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -96,34 +97,39 @@ fun FicheArbre(
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
-    ModalBottomSheet(onDismissRequest = onFermer, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    // Set by the form below: what a real dismissal (swipe, back) must clean up. Not run on a re-creation.
+    val abandon = remember { arrayOf<(() -> Unit)?>(null) }
+    ModalBottomSheet(onDismissRequest = { abandon[0]?.invoke(); onFermer() }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         // Each tree starts from its own state.
         androidx.compose.runtime.key(arbre.uuid) {
             val rubanInitial = if (arbre.dbhMesure) arbre.dbhCm?.let(::nombreAffiche).orEmpty() else ""
-            var recherche by remember { mutableStateOf(arbre.essence?.let(Essences::affichage).orEmpty()) }
-            var essence by remember { mutableStateOf(arbre.essence.orEmpty()) }
-            var ruban by remember { mutableStateOf(rubanInitial) }
-            var statut by remember { mutableStateOf(arbre.statut) }
-            var qualite by remember { mutableStateOf(arbre.qualite.orEmpty()) }
+            var recherche by rememberSaveable { mutableStateOf(arbre.essence?.let(Essences::affichage).orEmpty()) }
+            var essence by rememberSaveable { mutableStateOf(arbre.essence.orEmpty()) }
+            var ruban by rememberSaveable { mutableStateOf(rubanInitial) }
+            var statut by rememberSaveable { mutableStateOf(arbre.statut) }
+            var qualite by rememberSaveable { mutableStateOf(arbre.qualite.orEmpty()) }
             var erreurEssence by remember { mutableStateOf<String?>(null) }
             var erreurGenerale by remember { mutableStateOf<String?>(null) }
             var enCours by remember { mutableStateOf(false) }
             var confirmerSuppression by remember { mutableStateOf(false) }
             val rubanObligatoire = creation || arbre.ajoute
             val avecTerrain = !creation && dossierProjet != null
-            var note by remember { mutableStateOf(arbre.notes.orEmpty()) }
-            val photos = remember { mutableStateListOf<String>().also { it.addAll(arbre.photos) } }
-            val nouvelles = remember { mutableListOf<String>() } // taken in this form, not yet saved
+            var note by rememberSaveable { mutableStateOf(arbre.notes.orEmpty()) }
+            // Survives a re-creation (rotation, process death while the camera is open).
+            var photosEtat by rememberSaveable(stateSaver = listSaver(save = { it.enTextes() }, restore = { EtatPhotos.depuis(it) })) {
+                mutableStateOf(EtatPhotos(arbre.photos))
+            }
+            val photos = photosEtat.courantes
             var temporaire by rememberSaveable { mutableStateOf<String?>(null) }
             var photoARetirer by remember { mutableStateOf<String?>(null) }
-            val etat = remember { booleanArrayOf(false) } // [0] = saved
             val erreurNote = PhotosArbre.controlerNote(note)
 
             fun ajouterPrise(prise: File) {
                 scope.launch {
-                    val rel = withContext(Dispatchers.IO) { PhotoArbre.enregistrer(prise, dossierProjet!!, plotId, arbre.numero) }
+                    // Not cancellable: the file must reach the list even if the screen is being re-created.
+                    val rel = withContext(Dispatchers.IO + NonCancellable) { PhotoArbre.enregistrer(prise, dossierProjet!!, plotId, arbre.numero) }
                     if (rel == null) erreurGenerale = ctx.getString(R.string.fiche_photo_echec)
-                    else { photos.add(rel); nouvelles.add(rel) }
+                    else photosEtat = photosEtat.ajoutee(rel)
                 }
             }
             val prise = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
@@ -138,12 +144,10 @@ fun FicheArbre(
             val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
                 if (ok) lancerPrise() else erreurGenerale = ctx.getString(R.string.fiche_photo_permission)
             }
-            // Closed without saving: the photos taken in this form (and an unfinished camera file) are dropped.
-            DisposableEffect(Unit) {
-                onDispose {
-                    temporaire?.let { File(it).delete() }
-                    if (!etat[0] && nouvelles.isNotEmpty()) onNettoyerPhotos(nouvelles.toList())
-                }
+            // Real dismissal without saving (swipe, back): the photos taken in this form and an unfinished camera file are dropped.
+            abandon[0] = {
+                temporaire?.let { File(it).delete() }
+                if (photosEtat.abandonnees.isNotEmpty()) onNettoyerPhotos(photosEtat.abandonnees)
             }
 
             val propositions = if (recherche.isNotBlank() && Essences.resoudre(recherche, arbre.essence, essence) == null) Essences.rechercher(recherche, 6) else emptyList()
@@ -163,14 +167,15 @@ fun FicheArbre(
                 if (creation || qualite != arbre.qualite.orEmpty()) saisie["qualite"] = qualite
                 if (avecTerrain) {
                     if (note.trim() != arbre.notes.orEmpty()) saisie["notes"] = note.trim()
-                    if (photos.toList() != arbre.photos) saisie["photos"] = PhotosArbre.joindre(photos.toList()).orEmpty()
+                    if (photosEtat.modifiee) saisie["photos"] = PhotosArbre.joindre(photos).orEmpty()
                 }
                 enCours = true
                 scope.launch {
                     try {
                         onEnregistrer(saisie)
-                        etat[0] = true
-                        val retirees = arbre.photos.filter { it !in photos }
+                        val retirees = photosEtat.retireesALEnregistrement
+                        photosEtat = photosEtat.enregistree()
+                        abandon[0] = null
                         if (retirees.isNotEmpty()) onNettoyerPhotos(retirees)
                         apres()
                     } catch (e: IllegalArgumentException) {
@@ -220,9 +225,10 @@ fun FicheArbre(
                     confirmButton = {
                         TextButton(onClick = {
                             photoARetirer = null
-                            photos.remove(chemin)
-                            // Never saved: nobody else cites it, the file goes now.
-                            if (nouvelles.remove(chemin)) onNettoyerPhotos(listOf(chemin))
+                            // A photo taken here and never saved: nobody else cites it, the file goes now.
+                            val (suite, aSupprimer) = photosEtat.retiree(chemin)
+                            photosEtat = suite
+                            if (aSupprimer.isNotEmpty()) onNettoyerPhotos(aSupprimer)
                         }) { Text(stringResource(R.string.fiche_photo_retirer_confirmer), color = MaterialTheme.colorScheme.error) }
                     },
                     dismissButton = { TextButton(onClick = { photoARetirer = null }) { Text(stringResource(R.string.fiche_supprimer_annuler)) } },

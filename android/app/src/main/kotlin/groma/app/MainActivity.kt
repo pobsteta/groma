@@ -56,6 +56,8 @@ import java.io.File
 import java.text.Collator
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -211,6 +213,16 @@ class MainActivity : AppCompatActivity() {
                             // Plots still "to send" (list opened, or server set up since): planned again.
                             LaunchedEffect(ouvert, rafraichir, reglages.serveur) {
                                 withContext(Dispatchers.IO) { try { EnvoiTerrainWorker.planifierEnAttente(this@MainActivity, ouvert) } catch (e: Exception) {} }
+                            }
+                            // Mission 022: the "Terrain envoyé" state is re-read when an upload finishes (unique work "terrain/<cle>", read only).
+                            val ids = placettes.map { it.plotId }
+                            LaunchedEffect(ouvert, ids) {
+                                val wm = androidx.work.WorkManager.getInstance(this@MainActivity)
+                                val flux = ids.map { wm.getWorkInfosForUniqueWorkFlow("terrain/" + groma.core.CleProjet.chemin(ouvert.projetId, it)) }
+                                if (flux.isNotEmpty()) {
+                                    kotlinx.coroutines.flow.combine(flux) { listes -> listes.sumOf { l -> l.count { w -> w.state == androidx.work.WorkInfo.State.SUCCEEDED } } }
+                                        .distinctUntilChanged().drop(1).collect { rafraichir++ }
+                                }
                             }
                             EcranPlacettes(
                                 titre = titre,

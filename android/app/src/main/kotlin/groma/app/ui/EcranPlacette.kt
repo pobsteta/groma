@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -90,7 +91,7 @@ fun EcranPlacette(
     val scope = rememberCoroutineScope()
     var cibles by remember { mutableStateOf(initiales) }
     var arbres by remember { mutableStateOf(arbresInitiaux) }
-    var fiche by remember { mutableStateOf<String?>(null) }
+    var fiche by rememberSaveable { mutableStateOf<String?>(null) }
     var ajout by remember { mutableStateOf(false) }
     var creation by remember { mutableStateOf<Pair<Double, Double>?>(null) }
     var choisie by remember { mutableStateOf("C1") }
