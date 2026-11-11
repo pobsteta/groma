@@ -45,20 +45,39 @@ class ExportTerrain(private val ouvrir: (File) -> BaseSqlite) {
     }
 
     fun extraire(copie: File, plotId: String, sortie: File) {
-        avec(copie) { verifierPlacette(it, plotId) }
-        copier(copie, sortie)
+        // Consistent snapshot: BEGIN IMMEDIATE takes the write reservation, so no other writer can
+        // commit while the bytes (and a possible -wal) are copied. Nothing is written to the source.
+        avec(copie) { src ->
+            verifierPlacette(src, plotId)
+            src.transactionImmediate { copier(copie, sortie) }
+        }
         avec(sortie) { db ->
             db.requete("PRAGMA journal_mode = DELETE") // folds a possible -wal copy into the file
             db.transactionImmediate {
                 for (t in TABLES_PLACETTE) db.executer("DELETE FROM $t WHERE plot_id IS NOT ?", listOf(plotId))
                 for (t in TABLES_VIDEES) db.executer("DELETE FROM $t")
             }
+            recalculerEtendues(db)
             db.executer("VACUUM") // no trace of the other plots in free pages
             val ok = db.requete("PRAGMA integrity_check").singleOrNull()?.values?.firstOrNull()
             check(ok == "ok") { "Copie de Groma illisible pendant l'extraction : $ok" }
         }
         File(sortie.path + "-wal").delete()
         File(sortie.path + "-shm").delete()
+    }
+
+    /** `gpkg_contents` extents from the rows kept; NULL when a layer has no geometry left. */
+    private fun recalculerEtendues(db: BaseSqlite) {
+        for (c in db.requete("SELECT table_name FROM gpkg_contents WHERE data_type = 'features'")) {
+            val t = c["table_name"].toString()
+            val geom = db.requete("SELECT column_name FROM gpkg_geometry_columns WHERE table_name = ?", listOf(t)).firstOrNull()?.get("column_name") ?: continue
+            val pts = db.requete("SELECT \"$geom\" AS g FROM \"$t\" WHERE \"$geom\" IS NOT NULL").mapNotNull {
+                try { GeoPackage.decoderPoint(it["g"] as ByteArray) } catch (e: Exception) { null }
+            }
+            val args: List<Any?> = if (pts.isEmpty()) listOf(null, null, null, null, t)
+            else listOf(pts.minOf { it.first }, pts.minOf { it.second }, pts.maxOf { it.first }, pts.maxOf { it.second }, t)
+            db.executer("UPDATE gpkg_contents SET min_x = ?, min_y = ?, max_x = ?, max_y = ? WHERE table_name = ?", args)
+        }
     }
 
     private fun copier(copie: File, sortie: File) {

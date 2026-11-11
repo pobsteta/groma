@@ -8,6 +8,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
@@ -137,18 +138,41 @@ class EnvoiTerrainWorker(ctx: Context, params: WorkerParameters) : CoroutineWork
          * is configured, (re)plans the upload [DELAI_REGROUPEMENT_S] seconds ahead, replacing a pending one.
          */
         fun apresEnregistrement(ctx: Context, projet: Projet, plotId: String) {
+            val cle = CleProjet.chemin(projet.projetId, plotId)
+            Preferences.prefs(ctx).edit().putLong(PREF_MAJ + cle, System.currentTimeMillis()).apply()
+            planifier(ctx, projet, plotId, DELAI_REGROUPEMENT_S)
+        }
+
+        /**
+         * Plans the upload of every plot of [projet] still "to send" (list opened, server set up
+         * afterwards): same unique work and REPLACE, no delay, but a plot whose upload is already
+         * waiting or running is left alone. The worker sends nothing when the fingerprint is unchanged.
+         */
+        fun planifierEnAttente(ctx: Context, projet: Projet) {
+            if (Preferences.prefs(ctx).getString("serveur", "").isNullOrBlank()) return
+            val projetId = projet.projetId
+            val wm = WorkManager.getInstance(ctx)
+            for (l in projet.placettes()) {
+                val plot = l["plot_id"] as? String ?: continue
+                if (etat(ctx, projetId, plot) != EtatEnvoiTerrain.AEnvoyer) continue
+                val deja = wm.getWorkInfosForUniqueWork("terrain/" + CleProjet.chemin(projetId, plot)).get()
+                    .any { it.state == WorkInfo.State.ENQUEUED || it.state == WorkInfo.State.RUNNING }
+                if (!deja) planifier(ctx, projet, plot, 0L)
+            }
+        }
+
+        private fun planifier(ctx: Context, projet: Projet, plotId: String, delaiS: Long) {
             val projetId = projet.projetId
             val cle = CleProjet.chemin(projetId, plotId)
             val p = Preferences.prefs(ctx)
-            p.edit().putLong(PREF_MAJ + cle, System.currentTimeMillis()).apply()
             val serveur = p.getString("serveur", "").orEmpty()
-            if (serveur.isBlank()) return // kept "to send" until a server is configured and a save plans it
+            if (serveur.isBlank()) return // kept "to send" until a server is configured
             val req = OneTimeWorkRequestBuilder<EnvoiTerrainWorker>()
                 .setInputData(workDataOf(
                     CLE_DOSSIER to projet.dossier.path, CLE_PROJET to projetId, CLE_PLOT to plotId,
                     CLE_SERVEUR to serveur, CLE_JETON to p.getString("jeton", null)?.ifBlank { null },
                 ))
-                .setInitialDelay(DELAI_REGROUPEMENT_S, TimeUnit.SECONDS)
+                .setInitialDelay(delaiS, TimeUnit.SECONDS)
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(if (p.getBoolean("4g", false)) NetworkType.CONNECTED else NetworkType.UNMETERED).build())
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
                 .build()

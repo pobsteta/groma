@@ -198,6 +198,10 @@ class MainActivity : AppCompatActivity() {
                             // The list may still be loading (activity recreated after a capture): follow it.
                             val titre = projets.firstOrNull { it.cle == cle }?.titre ?: ouvert.dossier.name
                             val placettes = remember(ouvert, rafraichir) { lignes(ouvert) }
+                            // Plots still "to send" (list opened, or server set up since): planned again.
+                            LaunchedEffect(ouvert, rafraichir, reglages.serveur) {
+                                withContext(Dispatchers.IO) { try { EnvoiTerrainWorker.planifierEnAttente(this@MainActivity, ouvert) } catch (e: Exception) {} }
+                            }
                             EcranPlacettes(
                                 titre = titre,
                                 placettes = placettes,
