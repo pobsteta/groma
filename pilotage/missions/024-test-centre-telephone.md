@@ -8,7 +8,7 @@ et ses garde-fous, parce que Pascal veut pouvoir prendre le centre sans le réce
 2026-11-11), alors que C0 posée sur ce centre place toute la placette : quelques mètres d'erreur
 décalent tous les arbres d'autant.
 
-**Redite par l'agent :** _à compléter par l'agent avant d'agir — s'il n'y arrive pas, il s'arrête._
+**Redite par l'agent :** écrire, avant le code de 025, les tests (Kotlin + schéma Python) qui disent quand le GNSS du téléphone est accepté pour le centre (confirmation, 20 fixes, précision annoncée <= 10 m, jamais mélangé au récepteur), comment il est noté (`telephone`) et qu'il ne remplace jamais un centre RTK sans confirmation, parce que C0 pose toute la placette.
 
 ## Les trois questions (règle de staffing)
 
