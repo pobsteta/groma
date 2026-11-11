@@ -374,7 +374,29 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    que Groma a saisi à QField, appuyer sur le bouton du plugin (voir
    « Échange entre Groma et QField ») : **rien de ce qui a été saisi dans
    QField n'est écrasé**.
-6. Le paquet de la placette part au serveur dès qu'un réseau Wi-Fi est
+6. **Arbre oublié par la vidéo** (mission 023, schéma 1.5.0) : dans
+   **Placette**, « Ajouter un arbre ». Le centre de la placette doit avoir été
+   **mesuré** (sinon le bouton « Saisir le diamètre au ruban » est grisé).
+   Saisir l'**azimut** depuis le centre (dans l'unité de la placette, degrés
+   ou grades ; boussole de visée tapée, ou boussole du téléphone comme pour
+   les cibles) et la **distance horizontale** en mètres : l'emplacement
+   s'affiche en **cercle pointillé** sur le plan. « Saisir le diamètre au
+   ruban » ouvre la fiche : le **diamètre au ruban est obligatoire** (0 à
+   1000 cm) ; essence, statut et qualité sont facultatifs. L'arbre reçoit le
+   numéro provisoire **A1, A2…** (par placette), `methode = terrain`,
+   `dbh_source = mesure`, `etat_detection = provisoire` ; il est écrit
+   directement dans `arbres` (rien dans `detections`) et part avec l'archive
+   de terrain. Sa pastille a un **contour pointillé violet**. Dans sa fiche,
+   « Supprimer cet arbre » (avec confirmation) n'existe que pour un arbre
+   ajouté à la main ; un arbre de la vidéo ne se supprime jamais (le diamètre
+   d'un arbre ajouté ne peut pas être vidé non plus). Au calcul définitif,
+   un arbre ajouté apparié à une détection (tolérance 0,5 m) garde son
+   ruban et ses saisies ; non apparié, il est **conservé**, `a_verifier`,
+   numéro `V<n>`, et listé dans les arbres non retrouvés. *Projets déjà
+   générés :* la valeur `terrain` est une simple valeur de domaine, il n'y a
+   rien à migrer (la colonne `dbh_source` est ajoutée comme pour la
+   mission 018 si elle manque).
+7. Le paquet de la placette part au serveur dès qu'un réseau Wi-Fi est
    disponible (4G sur option), avec reprise après coupure.
 
 ## Envoi des saisies de terrain au serveur (sans QField)
@@ -386,7 +408,7 @@ intégrer sans passer par la copie de QField (brief
 `briefs/vers-nemeton/2026-11-11-terrain-sans-qfield.md`). Le plugin et
 « Ouvrir dans QField » restent disponibles.
 
-* **Quand** : après chaque enregistrement (fiche d'arbre, cible, centre),
+* **Quand** : après chaque enregistrement (fiche d'arbre, arbre ajouté ou supprimé, cible, centre),
   Groma attend **30 s** après la dernière modification (valeur provisoire, à
   juger sur le terrain : plusieurs saisies de suite ne font qu'un envoi), puis
   envoie. Même serveur, même jeton et même réglage Wi-Fi / 4G que l'envoi de

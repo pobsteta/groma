@@ -163,6 +163,14 @@ class MainActivity : AppCompatActivity() {
                                         withContext(Dispatchers.IO) { ouvert.modifierArbre(uuid, saisie); EnvoiTerrainWorker.apresEnregistrement(this@MainActivity, ouvert, plot); ouvert.arbres(plot) }
                                             .also { ServicePartageQfield.demarrer(this@MainActivity) }
                                     },
+                                    onAjouterArbre = { az, d, saisie ->
+                                        withContext(Dispatchers.IO) { ouvert.ajouterArbre(plot, az, d, saisie); EnvoiTerrainWorker.apresEnregistrement(this@MainActivity, ouvert, plot); ouvert.arbres(plot) }
+                                            .also { ServicePartageQfield.demarrer(this@MainActivity) }
+                                    },
+                                    onSupprimerArbre = { uuid ->
+                                        withContext(Dispatchers.IO) { ouvert.supprimerArbreAjoute(uuid); EnvoiTerrainWorker.apresEnregistrement(this@MainActivity, ouvert, plot); ouvert.arbres(plot) }
+                                            .also { ServicePartageQfield.demarrer(this@MainActivity) }
+                                    },
                                     onPlacer = { id, az, d, dbh, source ->
                                         withContext(Dispatchers.IO) { ouvert.placerCible(plot, id, az, d, dbh, source).also { EnvoiTerrainWorker.apresEnregistrement(this@MainActivity, ouvert, plot) } }
                                             .also { rafraichir++; ServicePartageQfield.demarrer(this@MainActivity) }

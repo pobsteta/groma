@@ -62,6 +62,20 @@ placette : l'archive « terrain ». Elle est renvoyée à chaque modification
 * Les attributs du terrain (essence, statut, qualité, `dbh_cm` et
   `dbh_source`, notes, photos) arrivent tels que saisis.
 
+## 4 bis. Arbres ajoutés à la main (mission 023, schéma 1.5.0)
+
+Un arbre oublié par la vidéo est ajouté dans Groma : ligne de `arbres`
+avec `methode = terrain` (**nouvelle valeur du domaine `methode`**, à
+ajouter à celui de nemeton : `embarque`, `classique`, `ia`, `terrain`),
+`tree_id = num_provisoire = A<n>` (par placette), `dbh_source = mesure`,
+`etat_detection = provisoire`, `h_source = aucune`, sans ligne dans
+`detections`. Il arrive donc dans `terrain.gpkg`. Au rapprochement
+définitif (déjà dans `groma.rapprochement`, aucune règle nouvelle côté
+R) : apparié (0,5 m), il garde son ruban et ses saisies, son numéro final
+est un numéro normal ; non apparié, il est conservé (`a_verifier`,
+`V<n>`) et listé dans `non_retrouves`, jamais supprimé. Les lecteurs de
+`methode` doivent accepter `terrain`.
+
 ## 5. Ce que Groma fait, et ce qu'il ne fait pas
 
 Groma n'envoie ni le contenu des couches `houppiers`, `parcelles`, `ugf`,

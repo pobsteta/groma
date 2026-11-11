@@ -182,10 +182,10 @@ object GeoPackage {
         for ((champ, valeur) in saisie) SaisieArbre.controler(champ, valeur)?.let { throw IllegalArgumentException(it) }
         db.transactionImmediate {
             require(db.requete("SELECT 1 AS un FROM arbres WHERE uuid = ?", listOf(uuid)).isNotEmpty()) { "Arbre inconnu : $uuid." }
-            val colonnes = db.requete("PRAGMA table_info(arbres)").map { it["name"] }
-            if ("dbh_source" !in colonnes) {
-                db.executer("ALTER TABLE arbres ADD COLUMN dbh_source TEXT DEFAULT 'estime'")
-                recreerDeclencheursDetections(db)
+            assurerDbhSource(db)
+            val terrain = db.requete("SELECT methode FROM arbres WHERE uuid = ?", listOf(uuid)).single()["methode"] == "terrain"
+            if (terrain && saisie.containsKey("dbh_cm") && saisie["dbh_cm"]?.trim().isNullOrEmpty()) {
+                throw IllegalArgumentException("Le diamètre au ruban d'un arbre ajouté à la main est obligatoire : il ne peut pas être vidé.")
             }
             val maj = LinkedHashMap<String, Any?>()
             for ((champ, brut) in saisie) {
@@ -205,6 +205,77 @@ object GeoPackage {
             if (maj.isNotEmpty()) {
                 db.executer("UPDATE arbres SET ${maj.keys.joinToString(", ") { "$it = ?" }} WHERE uuid = ?", maj.values.toList() + uuid)
             }
+        }
+    }
+
+    /** Adds the `dbh_source` column and recreates the two `detections` triggers in a project prepared before 1.4.0. */
+    private fun assurerDbhSource(db: BaseSqlite) {
+        val colonnes = db.requete("PRAGMA table_info(arbres)").map { it["name"] }
+        if ("dbh_source" !in colonnes) {
+            db.executer("ALTER TABLE arbres ADD COLUMN dbh_source TEXT DEFAULT 'estime'")
+            recreerDeclencheursDetections(db)
+        }
+    }
+
+    private val NUMERO_AJOUTE = Regex("^A([0-9]+)$")
+
+    /**
+     * Adds ONE tree forgotten by the video to `arbres` of Groma's own copy (mission 023, schema 1.5.0):
+     * direct INSERT in one immediate transaction, nothing in `detections`; returns its new uuid.
+     * Position from the latest measured centre as [PlacementCible.position]; [azimut] is magnetic, in
+     * the plot unit; the stored azimuth is geographic, in the plot unit. Tape diameter [dbhCm] required.
+     * Throws IllegalArgumentException, nothing written, on any refused input (see AjouterArbreTest).
+     */
+    fun ajouterArbre(
+        db: BaseSqlite, plotId: String, azimut: Double, distanceM: Double, dbhCm: Double,
+        essence: String? = null, statut: String? = null, qualite: String? = null,
+    ): String {
+        require(dbhCm.isFinite() && dbhCm >= 0.0 && dbhCm <= SaisieArbre.DBH_MAX_CM) {
+            "Le diamètre au ruban est obligatoire, entre 0 et ${SaisieArbre.DBH_MAX_CM.toInt()} cm."
+        }
+        for ((champ, v) in listOf("essence_arbre" to essence, "statut" to statut, "qualite" to qualite)) {
+            SaisieArbre.controler(champ, v)?.let { throw IllegalArgumentException(it) }
+        }
+        return db.transactionImmediate {
+            val placette = db.requete(
+                "SELECT unite_azimut, declinaison_deg, convergence_deg FROM placettes WHERE plot_id = ?", listOf(plotId),
+            ).firstOrNull() ?: throw IllegalArgumentException("Placette inconnue : $plotId.")
+            val centre = dernierCentreParPlacette(db, plotId).firstOrNull()
+                ?: throw IllegalArgumentException("La placette $plotId n'a pas de centre mesuré : mesurez le centre avant d'ajouter un arbre.")
+            val unite = placette["unite_azimut"]?.toString() ?: "deg"
+            val declinaison = (placette["declinaison_deg"] as? Number)?.toDouble() ?: 0.0
+            val convergence = (placette["convergence_deg"] as? Number)?.toDouble() ?: 0.0
+            val (x, y) = PlacementCible.position(
+                Pair(centre["x"] as Double, centre["y"] as Double), azimut, unite, declinaison, convergence, distanceM,
+            )
+            val geographique = Azimut.magnetiqueVersGeographique(Azimut.depuisUnite(azimut, unite), declinaison)
+            assurerDbhSource(db)
+            val numeros = db.requete("SELECT tree_id, num_provisoire FROM arbres WHERE plot_id = ?", listOf(plotId))
+                .flatMap { listOf(it["tree_id"], it["num_provisoire"]) }
+                .mapNotNull { (it as? String)?.let(NUMERO_AJOUTE::matchEntire)?.groupValues?.get(1)?.toLongOrNull() }
+            val numero = "A${(numeros.maxOrNull() ?: 0L) + 1}"
+            val uuid = java.util.UUID.randomUUID().toString()
+            db.executer(
+                "INSERT INTO arbres ($GEOMETRIE, plot_id, tree_id, num_provisoire, dbh_cm, dbh_source, statut, qualite, essence_arbre, " +
+                    "uuid, azimut, distance_m, h_source, etat_detection, methode) " +
+                    "VALUES (?, ?, ?, ?, ?, 'mesure', ?, ?, ?, ?, ?, ?, 'aucune', 'provisoire', 'terrain')",
+                listOf(
+                    encoderPoint(x, y), plotId, numero, numero, dbhCm,
+                    statut?.trim().orEmpty().ifEmpty { "vivant" }, qualite?.trim()?.ifEmpty { null }, essence?.trim()?.ifEmpty { null },
+                    uuid, Azimut.versUnite(geographique, unite), distanceM,
+                ),
+            )
+            uuid
+        }
+    }
+
+    /** Deletes a tree added by mistake: only a row with methode = 'terrain'; IllegalArgumentException otherwise. */
+    fun supprimerArbreAjoute(db: BaseSqlite, uuid: String) {
+        db.transactionImmediate {
+            val methode = db.requete("SELECT methode FROM arbres WHERE uuid = ?", listOf(uuid)).firstOrNull()
+                ?: throw IllegalArgumentException("Arbre inconnu : $uuid.")
+            require(methode["methode"] == "terrain") { "Seul un arbre ajouté à la main peut être supprimé (jamais un arbre de la vidéo)." }
+            db.executer("DELETE FROM arbres WHERE uuid = ? AND methode = 'terrain'", listOf(uuid))
         }
     }
 

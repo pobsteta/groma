@@ -16,6 +16,8 @@ data class ArbrePlacette(
     val qualite: String?,
     /** Estimate of the video (`detections.dbh_cm`), kept when a tape diameter replaces it in `arbres`. */
     val dbhEstimeCm: Double? = null,
+    /** True for a tree forgotten by the video and added by hand (`methode = 'terrain'`, mission 023). */
+    val ajoute: Boolean = false,
 ) {
     companion object {
         /** Pastille radius bounds (dp) and the diameters they correspond to (Marculus: 7.5 to 80 cm). */
@@ -61,6 +63,7 @@ data class ArbrePlacette(
                     (r["statut"] as? String)?.takeIf { it.isNotBlank() } ?: "vivant",
                     (r["qualite"] as? String)?.takeIf { it.isNotBlank() },
                     estimes[uuid] ?: (r["dbh_cm"] as? Number)?.toDouble()?.takeIf { r["dbh_source"] != "mesure" },
+                    ajoute = r["methode"] == "terrain",
                 )
             }.sortedWith(compareBy(ORDRE_NUMEROS) { it.numero })
         }

@@ -7,7 +7,11 @@ la vidéo n'a pas détecté (azimut et distance depuis le centre, diamètre au r
 statut, qualité), parce que le diamètre est désormais en lecture seule dans QField et que Pascal veut
 ajouter les arbres oubliés dans Groma (décision du 2026-11-11).
 
-**Redite par l'agent :** _à compléter par l'agent avant d'agir — s'il n'y arrive pas, il s'arrête._
+**Redite par l'agent :** dans la vue « Placette », ajouter un arbre que la vidéo a oublié, placé par son
+azimut et sa distance depuis le centre mesuré, avec son diamètre au ruban obligatoire (essence, statut,
+qualité facultatifs), écrit directement dans `arbres` (`methode = terrain`, numéro `A<n>`), et supprimable
+seulement s'il a été ajouté à la main, pour que Pascal puisse compléter l'inventaire dans Groma puisque le
+diamètre est en lecture seule dans QField.
 
 ## Les trois questions (règle de staffing)
 

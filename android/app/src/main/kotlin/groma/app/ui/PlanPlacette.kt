@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
@@ -45,12 +46,14 @@ import kotlin.math.max
  * trees at their Lambert-93 offsets from [centre]. Pinch or +/- to zoom, drag to move, touch a
  * tree to open its form. A pastille takes the colour of the species group (grey without species),
  * a size growing with the diameter (bounded) and a thick dark outline when the diameter was
- * measured with the tape; the "number – diameter" label is drawn where it does not overlap another.
+ * measured with the tape, a dashed purple outline for a tree added by hand (mission 023), and the
+ * preview of the tree being added ([apercu], offset in metres east/north of the centre, dashed circle); the "number – diameter" label is drawn where it does not overlap another.
  */
 @Composable
 internal fun Plan(
     rayonM: Double, unite: String, decl: Double, conv: Double, cibles: List<CiblePlacee>, choisie: String,
-    arbres: List<ArbrePlacette>, centre: Pair<Double, Double>, arbreChoisi: String?, onArbre: (ArbrePlacette) -> Unit,
+    arbres: List<ArbrePlacette>, centre: Pair<Double, Double>, arbreChoisi: String?,
+    apercu: Pair<Double, Double>? = null, onArbre: (ArbrePlacette) -> Unit,
 ) {
     val couleurCercle = MaterialTheme.colorScheme.outline
     val couleurTexte = MaterialTheme.colorScheme.onSurface
@@ -60,6 +63,8 @@ internal fun Plan(
     val contourEstime = colorResource(R.color.arbre_contour_estime)
     val contourMesure = colorResource(R.color.arbre_contour_mesure)
     val halo = colorResource(R.color.arbre_choisi)
+    val contourAjoute = colorResource(R.color.arbre_contour_ajoute)
+    val couleurApercu = colorResource(R.color.arbre_apercu)
     val dp = LocalDensity.current.density
     var zoom by remember { mutableFloatStateOf(1f) }
     var pan by remember { mutableStateOf(Offset.Zero) }
@@ -72,7 +77,7 @@ internal fun Plan(
     val decalages = arbres.map { it to Offset((it.x - centre.first).toFloat(), (it.y - centre.second).toFloat()) }
     val etendue = max(
         rayonM,
-        max(positions.maxOfOrNull { (c, _) -> c.distanceM } ?: 0.0, decalages.maxOfOrNull { (_, o) -> hypot(o.x, o.y).toDouble() } ?: 0.0),
+        max(max(positions.maxOfOrNull { (c, _) -> c.distanceM } ?: 0.0, apercu?.let { hypot(it.first, it.second) } ?: 0.0), decalages.maxOfOrNull { (_, o) -> hypot(o.x, o.y).toDouble() } ?: 0.0),
     ) * 1.1
 
     fun echelleDe(taille: Size) = (taille.minDimension / 2 / etendue).toFloat()
@@ -125,8 +130,15 @@ internal fun Plan(
                 val pt = versEcran(o, size, zoom, pan)
                 val r = ArbrePlacette.rayonDp(a.dbhCm) * dp
                 drawCircle(couleursGroupes.getValue(Essences.groupe(a.essence)), r, pt)
-                if (a.dbhMesure) drawCircle(contourMesure, r, pt, style = Stroke(3f * dp)) else drawCircle(contourEstime, r, pt, style = Stroke(1.5f * dp))
+                if (a.ajoute) {
+                    drawCircle(contourAjoute, r, pt, style = Stroke(3f * dp, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f * dp, 3f * dp))))
+                } else if (a.dbhMesure) drawCircle(contourMesure, r, pt, style = Stroke(3f * dp)) else drawCircle(contourEstime, r, pt, style = Stroke(1.5f * dp))
                 if (a.uuid == arbreChoisi) drawCircle(halo, r + 5 * dp, pt, style = Stroke(3f * dp))
+            }
+            apercu?.let { (ex, ny) ->
+                val pt = versEcran(Offset(ex.toFloat(), ny.toFloat()), size, zoom, pan)
+                drawLine(couleurApercu.copy(alpha = 0.5f), c0, pt, 2f)
+                drawCircle(couleurApercu, 10 * dp, pt, style = Stroke(3f * dp, pathEffect = PathEffect.dashPathEffect(floatArrayOf(4f * dp, 3f * dp))))
             }
             // Labels, the selected tree first, skipping any that would overlap one already placed.
             val posees = mutableListOf<android.graphics.RectF>()
