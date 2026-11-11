@@ -1,5 +1,9 @@
 package groma.app.ui
 
+import groma.core.EtatEnvoiTerrain
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,7 +42,7 @@ import androidx.compose.ui.unit.dp
 import groma.app.R
 
 /** One plot as shown in the list. */
-data class LignePlacette(val plotId: String, val etat: String, val rayonM: Double?, val seuilCm: Double?)
+data class LignePlacette(val plotId: String, val etat: String, val rayonM: Double?, val seuilCm: Double?, val terrain: EtatEnvoiTerrain = EtatEnvoiTerrain.Rien)
 
 /** Plots of one project, opened from the project list; back returns to it. */
 @Composable
@@ -116,6 +120,17 @@ private fun CartePlacette(p: LignePlacette, onCibles: () -> Unit, onOuvrir: () -
                         stringResource(R.string.placette_rayon, nombre(p.rayonM), nombre(p.seuilCm)),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                when (val t = p.terrain) {
+                    EtatEnvoiTerrain.Rien -> {}
+                    EtatEnvoiTerrain.AEnvoyer -> Text(
+                        stringResource(R.string.terrain_a_envoyer),
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary,
+                    )
+                    is EtatEnvoiTerrain.Envoye -> Text(
+                        stringResource(R.string.terrain_envoye, DateTimeFormatter.ofPattern("HH:mm").format(Instant.ofEpochMilli(t.envoyeLe).atZone(ZoneId.systemDefault()))),
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }

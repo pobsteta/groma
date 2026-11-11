@@ -24,6 +24,8 @@
     <string name="menu_apropos">À propos</string>
     <string name="aucune_placette">Ce projet ne contient aucune placette.</string>
     <string name="placettes_nombre">%1$d placettes · %2$d à faire</string>
+    <string name="terrain_a_envoyer">Terrain à envoyer</string>
+    <string name="terrain_envoye">Terrain envoyé à %1$s</string>
     <string name="placette_rayon">Rayon %1$s m · seuil %2$s cm</string>
     <string name="etat_a_faire">À faire</string>
     <string name="etat_provisoire">Provisoire</string>

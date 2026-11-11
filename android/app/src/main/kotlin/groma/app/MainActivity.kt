@@ -160,11 +160,11 @@ class MainActivity : AppCompatActivity() {
                                     centre = e.centre,
                                     arbresInitiaux = e.arbres,
                                     onEnregistrerArbre = { uuid, saisie ->
-                                        withContext(Dispatchers.IO) { ouvert.modifierArbre(uuid, saisie); ouvert.arbres(plot) }
+                                        withContext(Dispatchers.IO) { ouvert.modifierArbre(uuid, saisie); EnvoiTerrainWorker.apresEnregistrement(this@MainActivity, ouvert, plot); ouvert.arbres(plot) }
                                             .also { ServicePartageQfield.demarrer(this@MainActivity) }
                                     },
                                     onPlacer = { id, az, d, dbh, source ->
-                                        withContext(Dispatchers.IO) { ouvert.placerCible(plot, id, az, d, dbh, source) }
+                                        withContext(Dispatchers.IO) { ouvert.placerCible(plot, id, az, d, dbh, source).also { EnvoiTerrainWorker.apresEnregistrement(this@MainActivity, ouvert, plot) } }
                                             .also { rafraichir++; ServicePartageQfield.demarrer(this@MainActivity) }
                                     },
                                     onFilmer = { demanderPlacette(plot) },
@@ -189,7 +189,7 @@ class MainActivity : AppCompatActivity() {
                                 onOuvrirPlacette = ::demanderPlacette,
                                 onOuvrirCibles = { ciblesPlot = it },
                                 onEnregistrerCentre = { plotId, centre ->
-                                    withContext(Dispatchers.IO) { ouvert.ajouterCentre(plotId, centre) }.also { rafraichir++; ServicePartageQfield.demarrer(this@MainActivity) }
+                                    withContext(Dispatchers.IO) { ouvert.ajouterCentre(plotId, centre).also { EnvoiTerrainWorker.apresEnregistrement(this@MainActivity, ouvert, plotId) } }.also { rafraichir++; ServicePartageQfield.demarrer(this@MainActivity) }
                                 },
                             )
                         }
@@ -345,12 +345,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun lignes(pr: Projet): List<LignePlacette> = try {
+        val projetId = pr.projetId
         pr.placettes().map {
             LignePlacette(
                 it["plot_id"] as String,
                 it["etat_traitement"] as? String ?: "a_faire",
                 (it["rayon_m"] as? Number)?.toDouble(),
                 (it["seuil_diam_cm"] as? Number)?.toDouble(),
+                EnvoiTerrainWorker.etat(this, projetId, it["plot_id"] as String),
             )
         }
     } catch (e: Exception) {
