@@ -115,13 +115,17 @@ Configuration, GPU (COLMAP CUDA, VGGT, SAM 2) et stockage S3 :
 | `r` | numérotation R sur les cas communs et intégration avec `nemeton` |
 | `docker` | construction de l'image serveur |
 
-**Versions** : une seule version pour tout le dépôt (SemVer, tags `vX.Y.Z`),
-calculée par [release-please](https://github.com/googleapis/release-please)
-à partir des messages de commit
-([Conventional Commits](https://www.conventionalcommits.org/fr/)) :
+**Versions** : une seule version pour tout le dépôt, **calendaire `AAAA.M.N`**
+comme nemeton (tags `vAAAA.M.N`, par exemple `v2026.11.1`) : année et mois
+(sans zéro initial) du jour où la PR de publication est mise à jour, et `N`
+qui repart à 1 chaque mois. Jusqu'à 0.14.0, le versionnage était sémantique.
+La version est calculée par `.github/scripts/version_calendaire.py` à partir
+des tags ; [release-please](https://github.com/googleapis/release-please)
+tient la PR de publication et le journal des changements à partir des
+messages de commit ([Conventional Commits](https://www.conventionalcommits.org/fr/)) :
 
-* `fix: …` → version corrective, `feat: …` → version mineure, `feat!: …`
-  ou `BREAKING CHANGE:` → version majeure (mineure tant qu'on est en 0.x) ;
+* `feat: …`, `fix: …`, `perf: …`, `revert: …` et `feat!: …` (ou
+  `BREAKING CHANGE:`) ouvrent ou mettent à jour une PR de publication ;
 * `docs`, `refactor`, `test`, `build`, `ci`, `chore` ne déclenchent pas de
   version à eux seuls.
 
@@ -130,15 +134,16 @@ et doit donc suivre la convention (vérifié par `pr-title.yml`).
 
 **Publication** (`.github/workflows/release.yml`) :
 
-1. À chaque push sur `main`, release-please ouvre ou met à jour la PR
-   « chore: publier la version X.Y.Z ». Elle monte la version dans
+1. À chaque push sur `main`, s'il y a de quoi publier depuis le dernier
+   tag, release-please ouvre ou met à jour la PR
+   « chore: publier la version AAAA.M.N ». Elle monte la version dans
    `core/pyproject.toml`, `server/pyproject.toml`, les deux `__init__.py`
    et `android/app/build.gradle.kts` (`versionCode` en est déduit), et
    complète `CHANGELOG.md`.
-2. Fusionner cette PR crée le tag `vX.Y.Z` et la release GitHub.
+2. Fusionner cette PR crée le tag `vAAAA.M.N` et la release GitHub.
 3. Les tests sont rejoués sur le tag, puis sont attachés à la release :
    wheels et sdist de `groma` et `groma-server`, image
-   `ghcr.io/pobsteta/groma-server:X.Y.Z` (et `X.Y`, `latest`), APK Android
+   `ghcr.io/pobsteta/groma-server:AAAA.M.N` (et `AAAA.M`, `latest`), APK Android
    (signée si le keystore est configuré, sinon APK de debug).
 
 Secrets facultatifs du dépôt :

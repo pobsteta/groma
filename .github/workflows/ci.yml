@@ -32,7 +32,7 @@ jobs:
             core/pyproject.toml
             server/pyproject.toml
       - run: pip install -e "core[dev]" -e "server[dev]"
-      - run: pytest core server benchmark
+      - run: pytest core server benchmark .github/scripts
 
   kotlin:
     runs-on: ubuntu-latest

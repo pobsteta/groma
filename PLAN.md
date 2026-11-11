@@ -18,6 +18,7 @@ Source unique de l'état d'avancement. Mis à jour à chaque étape.
 | 2026-10-12 | Pont `groma-preparer` côté Groma (GeoPackage, sans toucher à nemeton) ; rayon et déclinaison obligatoires, rayon à reprendre du plan | Pascal |
 | 2026-10-12 | Licence du dépôt : GPL-3.0-or-later (alignée sur nemeton), fichier `LICENSE` | Pascal |
 | 2026-10-15 | Déclinaison calculée par WMM2025 (NOAA, embarqué en Python et en Kotlin) quand elle n'est pas fournie à `groma-preparer`, par placette et à la date du jour ; saisie manuelle prioritaire (avertissement au-delà de 1° d'écart). Complète la décision « rayon et déclinaison obligatoires » du 2026-10-12 | Pascal (2026-10-16) |
+| 2026-11-11 | Versionnage calendaire `AAAA.M.N` comme nemeton (tags `vAAAA.M.N`, `N` repart à 1 chaque mois), après 0.14.0 ; version calculée par `.github/scripts/version_calendaire.py` et passée à release-please (`release-as`) ; `versionCode` = AAAA·10000 + M·100 + N | Pascal |
 
 ## Avancement (ordre de travail du brief)
 
