@@ -7,7 +7,7 @@ placette, l'envoyer au serveur (reprenable, renvoyée à chaque modification, Wi
 réglage), la servir à nemetonshiny, et décrire dans un brief comment `nemeton` l'intègre à la place
 de la copie de QField, parce que Pascal veut se passer de QField (décision du 2026-11-11).
 
-**Redite par l'agent :** _à compléter par l'agent avant d'agir — s'il n'y arrive pas, il s'arrête._
+**Redite par l'agent :** Extraire de la copie de Groma l'archive `<plot_id>.terrain.zip` d'une placette, l'envoyer au serveur (renvoyée à chaque modification, regroupée 30 s, sans doublon si l'empreinte n'a pas changé), la servir à nemetonshiny via `GET …/terrain.zip` et décrire dans un brief l'intégration par `nemeton`, pour que Pascal se passe de QField.
 
 ## Les trois questions (règle de staffing)
 
