@@ -1,6 +1,6 @@
 {
   "nom": "inventaire_video",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "crs": 2154,
   "description": "Schéma du GeoPackage inventaire_video.gpkg produit par nemeton (sous-onglet Terrain > Inventaire vidéo) et complété sur le terrain par QField (saisie) et Groma (détections). Source unique : Python (groma), Kotlin (application Groma) et brief nemeton.",
   "domaines": {
@@ -16,7 +16,7 @@
     "h_source": ["mnh", "mesuree", "aucune"],
     "dbh_source": ["estime", "mesure"],
     "etat_detection": ["provisoire", "definitif", "a_completer", "a_verifier", "faux_positif"],
-    "methode": ["embarque", "classique", "ia"]
+    "methode": ["embarque", "classique", "ia", "terrain"]
   },
   "couches": [
     {
@@ -34,7 +34,7 @@
         {"nom": "pente_pct", "type": "REAL", "min": 0, "max": 200, "origine": "nemeton"},
         {"nom": "exposition", "type": "TEXT", "domaine": "exposition", "origine": "nemeton"},
         {"nom": "recouvrement_pct", "type": "REAL", "min": 0, "max": 100, "origine": "nemeton"},
-        {"nom": "photos", "type": "TEXT", "widget": "photo", "origine": "nemeton"},
+        {"nom": "photos", "type": "TEXT", "widget": "photo", "origine": "nemeton", "remarque": "Un ou plusieurs chemins relatifs au dossier du projet, séparés par « ; ». Le widget photo de QField n'en gère qu'un."},
         {"nom": "notes", "type": "TEXT", "origine": "nemeton"},
         {"nom": "wgt", "type": "REAL", "cache": true, "lecture_seule": true, "origine": "plan"},
         {"nom": "ip", "type": "REAL", "cache": true, "lecture_seule": true, "origine": "plan"},
@@ -93,7 +93,7 @@
         {"nom": "h_m", "type": "REAL", "min": 0, "max": 80, "origine": "nemeton"},
         {"nom": "statut", "type": "TEXT", "domaine": "statut", "defaut": "vivant", "origine": "nemeton"},
         {"nom": "qualite", "type": "TEXT", "domaine": "qualite", "origine": "nemeton"},
-        {"nom": "photos", "type": "TEXT", "widget": "photo", "origine": "nemeton"},
+        {"nom": "photos", "type": "TEXT", "widget": "photo", "origine": "nemeton", "remarque": "Un ou plusieurs chemins relatifs au dossier du projet, séparés par « ; ». Le widget photo de QField n'en gère qu'un."},
         {"nom": "notes", "type": "TEXT", "origine": "nemeton"},
         {"nom": "uuid", "type": "TEXT", "requis": true, "cache": true, "lecture_seule": true, "origine": "groma"},
         {"nom": "num_provisoire", "type": "TEXT", "lecture_seule": true, "origine": "groma"},
@@ -104,7 +104,7 @@
         {"nom": "dbh_source", "type": "TEXT", "domaine": "dbh_source", "defaut": "estime", "lecture_seule": true, "origine": "groma", "remarque": "estime : diamètre de la vidéo (suit la détection) ; mesure : diamètre au ruban saisi dans Groma (lecture seule dans QField), jamais écrasé par une détection ni par le rapprochement définitif. Absente des GeoPackages préparés avant le schéma 1.4.0 (Groma l'ajoute à la première saisie)."},
         {"nom": "houppier_id", "type": "INTEGER", "lecture_seule": true, "origine": "groma"},
         {"nom": "etat_detection", "type": "TEXT", "domaine": "etat_detection", "origine": "groma"},
-        {"nom": "methode", "type": "TEXT", "domaine": "methode", "lecture_seule": true, "origine": "groma"}
+        {"nom": "methode", "type": "TEXT", "domaine": "methode", "lecture_seule": true, "origine": "groma", "remarque": "terrain : arbre oublié par la vidéo, ajouté à la main dans Groma (GeoPackage.ajouterArbre, schéma 1.5.0) ; les autres valeurs viennent de la détection."}
       ]
     },
     {

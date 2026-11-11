@@ -6,6 +6,7 @@ import groma.core.Azimut
 import groma.core.CentreMesure
 import groma.core.CiblePlacee
 import groma.core.PlacementCible
+import groma.core.SaisieArbre
 import groma.core.SourceAzimut
 import groma.core.CibleMesuree
 import groma.core.CleProjet
@@ -17,6 +18,7 @@ import groma.core.Grille
 import groma.core.Houppier
 import groma.core.InfosProjet
 import groma.core.ParametresPlacette
+import groma.core.PhotosArbre
 import groma.core.Projections
 import java.io.File
 
@@ -123,6 +125,31 @@ class Projet(val dossier: File) {
      */
     fun modifierArbre(uuid: String, saisie: Map<String, String?>) {
         ouvrir().use { GeoPackage.modifierArbre(SqliteAndroid(it), uuid, saisie) }
+    }
+
+    /**
+     * Adds a tree forgotten by the video ([GeoPackage.ajouterArbre], mission 023): [azimut] in the plot's unit,
+     * [saisie] as typed in the form (essence_arbre, dbh_cm required, statut, qualite). Throws IllegalArgumentException
+     * on a refused value (no measured centre, missing diameter...).
+     */
+    fun ajouterArbre(plotId: String, azimut: Double, distanceM: Double, saisie: Map<String, String?>): String {
+        val dbh = SaisieArbre.diametre(saisie["dbh_cm"]) ?: throw IllegalArgumentException("Le diamètre au ruban est obligatoire.")
+        return ouvrir().use {
+            GeoPackage.ajouterArbre(SqliteAndroid(it), plotId, azimut, distanceM, dbh, saisie["essence_arbre"], saisie["statut"], saisie["qualite"])
+        }
+    }
+
+    /** Deletes a tree added by hand ([GeoPackage.supprimerArbreAjoute]); never a tree of the video. */
+    fun supprimerArbreAjoute(uuid: String) {
+        ouvrir().use { GeoPackage.supprimerArbreAjoute(SqliteAndroid(it), uuid, dossier) }
+    }
+
+    /**
+     * Deletes the files of photos Groma took and the form no longer cites (mission 022, after a confirmed
+     * removal that was saved, or a photo taken then abandoned). Never a photo of QField: see [PhotosArbre.supprimerFichier].
+     */
+    fun supprimerPhotos(chemins: List<String>) {
+        ouvrir().use { db -> val b = SqliteAndroid(db); for (c in chemins) PhotosArbre.supprimerFichier(b, dossier, c) }
     }
 
     /** Trees of the plot for the plan (false positives left out, by number): see [ArbrePlacette.lire]. */

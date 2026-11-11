@@ -8,10 +8,12 @@ import groma.core.BaseSqlite
  * android.database.sqlite adapter of the GeoPackage write protocol.
  * The journal mode of the file is left untouched (QField / GDAL decide it).
  */
-class SqliteAndroid(private val db: SQLiteDatabase) : BaseSqlite {
+class SqliteAndroid(private val db: SQLiteDatabase) : BaseSqlite, AutoCloseable {
     init {
         db.rawQuery("PRAGMA busy_timeout = 5000", null).use { it.moveToFirst() }
     }
+
+    override fun close() = db.close()
 
     override fun executer(sql: String, args: List<Any?>) = db.execSQL(sql, args.map { it }.toTypedArray())
 

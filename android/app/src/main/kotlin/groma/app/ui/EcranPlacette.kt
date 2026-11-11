@@ -28,6 +28,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -47,6 +48,7 @@ import groma.app.R
 import groma.core.ArbrePlacette
 import groma.core.CiblePlacee
 import groma.core.PlacementCible
+import java.io.File
 import groma.core.SourceAzimut
 import groma.core.TypeAlerte
 import kotlinx.coroutines.launch
@@ -60,6 +62,10 @@ import kotlin.math.max
  * The plan also shows the trees of the plot ([arbresInitiaux]); touching one opens its form
  * ([FicheArbre]), whose "Enregistrer" calls [onEnregistrerArbre] (writes through the 018 API and
  * returns the trees read back).
+ * Mission 023: "Ajouter un arbre" switches the form to a tree forgotten by the video: same azimuth
+ * (sighting compass typed or phone compass) and distance fields, preview of the place on the plan,
+ * then the form with the tape diameter required; [onAjouterArbre] writes it and returns the trees
+ * read back; [onSupprimerArbre] deletes a tree added by hand (after a confirmation in the form).
  */
 @Composable
 fun EcranPlacette(
@@ -73,15 +79,21 @@ fun EcranPlacette(
     centre: Pair<Double, Double>,
     arbresInitiaux: List<ArbrePlacette>,
     onEnregistrerArbre: suspend (uuid: String, saisie: Map<String, String?>) -> List<ArbrePlacette>,
+    onAjouterArbre: suspend (azimut: Double, distanceM: Double, saisie: Map<String, String?>) -> List<ArbrePlacette>,
+    onSupprimerArbre: suspend (uuid: String) -> List<ArbrePlacette>,
     onPlacer: suspend (id: String, azimut: Double, distanceM: Double, dbhCm: Double, source: SourceAzimut) -> CiblePlacee,
     onFilmer: () -> Unit,
     onRetour: () -> Unit,
+    dossierProjet: File? = null,
+    onNettoyerPhotos: (List<String>) -> Unit = {},
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var cibles by remember { mutableStateOf(initiales) }
     var arbres by remember { mutableStateOf(arbresInitiaux) }
-    var fiche by remember { mutableStateOf<String?>(null) }
+    var fiche by rememberSaveable { mutableStateOf<String?>(null) }
+    var ajout by remember { mutableStateOf(false) }
+    var creation by remember { mutableStateOf<Pair<Double, Double>?>(null) }
     var choisie by remember { mutableStateOf("C1") }
     var azimutTexte by remember { mutableStateOf("") }
     var distanceTexte by remember { mutableStateOf("") }
@@ -136,9 +148,33 @@ fun EcranPlacette(
                     onEnregistrer = { saisie -> if (saisie.isNotEmpty()) arbres = onEnregistrerArbre(uuid, saisie) },
                     onOuvrir = { fiche = it.uuid },
                     onFermer = { fiche = null },
+                    onSupprimer = if (a.ajoute) ({ arbres = onSupprimerArbre(uuid); fiche = null }) else null,
+                    dossierProjet = dossierProjet,
+                    plotId = plotId,
+                    onNettoyerPhotos = onNettoyerPhotos,
                 )
             }
         }
+        creation?.let { (az, d) ->
+            FicheArbre(
+                arbre = ArbrePlacette("", "A?", 0.0, 0.0, null, false, null, "vivant", null),
+                suivant = null,
+                onEnregistrer = { saisie ->
+                    arbres = onAjouterArbre(az, d, saisie)
+                    ajout = false; azimutTexte = ""; distanceTexte = ""
+                },
+                onOuvrir = {},
+                onFermer = { creation = null },
+                creation = true,
+            )
+        }
+
+        // Preview of the tree being added: offset (east, north) from the centre, null while the input is not valid.
+        val apercu = if (ajout) {
+            val az = nombre(azimutTexte); val d = nombre(distanceTexte)
+            if (az == null || d == null) null
+            else runCatching { PlacementCible.position(Pair(0.0, 0.0), az, unite, declinaisonDeg, convergenceDeg, d) }.getOrNull()
+        } else null
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -146,15 +182,19 @@ fun EcranPlacette(
             if (!centreMesure) {
                 Text(stringResource(R.string.cibles_centre_prevu), color = MaterialTheme.colorScheme.error)
             }
-            Plan(rayonM, unite, declinaisonDeg, convergenceDeg, cibles, choisie, arbres, centre, fiche) { fiche = it.uuid }
+            Plan(rayonM, unite, declinaisonDeg, convergenceDeg, cibles, choisie, arbres, centre, fiche, apercu) { fiche = it.uuid }
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                PlacementCible.IDENTIFIANTS.forEach { id ->
-                    FilterChip(
-                        selected = choisie == id,
-                        onClick = { remplir(id) },
-                        label = { Text(if (cibles.any { it.id == id }) "$id ✓" else id) },
-                    )
+            if (ajout) {
+                Text(stringResource(R.string.arbre_ajout_aide), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PlacementCible.IDENTIFIANTS.forEach { id ->
+                        FilterChip(
+                            selected = choisie == id,
+                            onClick = { remplir(id) },
+                            label = { Text(if (cibles.any { it.id == id }) "$id ✓" else id) },
+                        )
+                    }
                 }
             }
 
@@ -212,7 +252,7 @@ fun EcranPlacette(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true, modifier = Modifier.weight(1f),
                 )
-                OutlinedTextField(
+                if (!ajout) OutlinedTextField(
                     value = dbhTexte, onValueChange = { dbhTexte = it },
                     label = { Text(stringResource(R.string.cibles_diametre)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -220,7 +260,28 @@ fun EcranPlacette(
                 )
             }
             erreur?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            Button(
+            if (ajout) {
+                if (!centreMesure) Text(stringResource(R.string.arbre_ajout_sans_centre), color = MaterialTheme.colorScheme.error)
+                Button(
+                    enabled = centreMesure,
+                    onClick = {
+                        val az = nombre(azimutTexte); val d = nombre(distanceTexte)
+                        if (az == null || d == null) { erreur = ctx.getString(R.string.arbre_ajout_saisie_incomplete); return@Button }
+                        try {
+                            PlacementCible.position(Pair(0.0, 0.0), az, unite, declinaisonDeg, convergenceDeg, d)
+                            erreur = null
+                            creation = Pair(az, d)
+                        } catch (e: IllegalArgumentException) {
+                            erreur = e.message
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.arbre_ajout_continuer)) }
+                OutlinedButton(
+                    onClick = { ajout = false; remplir(choisie) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.arbre_ajout_annuler)) }
+            } else Button(
                 onClick = {
                     val az = nombre(azimutTexte); val d = nombre(distanceTexte); val dbh = nombre(dbhTexte)
                     if (az == null || d == null || dbh == null) { erreur = ctx.getString(R.string.cibles_saisie_incomplete); return@Button }
@@ -249,6 +310,12 @@ fun EcranPlacette(
                     },
                     color = MaterialTheme.colorScheme.tertiary,
                 )
+            }
+            if (!ajout) {
+                OutlinedButton(
+                    onClick = { ajout = true; erreur = null; azimutTexte = ""; distanceTexte = ""; source = SourceAzimut.BOUSSOLE_VISEE },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text(stringResource(R.string.arbre_ajouter)) }
             }
             Button(onClick = onFilmer, modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) { Text(stringResource(R.string.filmer)) }
         }

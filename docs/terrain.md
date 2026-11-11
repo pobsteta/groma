@@ -306,7 +306,9 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    « Carte du projet ») : ligne ajoutée à `centres_mesures` avec
    `qualite_gnss`, `precision_h_m`, `ecart_prevu_m` et `date_mesure`.
    **Libérer le récepteur** avant de passer à QField. Le centre peut aussi
-   être saisi dans QField, comme avant.
+   être saisi dans QField, comme avant. Une **seule cible C0** sur la canne,
+   **orientée vers le début du premier tour** (décision de Pascal du
+   2026-11-11).
 2. Poser C1-C3 sur trois arbres bien répartis (idéalement à **120°** les uns
    des autres, entre **8 et 15 m** du centre). Puis, dans Groma, bouton
    **Placette** (ancien « Cibles »), dans la liste des placettes ou sur la carte du
@@ -362,9 +364,10 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    champ et rien n'est écrit. Ce qui est saisi : l'essence (`essence_arbre`, code BD Forêt v2), le **diamètre au ruban**
    (`dbh_cm`, virgule ou point décimal ; il passe `dbh_source` à `mesure` ;
    **le ruban se saisit seulement dans Groma**, `dbh_cm` et `dbh_source`
-   sont en lecture seule dans QField), le statut et la qualité ; **dans
-   QField** les notes et les photos, et au besoin l'essence, le statut et
-   la qualité. Les arbres provisoires apparaissent dans la couche
+   sont en lecture seule dans QField), le statut et la qualité, une
+   **note** et des **photos** (mission 022, voir ci-dessous) ; **dans
+   QField**, facultatif, on peut encore saisir les notes et les photos, et
+   au besoin l'essence, le statut et la qualité. Les arbres provisoires apparaissent dans la couche
    `arbres` de QField. Un diamètre au ruban n'est jamais écrasé : ni par
    une nouvelle capture, ni par le calcul définitif du serveur (l'alerte
    `ecart_dbh` reste émise s'il diffère de 10 cm **et** de 50 %) ; vider le
@@ -372,8 +375,86 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    que Groma a saisi à QField, appuyer sur le bouton du plugin (voir
    « Échange entre Groma et QField ») : **rien de ce qui a été saisi dans
    QField n'est écrasé**.
-6. Le paquet de la placette part au serveur dès qu'un réseau Wi-Fi est
+6. **Arbre oublié par la vidéo** (mission 023, schéma 1.5.0) : dans
+   **Placette**, « Ajouter un arbre ». Le centre de la placette doit avoir été
+   **mesuré** (sinon le bouton « Saisir le diamètre au ruban » est grisé).
+   Saisir l'**azimut** depuis le centre (dans l'unité de la placette, degrés
+   ou grades ; boussole de visée tapée, ou boussole du téléphone comme pour
+   les cibles) et la **distance horizontale** en mètres : l'emplacement
+   s'affiche en **cercle pointillé** sur le plan. « Saisir le diamètre au
+   ruban » ouvre la fiche : le **diamètre au ruban est obligatoire** (0 à
+   1000 cm) ; essence, statut et qualité sont facultatifs. L'arbre reçoit le
+   numéro provisoire **A1, A2…** (par placette), `methode = terrain`,
+   `dbh_source = mesure`, `etat_detection = provisoire` ; il est écrit
+   directement dans `arbres` (rien dans `detections`) et part avec l'archive
+   de terrain. Sa pastille a un **contour pointillé violet**. Dans sa fiche,
+   « Supprimer cet arbre » (avec confirmation) n'existe que pour un arbre
+   ajouté à la main ; un arbre de la vidéo ne se supprime jamais (le diamètre
+   d'un arbre ajouté ne peut pas être vidé non plus). Au calcul définitif,
+   un arbre ajouté apparié à une détection (tolérance 0,5 m) garde son
+   ruban et ses saisies ; non apparié, il est **conservé**, `a_verifier`,
+   numéro `V<n>`, et listé dans les arbres non retrouvés. *Projets déjà
+   générés :* la valeur `terrain` est une simple valeur de domaine, il n'y a
+   rien à migrer (la colonne `dbh_source` est ajoutée comme pour la
+   mission 018 si elle manque).
+7. Le paquet de la placette part au serveur dès qu'un réseau Wi-Fi est
    disponible (4G sur option), avec reprise après coupure.
+
+## Envoi des saisies de terrain au serveur (sans QField)
+
+QField est **facultatif** : tout ce qui est saisi dans Groma (centre mesuré,
+cibles, essence, diamètre au ruban, statut, qualité) part au serveur dans
+une archive de terrain, `<plot_id>.terrain.zip`, que nemetonshiny peut
+intégrer sans passer par la copie de QField (brief
+`briefs/vers-nemeton/2026-11-11-terrain-sans-qfield.md`). Le plugin et
+« Ouvrir dans QField » restent disponibles.
+
+* **Notes et photos d'un arbre** (mission 022, fiche d'un arbre existant ;
+  pas dans le formulaire d'un arbre en cours d'ajout, dont le numéro n'existe
+  pas encore : on les ajoute en rouvrant sa fiche).
+  * **Note** : texte libre multiligne, **2000 caractères au plus** (valeur
+    provisoire), écrit dans `arbres.notes` ; vide = effacée.
+  * **Photo** : « Prendre une photo » ouvre l'appareil du téléphone (autorisation
+    « Appareil photo » demandée la première fois). Le JPEG est réduit à
+    **2048 px** de grand côté (valeur provisoire, à juger en 4G), redressé,
+    et rangé dans `DCIM/` du dossier du projet sous le nom
+    `<plot_id>_<tree_id>_<AAAAMMJJ-HHMMSS>.jpg`.
+  * **Convention de `arbres.photos`** : un ou plusieurs chemins **relatifs au
+    dossier du projet**, séparés par `;` (une seule photo = exactement ce
+    qu'écrit le widget photo de QField). **Limite connue** : le widget de QField
+    ne sait afficher qu'**un** chemin ; avec plusieurs, il n'affiche rien, et une
+    nouvelle photo prise dans QField remplace toute la liste. On ne prend donc
+    pas de photo dans QField pour un arbre qui en a déjà plusieurs.
+  * **Rien ne se perd** : la note et les photos déjà là (de QField ou de Groma)
+    sont affichées et conservées ; un enregistrement qui ne les touche pas ne les
+    modifie pas. Retirer une photo demande une **confirmation** ; elle n'est
+    effective qu'à « Enregistrer ». Le fichier n'est supprimé que si Groma l'a
+    pris (nom `DCIM/…_AAAAMMJJ-HHMMSS.jpg`) et si plus aucune ligne ne le cite ;
+    un fichier de QField reste dans le projet. Une photo prise puis abandonnée
+    (fiche fermée sans enregistrer) est supprimée.
+  * **Envoi** : l'enregistrement relance l'envoi de terrain ; les photos
+    entrent dans l'archive (`photos/`) et dans l'empreinte. Une photo
+    introuvable n'est pas emballée et garde son chemin d'origine dans
+    `terrain.gpkg` (jamais lue hors du dossier du projet).
+  * **À vérifier** : deux arbres, chacun avec une note et une photo ; attendre
+    « Terrain envoyé à … » ; l'archive du serveur contient les deux photos.
+* **Quand** : après chaque enregistrement (fiche d'arbre, arbre ajouté ou supprimé, cible, centre),
+  Groma attend **30 s** après la dernière modification (valeur provisoire, à
+  juger sur le terrain : plusieurs saisies de suite ne font qu'un envoi), puis
+  envoie. Même serveur, même jeton et même réglage Wi-Fi / 4G que l'envoi de
+  la vidéo (Paramètres) ; l'envoi reprend après une coupure.
+* **Rien d'inutile** : si le contenu n'a pas changé depuis le dernier envoi
+  réussi (empreinte SHA-256 des lignes et des photos), rien n'est envoyé.
+* **État** : dans la liste des placettes, « Terrain à envoyer » (saisie pas
+  encore arrivée) ou « Terrain envoyé à HH:MM ». Sans serveur configuré, la
+  saisie reste « à envoyer » ; elle part à l'enregistrement suivant, une fois
+  le serveur réglé.
+* **Contenu** : `terrain.gpkg` (même schéma, **cette placette seule**) et
+  `photos/`. Un renvoi remplace le précédent côté serveur.
+* **À vérifier** : saisir une placette dans Groma sans ouvrir QField,
+  attendre « Terrain envoyé à … », puis télécharger l'archive depuis le
+  serveur (`GET /projets/<projet_id>/placettes/<plot_id>/terrain.zip`) : ses
+  arbres et leurs saisies y sont.
 
 ## Échange entre Groma et QField (décision 3)
 

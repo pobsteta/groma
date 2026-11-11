@@ -13,6 +13,9 @@
     <!-- Contour des pastilles : fin et blanc = diamètre estimé, épais et sombre = mesuré au ruban. -->
     <color name="arbre_contour_estime">#FFFFFF</color>
     <color name="arbre_contour_mesure">#212121</color>
+    <!-- Arbre ajouté à la main (oublié par la vidéo) : contour pointillé ; aperçu de sa place avant l'enregistrement. -->
+    <color name="arbre_contour_ajoute">#6A1B9A</color>
+    <color name="arbre_apercu">#00897B</color>
     <!-- Halo de l'arbre dont la fiche est ouverte. -->
     <color name="arbre_choisi">#FFB300</color>
 </resources>

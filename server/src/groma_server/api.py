@@ -10,6 +10,11 @@ offset the server reports):
 4. ``POST /televersements/{id}/terminer`` -> checks size and SHA-256, queues
    the task -> {tache_id}
 
+Field entries (mission 021): the same protocol with ``"type": "terrain"`` in step 1 stores
+``<plot_id>.terrain.zip`` (zip with ``terrain.gpkg``), replacing the former one, no GPU task;
+``GET /projets/{projet_id}/placettes/{plot_id}/terrain.zip`` serves it, ``/placettes`` gives
+``terrain_envoye_le``.
+
 Results: ``GET /placettes[?projet_id=]`` (state of every plot),
 ``GET /taches/{id}``,
 ``GET /projets/{projet_id}/placettes/{plot_id}/resultat.gpkg | rapport.json | rapport.html``.
@@ -39,28 +44,58 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import uuid
+import zipfile
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Literal
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, Response
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .config import Config
 from .file_attente import FileAttente
 from .projets_qfield import ErreurProjet, Fichier, ProjetsQfield
 from .worker import archiver, prefixe_resultats
 
-PLOT_ID = re.compile(r"^[A-Za-z0-9_.-]{1,64}$")
+class _Identifiant:
+    """Identifier pattern; ``.``, ``..`` and any all-dots name are refused (they are path components)."""
+
+    _motif = re.compile(r"^[A-Za-z0-9_.-]{1,64}$")
+    pattern = r"^[A-Za-z0-9_.-]{1,64}$"
+
+    def match(self, valeur: str):
+        return self._motif.match(valeur) if valeur.strip(".") else None
+
+
+PLOT_ID = _Identifiant()
+
+
+def _sous(base: Path, chemin: Path) -> Path:
+    """[chemin] itself, once checked to stay under [base] (defence in depth after the pattern)."""
+    if not chemin.resolve().is_relative_to(base.resolve()):
+        raise HTTPException(422, "Chemin hors du dossier de données.")
+    return chemin
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
 class DemandeTeleversement(BaseModel):
     projet_id: str = Field(default="", pattern=r"^(|[A-Za-z0-9_.-]{1,64})$")
     plot_id: str = Field(pattern=PLOT_ID.pattern)
+
+    @field_validator("projet_id", "plot_id")
+    @classmethod
+    def _pas_de_points(cls, v: str) -> str:
+        if v and not v.strip("."):
+            raise ValueError("Identifiant invalide.")
+        return v
     taille: int = Field(gt=0)
     sha256: str = Field(pattern=SHA256.pattern)
+    # "paquet" = video package (GPU task); "terrain" = field entries of one plot (no task).
+    type: Literal["paquet", "terrain"] = "paquet"
 
 
 # Files a remote worker hands back, by the name it uses -> (queue column, stored suffix).
@@ -101,7 +136,8 @@ def creer_app(config: Config | None = None) -> FastAPI:
     file = FileAttente(cfg.base)
     dossier_tel = cfg.dossier_donnees / "televersements"
     dossier_paquets = cfg.dossier_donnees / "paquets"
-    for d in (dossier_tel, dossier_paquets):
+    dossier_terrain = cfg.dossier_donnees / "terrain"
+    for d in (dossier_tel, dossier_paquets, dossier_terrain):
         d.mkdir(parents=True, exist_ok=True)
 
     projets = ProjetsQfield(cfg.dossier_donnees / "projets_qfield", cfg.taille_max_projet, cfg.versions_projet)
@@ -123,6 +159,32 @@ def creer_app(config: Config | None = None) -> FastAPI:
         if not m.exists():
             raise HTTPException(404, "Téléversement inconnu.")
         return dossier_tel / f"{tid}.part", json.loads(m.read_text())
+
+    def chemin_terrain(projet_id: str, plot_id: str) -> Path:
+        # "~defaut" cannot be produced by PLOT_ID, so it never collides with a real project.
+        return _sous(dossier_terrain, dossier_terrain / (projet_id or "~defaut") / f"{plot_id}.terrain.zip")
+
+    def date_terrain(chemin: Path) -> str:
+        return datetime.fromtimestamp(chemin.stat().st_mtime, timezone.utc).isoformat(timespec="seconds")
+
+    def terminer_terrain(part: Path, m: dict, tid: str) -> dict:
+        try:
+            with zipfile.ZipFile(part) as z:
+                noms = z.namelist()
+                if "terrain.gpkg" not in noms:
+                    raise ValueError("terrain.gpkg absent")
+                for n in noms:
+                    if n.startswith("/") or "\\" in n or ".." in n.split("/") or re.match(r"^[A-Za-z]:", n):
+                        raise ValueError(f"nom d'entrée refusé : {n!r}")
+        except (zipfile.BadZipFile, ValueError, OSError) as e:
+            raise HTTPException(422, f"Archive de terrain illisible : {e}") from e
+        projet_id = m.get("projet_id", "")
+        cible = chemin_terrain(projet_id, m["plot_id"])
+        cible.parent.mkdir(parents=True, exist_ok=True)
+        os.utime(part)  # reception date = completion, whatever the last chunk time
+        os.replace(part, cible)  # atomic: the former archive is replaced, never half-written
+        (dossier_tel / f"{tid}.json").unlink()
+        return {"type": "terrain", "projet_id": projet_id, "plot_id": m["plot_id"], "recu_le": date_terrain(cible)}
 
     @app.post("/televersements", dependencies=[Depends(auth)])
     def creer(d: DemandeTeleversement):
@@ -162,8 +224,10 @@ def creer_app(config: Config | None = None) -> FastAPI:
                 h.update(bloc)
         if h.hexdigest() != m["sha256"]:
             raise HTTPException(422, "Somme de contrôle SHA-256 incorrecte.")
+        if m.get("type") == "terrain":
+            return terminer_terrain(part, m, tid)
         projet_id = m.get("projet_id", "")
-        cible = dossier_paquets / (projet_id or "_") / f"{m['plot_id']}_{tid}.groma.zip"
+        cible = _sous(dossier_paquets, dossier_paquets / (projet_id or "_") / f"{m['plot_id']}_{tid}.groma.zip")
         cible.parent.mkdir(exist_ok=True)
         part.replace(cible)
         (dossier_tel / f"{tid}.json").unlink()
@@ -178,7 +242,25 @@ def creer_app(config: Config | None = None) -> FastAPI:
 
     @app.get("/placettes", dependencies=[Depends(auth)])
     def placettes(projet_id: str | None = None):
-        return [_public(t) for t in file.lister(projet_id)]
+        sorties = []
+        vus = set()
+        for t in file.lister(projet_id):
+            e = _public(t)
+            c = chemin_terrain(t["projet_id"], t["plot_id"])
+            e["terrain_envoye_le"] = date_terrain(c) if c.exists() else None
+            vus.add((t["projet_id"], t["plot_id"]))
+            sorties.append(e)
+        # Plots that only have a terrain archive (no video task yet).
+        for c in sorted(dossier_terrain.glob("*/*.terrain.zip")):
+            pid = "" if c.parent.name == "~defaut" else c.parent.name
+            plot = c.name[: -len(".terrain.zip")]
+            if (pid, plot) in vus or (projet_id is not None and pid != projet_id):
+                continue
+            sorties.append({
+                "id": None, "projet_id": pid, "plot_id": plot, "etat": "sans_paquet", "tentatives": 0,
+                "cree": None, "maj": None, "erreur": None, "verdict": None, "terrain_envoye_le": date_terrain(c),
+            })
+        return sorties
 
     def resultat(projet_id: str, plot_id: str, champ: str, media: str):
         if not PLOT_ID.match(plot_id) or (projet_id and not PLOT_ID.match(projet_id)):
@@ -188,6 +270,14 @@ def creer_app(config: Config | None = None) -> FastAPI:
             raise HTTPException(404, "Aucun résultat définitif pour cette placette.")
         return FileResponse(t[champ], media_type=media, filename=Path(t[champ]).name)
 
+    def terrain(projet_id: str, plot_id: str):
+        if not PLOT_ID.match(plot_id) or (projet_id and not PLOT_ID.match(projet_id)):
+            raise HTTPException(404, "Placette inconnue.")
+        c = chemin_terrain(projet_id, plot_id)
+        if not c.exists():
+            raise HTTPException(404, "Aucun terrain envoyé pour cette placette.")
+        return FileResponse(c, media_type="application/zip", filename=c.name)
+
     fichiers = {
         "resultat.gpkg": ("gpkg", "application/geopackage+sqlite3"),
         "rapport.json": ("rapport_json", "application/json"),
@@ -196,12 +286,16 @@ def creer_app(config: Config | None = None) -> FastAPI:
 
     @app.get("/projets/{projet_id}/placettes/{plot_id}/{fichier}", dependencies=[Depends(auth)])
     def resultat_projet(projet_id: str, plot_id: str, fichier: str):
+        if fichier == "terrain.zip":
+            return terrain(projet_id, plot_id)
         if fichier not in fichiers:
             raise HTTPException(404, "Fichier inconnu.")
         return resultat(projet_id, plot_id, *fichiers[fichier])
 
     @app.get("/placettes/{plot_id}/{fichier}", dependencies=[Depends(auth)])
     def resultat_defaut(plot_id: str, fichier: str):
+        if fichier == "terrain.zip":
+            return terrain("", plot_id)
         if fichier not in fichiers:
             raise HTTPException(404, "Fichier inconnu.")
         return resultat("", plot_id, *fichiers[fichier])
@@ -263,7 +357,8 @@ def creer_app(config: Config | None = None) -> FastAPI:
         return t
 
     def dossier_resultats(t: dict) -> Path:
-        return cfg.dossier_donnees / "resultats" / prefixe_resultats(t)
+        base = cfg.dossier_donnees / "resultats"
+        return _sous(base, base / prefixe_resultats(t))
 
     @app.post("/worker/prendre", dependencies=[Depends(auth_worker)])
     def prendre():

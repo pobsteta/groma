@@ -56,6 +56,8 @@ import java.io.File
 import java.text.Collator
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -160,15 +162,25 @@ class MainActivity : AppCompatActivity() {
                                     centre = e.centre,
                                     arbresInitiaux = e.arbres,
                                     onEnregistrerArbre = { uuid, saisie ->
-                                        withContext(Dispatchers.IO) { ouvert.modifierArbre(uuid, saisie); ouvert.arbres(plot) }
+                                        withContext(Dispatchers.IO) { ouvert.modifierArbre(uuid, saisie); EnvoiTerrainWorker.apresEnregistrement(this@MainActivity, ouvert, plot); ouvert.arbres(plot) }
+                                            .also { ServicePartageQfield.demarrer(this@MainActivity) }
+                                    },
+                                    onAjouterArbre = { az, d, saisie ->
+                                        withContext(Dispatchers.IO) { ouvert.ajouterArbre(plot, az, d, saisie); EnvoiTerrainWorker.apresEnregistrement(this@MainActivity, ouvert, plot); ouvert.arbres(plot) }
+                                            .also { ServicePartageQfield.demarrer(this@MainActivity) }
+                                    },
+                                    onSupprimerArbre = { uuid ->
+                                        withContext(Dispatchers.IO) { ouvert.supprimerArbreAjoute(uuid); EnvoiTerrainWorker.apresEnregistrement(this@MainActivity, ouvert, plot); ouvert.arbres(plot) }
                                             .also { ServicePartageQfield.demarrer(this@MainActivity) }
                                     },
                                     onPlacer = { id, az, d, dbh, source ->
-                                        withContext(Dispatchers.IO) { ouvert.placerCible(plot, id, az, d, dbh, source) }
+                                        withContext(Dispatchers.IO) { ouvert.placerCible(plot, id, az, d, dbh, source).also { EnvoiTerrainWorker.apresEnregistrement(this@MainActivity, ouvert, plot) } }
                                             .also { rafraichir++; ServicePartageQfield.demarrer(this@MainActivity) }
                                     },
                                     onFilmer = { demanderPlacette(plot) },
                                     onRetour = { ciblesPlot = null },
+                                    dossierProjet = ouvert.dossier,
+                                    onNettoyerPhotos = { chemins -> lifecycleScope.launch(Dispatchers.IO) { runCatching { ouvert.supprimerPhotos(chemins) } } },
                                 )
                             }
                         }
@@ -189,7 +201,7 @@ class MainActivity : AppCompatActivity() {
                                 onOuvrirPlacette = ::demanderPlacette,
                                 onOuvrirCibles = { ciblesPlot = it },
                                 onEnregistrerCentre = { plotId, centre ->
-                                    withContext(Dispatchers.IO) { ouvert.ajouterCentre(plotId, centre) }.also { rafraichir++; ServicePartageQfield.demarrer(this@MainActivity) }
+                                    withContext(Dispatchers.IO) { ouvert.ajouterCentre(plotId, centre).also { EnvoiTerrainWorker.apresEnregistrement(this@MainActivity, ouvert, plotId) } }.also { rafraichir++; ServicePartageQfield.demarrer(this@MainActivity) }
                                 },
                             )
                         }
@@ -198,6 +210,20 @@ class MainActivity : AppCompatActivity() {
                             // The list may still be loading (activity recreated after a capture): follow it.
                             val titre = projets.firstOrNull { it.cle == cle }?.titre ?: ouvert.dossier.name
                             val placettes = remember(ouvert, rafraichir) { lignes(ouvert) }
+                            // Plots still "to send" (list opened, or server set up since): planned again.
+                            LaunchedEffect(ouvert, rafraichir, reglages.serveur) {
+                                withContext(Dispatchers.IO) { try { EnvoiTerrainWorker.planifierEnAttente(this@MainActivity, ouvert) } catch (e: Exception) {} }
+                            }
+                            // Mission 022: the "Terrain envoyé" state is re-read when an upload finishes (unique work "terrain/<cle>", read only).
+                            val ids = placettes.map { it.plotId }
+                            LaunchedEffect(ouvert, ids) {
+                                val wm = androidx.work.WorkManager.getInstance(this@MainActivity)
+                                val flux = ids.map { wm.getWorkInfosForUniqueWorkFlow("terrain/" + groma.core.CleProjet.chemin(ouvert.projetId, it)) }
+                                if (flux.isNotEmpty()) {
+                                    kotlinx.coroutines.flow.combine(flux) { listes -> listes.sumOf { l -> l.count { w -> w.state == androidx.work.WorkInfo.State.SUCCEEDED } } }
+                                        .distinctUntilChanged().drop(1).collect { rafraichir++ }
+                                }
+                            }
                             EcranPlacettes(
                                 titre = titre,
                                 placettes = placettes,
@@ -345,12 +371,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun lignes(pr: Projet): List<LignePlacette> = try {
+        val projetId = pr.projetId
         pr.placettes().map {
             LignePlacette(
                 it["plot_id"] as String,
                 it["etat_traitement"] as? String ?: "a_faire",
                 (it["rayon_m"] as? Number)?.toDouble(),
                 (it["seuil_diam_cm"] as? Number)?.toDouble(),
+                EnvoiTerrainWorker.etat(this, projetId, it["plot_id"] as String),
             )
         }
     } catch (e: Exception) {

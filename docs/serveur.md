@@ -46,6 +46,8 @@ nemetonshiny :
 | POST | `/televersements` ({`projet_id`, `plot_id`, `taille`, `sha256`}) puis PUT `/televersements/{id}?offset=N`, POST `/televersements/{id}/terminer` |
 | GET | `/placettes?projet_id=…` (état de chaque placette, pour le bloc « Suivre » ; sans `projet_id`, tous les projets) |
 | GET | `/taches/{id}` |
+| POST | `/televersements` avec `"type": "terrain"` (même protocole que le paquet) : archive de terrain d'une placette |
+| GET | `/projets/{projet_id}/placettes/{plot_id}/terrain.zip`, `/placettes/{plot_id}/terrain.zip` : projet par défaut |
 | GET | `/projets/{projet_id}/placettes/{plot_id}/resultat.gpkg`, `/rapport.json`, `/rapport.html` |
 | GET | `/placettes/{plot_id}/resultat.gpkg`, … : projet par défaut |
 
@@ -58,6 +60,24 @@ placettes vont dans le projet par défaut (`""`), servi par les chemins sans
 (`paquets/<projet_id>/`, `resultats/<projet_id>/<plot_id>/<tâche>/`, `_`
 pour le projet par défaut) ; une base de file d'attente plus ancienne est
 migrée au démarrage.
+
+### Saisies de terrain (`terrain.zip`)
+
+Groma envoie, séparément du paquet vidéo, ce qui a été saisi pour une
+placette (centre, cibles, attributs des arbres) : `<plot_id>.terrain.zip`,
+zip qui contient `terrain.gpkg` (même schéma, une seule placette) et
+`photos/…`. Le dépôt réutilise le protocole reprenable de `/televersements`
+avec `"type": "terrain"` (défaut `"paquet"` ; autre valeur : 422). À
+`/terminer`, le serveur contrôle la taille, le SHA-256 et que le zip contient
+`terrain.gpkg` (422 sinon), puis l'archive **remplace** la précédente de la
+même placette (`terrain/<projet_id>/<plot_id>.terrain.zip`, remplacement
+atomique ; un envoi refusé ou inachevé n'y touche pas). Réponse :
+`{"type": "terrain", "projet_id", "plot_id", "recu_le"}`, **sans `tache_id`
+et sans tâche GPU**. `GET …/terrain.zip` la sert (404 avant tout envoi).
+`GET /placettes` ajoute `terrain_envoye_le` ; une placette qui n'a que du
+terrain y figure avec `id` nul et `etat = "sans_paquet"`. La chaîne vidéo est
+indépendante : ni le résultat ni les tâches ne bougent. Brief nemeton :
+`briefs/vers-nemeton/2026-11-11-terrain-sans-qfield.md`.
 
 Authentification : jeton porteur (`GROMA_JETON`).
 
