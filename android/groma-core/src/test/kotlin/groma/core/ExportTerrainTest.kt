@@ -361,6 +361,8 @@ class ExportTerrainTest {
     @Test
     fun empreinteChangeApresModifierArbre() {
         val source = copieExemple(); val dossier = projet()
+        // U4 carries 'sapin_pectine' in the example: start from a tree without species so that erasing returns to the first state.
+        sur(source) { it.executer("UPDATE arbres SET essence_arbre = NULL WHERE uuid = ?", listOf(U4)) }
         val avant = export.empreinte(source, dossier, "P001")
         sur(source) { GeoPackage.modifierArbre(it, U4, mapOf("essence_arbre" to "hetre")) }
         val apres = export.empreinte(source, dossier, "P001")
