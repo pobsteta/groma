@@ -40,7 +40,25 @@ android {
         release {
             if (keystoreGroma != null) signingConfig = signingConfigs.getByName("release")
         }
+        // Smoke test (mission 026, modelled on Surculus ADR 0011): a copy of the release, installed BESIDE the
+        // real app. The suffix is ESSENTIAL: without it the test APK would carry the id of the installed app
+        // (fr.nemeton.groma) and the test runner's cleanup could uninstall it with the field data. With it, the
+        // app is fr.nemeton.groma.fumee and the test APK fr.nemeton.groma.fumee.test: neither can replace nor
+        // uninstall the real one. Same signature as the release when the keystore is given, else the debug key.
+        create("fumee") {
+            initWith(getByName("release"))
+            matchingFallbacks += "release"
+            applicationIdSuffix = ".fumee"
+            versionNameSuffix = "-fumee"
+            signingConfig = signingConfigs.getByName(if (keystoreGroma != null) "release" else "debug")
+            // Optional, local only: -PabiFumee=x86_64 keeps one ABI so the 190 MB APK fits a small emulator disk.
+            // Not set in CI nor for a phone: the default is every ABI, like the release.
+            (findProperty("abiFumee") as String?)?.let { abis -> ndk { abiFilters += abis.split(",") } }
+        }
     }
+    testBuildType = "fumee"
+    // The example project (single source, not copied): inventaire_video.gpkg and rasters/ become assets of the test APK.
+    sourceSets.getByName("androidTest").assets.directories.add(rootProject.file("../exemples/inventaire_video").path)
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -69,10 +87,27 @@ dependencies {
     implementation("com.github.pobsteta.terrain:terrain-style:v0.7.1") // shared Marculus style: colours, shapes, typography (JitPack)
     implementation("com.github.pobsteta.terrain:terrain-carte:v0.7.1") // shared map code: tile zone, Géoplateforme WMTS layers (JitPack)
     testImplementation(kotlin("test-junit"))
+    // Smoke test on a device (mission 026): Apache-2.0, test APK only.
+    androidTestImplementation("androidx.test.ext:junit:1.3.0")
+    androidTestImplementation("androidx.test:runner:1.7.0")
 }
 
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
+}
+
+// The smoke test fails when no test ran (Gradle reports success when the instrumentation crashes before the first
+// test). The report is deleted first, so that an older green report cannot hide a crash.
+val rapportsFumee = layout.buildDirectory.dir("outputs/androidTest-results/connected/fumee").get().asFile
+val verifierScriptFumee = rootProject.file("../scripts/verifier-fumee.sh")
+val verifierFumee = tasks.register<Exec>("verifierFumee") {
+    description = "Checks that the smoke test ran at least one test, no failure (scripts/verifier-fumee.sh)."
+    commandLine("bash", verifierScriptFumee.path, rapportsFumee.path)
+}
+val effacerRapportFumee = tasks.register<Delete>("effacerRapportFumee") { delete(rapportsFumee) }
+tasks.matching { it.name == "connectedFumeeAndroidTest" }.configureEach {
+    dependsOn(effacerRapportFumee)
+    finalizedBy(verifierFumee)
 }
