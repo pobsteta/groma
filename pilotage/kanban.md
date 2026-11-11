@@ -26,29 +26,27 @@ _Modèle de carte :_
 
 ## Validé
 
-- [020](missions/020-test-envoi-terrain.md) · depuis le cycle 7
-  - Homme : testeur (sonnet), appuyer
-  - Mission : tests de l'archive « terrain » d'une placette (extraction, photos, dépôt au serveur, renvoi, empreinte)
-  - Moyens : `/televersements`, `EnvoiWorker.kt`, schéma unique, exemples
-- [021](missions/021-envoi-terrain.md) · depuis le cycle 7
-  - Homme : dev (sonnet), appuyer
-  - Mission : envoi de terrain au serveur (reprenable, renvoyé à chaque modification), servi à nemetonshiny ; brief nemeton « terrain sans QField »
-  - Moyens : tests de 020, `EnvoiWorker.kt`, API du serveur
-- [022](missions/022-notes-photos-arbre.md) · depuis le cycle 7
-  - Homme : dev (sonnet), appuyer
-  - Mission : notes et photos d'arbre dans la fiche de Groma, parties avec l'envoi de terrain
-  - Moyens : `FicheArbre.kt`, `modifierArbre`, convention photo de QField ; essai de Pascal
-
-- [023](missions/023-arbre-oublie.md) · depuis le cycle 7
-  - Homme : dev (sonnet), appuyer
-  - Mission : ajouter dans Groma un arbre oublié par la vidéo (azimut, distance, ruban obligatoire), `methode = terrain`
-  - Moyens : tests de 020 (point 5), `PlacementCible`, `FicheArbre` ; essai de Pascal
-
 ## Planifié
 
 
 ## Terminé
 
+- [020](missions/020-test-envoi-terrain.md) · depuis le cycle 7
+  - Homme : testeur (sonnet), appuyer
+  - Mission : tests de l'archive « terrain » d'une placette (extraction, photos, dépôt au serveur, renvoi, empreinte)
+  - Moyens : `/televersements`, `EnvoiWorker.kt`, schéma unique, exemples · PR #94 fusionnée (828d266) après essai de Pascal sur le S23 Ultra
+- [021](missions/021-envoi-terrain.md) · depuis le cycle 7
+  - Homme : dev (sonnet), appuyer
+  - Mission : envoi de terrain au serveur (reprenable, renvoyé à chaque modification), servi à nemetonshiny ; brief nemeton « terrain sans QField »
+  - Moyens : tests de 020, `EnvoiWorker.kt`, API du serveur · PR #94 fusionnée (828d266) après essai de Pascal sur le S23 Ultra
+- [022](missions/022-notes-photos-arbre.md) · depuis le cycle 7
+  - Homme : dev (sonnet), appuyer
+  - Mission : notes et photos d'arbre dans la fiche de Groma, parties avec l'envoi de terrain
+  - Moyens : `FicheArbre.kt`, `modifierArbre`, convention photo de QField ; essai de Pascal · PR #94 fusionnée (828d266) après essai de Pascal sur le S23 Ultra
+- [023](missions/023-arbre-oublie.md) · depuis le cycle 7
+  - Homme : dev (sonnet), appuyer
+  - Mission : ajouter dans Groma un arbre oublié par la vidéo (azimut, distance, ruban obligatoire), `methode = terrain`
+  - Moyens : tests de 020 (point 5), `PlacementCible`, `FicheArbre` ; essai de Pascal · PR #94 fusionnée (828d266) après essai de Pascal sur le S23 Ultra
 - [017](missions/017-test-arbres-dans-groma.md) · depuis le cycle 7
   - Homme : testeur (sonnet), appuyer
   - Mission : tests de la saisie des arbres dans Groma (contrôles, priorité du ruban `dbh_source`, rapprochement, serveur local, recopie vers QField sans écrasement)
