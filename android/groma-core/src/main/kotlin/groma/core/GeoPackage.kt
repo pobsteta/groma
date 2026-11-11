@@ -168,6 +168,72 @@ object GeoPackage {
         fid
     }
 
+    /**
+     * Writes the values entered in Groma for ONE tree (by uuid) into Groma's own copy of `arbres`
+     * (mission 018), in one immediate transaction; [saisie] maps a field of [SaisieArbre.CHAMPS] to
+     * the raw text typed, an absent key leaves the column untouched. An empty value erases that
+     * attribute only (essence, qualite: NULL; statut: 'vivant'; dbh_cm: the estimate of the
+     * `detections` row, dbh_source = 'estime'); a non-empty dbh_cm sets dbh_source = 'mesure'.
+     * Throws IllegalArgumentException, nothing written, on an invalid value or an unknown uuid.
+     * A project prepared before 1.4.0 gets the `dbh_source` column and the two `detections`
+     * triggers recreated as in `declencheurs.sql` (resource), like `source_azimut` in [ecrireCible].
+     */
+    fun modifierArbre(db: BaseSqlite, uuid: String, saisie: Map<String, String?>) {
+        for ((champ, valeur) in saisie) SaisieArbre.controler(champ, valeur)?.let { throw IllegalArgumentException(it) }
+        db.transactionImmediate {
+            require(db.requete("SELECT 1 AS un FROM arbres WHERE uuid = ?", listOf(uuid)).isNotEmpty()) { "Arbre inconnu : $uuid." }
+            val colonnes = db.requete("PRAGMA table_info(arbres)").map { it["name"] }
+            if ("dbh_source" !in colonnes) {
+                db.executer("ALTER TABLE arbres ADD COLUMN dbh_source TEXT DEFAULT 'estime'")
+                recreerDeclencheursDetections(db)
+            }
+            val maj = LinkedHashMap<String, Any?>()
+            for ((champ, brut) in saisie) {
+                val v = brut?.trim().orEmpty()
+                when (champ) {
+                    "essence_arbre", "qualite" -> maj[champ] = v.ifEmpty { null }
+                    "statut" -> maj[champ] = v.ifEmpty { "vivant" }
+                    "dbh_cm" -> if (v.isNotEmpty()) {
+                        maj["dbh_cm"] = SaisieArbre.diametre(v)
+                        maj["dbh_source"] = "mesure"
+                    } else {
+                        db.requete("SELECT dbh_cm FROM detections WHERE uuid = ?", listOf(uuid)).firstOrNull()?.get("dbh_cm")?.let { maj["dbh_cm"] = it }
+                        maj["dbh_source"] = "estime"
+                    }
+                }
+            }
+            if (maj.isNotEmpty()) {
+                db.executer("UPDATE arbres SET ${maj.keys.joinToString(", ") { "$it = ?" }} WHERE uuid = ?", maj.values.toList() + uuid)
+            }
+        }
+    }
+
+    /** Drops and recreates `trg_detections_insert` and `trg_detections_update` from the resource `declencheurs.sql`. */
+    private fun recreerDeclencheursDetections(db: BaseSqlite) {
+        val sql = GeoPackage::class.java.getResourceAsStream("/groma/declencheurs.sql")?.bufferedReader()?.readText()
+            ?: error("Ressource declencheurs.sql absente.")
+        val creations = Regex("CREATE TRIGGER IF NOT EXISTS (\\w+)\\n.*?\\nEND;", RegexOption.DOT_MATCHES_ALL).findAll(sql).toList()
+        check(creations.size == 2) { "declencheurs.sql : deux déclencheurs attendus." }
+        for (c in creations) {
+            db.executer("DROP TRIGGER IF EXISTS ${c.groupValues[1]}")
+            db.executer(c.value)
+        }
+    }
+
+    /**
+     * Trees of `arbres` carrying an entry made in Groma (essence or quality filled, status other
+     * than 'vivant', or tape diameter), keyed by `uuid`, for the local server (mission 018).
+     */
+    fun arbresSaisis(db: BaseSqlite): List<Map<String, Any?>> {
+        val avecSource = "dbh_source" in db.requete("PRAGMA table_info(arbres)").map { it["name"] }
+        val source = if (avecSource) "dbh_source" else "'estime' AS dbh_source"
+        return db.requete("SELECT uuid, essence_arbre, dbh_cm, $source, statut, qualite FROM arbres WHERE uuid IS NOT NULL ORDER BY uuid")
+            .filter { a ->
+                a["essence_arbre"]?.toString()?.isNotBlank() == true || a["qualite"]?.toString()?.isNotBlank() == true ||
+                    (a["statut"] != null && a["statut"] != "vivant") || a["dbh_source"] == "mesure"
+            }
+    }
+
     /** Latest row of `centres_mesures` for each plot (or for [plotId] only): highest fid. */
     fun dernierCentreParPlacette(db: BaseSqlite, plotId: String? = null): List<Map<String, Any?>> =
         lirePoints(db, "centres_mesures", plotId)

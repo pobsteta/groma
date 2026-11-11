@@ -15,10 +15,11 @@ kotlin {
     }
 }
 
-// WMM2025 coefficients: single source in the Python package, copied as a
-// resource (/groma/WMM2025.COF) rather than duplicated by hand.
+// WMM2025 coefficients, species list and triggers: single source in the Python package, copied as
+// resources (/groma/WMM2025.COF, essences_bdforet_v2.json, declencheurs.sql) rather than duplicated.
 val copierWmm by tasks.registering(Copy::class) {
-    from(rootProject.projectDir.parentFile.resolve("core/src/groma/donnees/WMM2025.COF"))
+    val donnees = rootProject.projectDir.parentFile.resolve("core/src/groma/donnees")
+    from(donnees.resolve("WMM2025.COF"), donnees.resolve("essences_bdforet_v2.json"), donnees.resolve("declencheurs.sql"))
     into(layout.buildDirectory.dir("generated/wmm/groma"))
 }
 sourceSets.main {

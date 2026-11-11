@@ -17,8 +17,9 @@ import kotlin.concurrent.thread
  * QField's own copy of inventaire_video.gpkg (Android 11+ forbids Groma from
  * writing into QField's private folder). Routes:
  *
- * * `GET /inventaire/<projet_id>`: provisional detections of every plot and
- *   measured RTK centres of the project, in one JSON object;
+ * * `GET /inventaire/<projet_id>`: provisional detections of every plot,
+ *   measured RTK centres and the attributes entered in Groma (`arbres`, by uuid,
+ *   mission 018) of the project, in one JSON object;
  * * `GET /detections/<projet_id>/<plot_id>` (and `/detections/<plot_id>`):
  *   provisional detections of one plot.
  *
@@ -78,7 +79,7 @@ class ServeurLocal(private val dossierJson: File, private val dossierCopies: Fil
     }
 
     /**
-     * `/inventaire/<projet_id>`: `{projet_id, detections: [...], centres: [...]}`,
+     * `/inventaire/<projet_id>`: `{projet_id, detections: [...], centres: [...], arbres: [...]}`,
      * coordinates in the GeoPackage CRS (Lambert-93). Detections come from the
      * JSON exports of the captures, centres from the working copy (latest per
      * plot). Null when the route does not match or the project is unknown.
@@ -95,6 +96,7 @@ class ServeurLocal(private val dossierJson: File, private val dossierCopies: Fil
             .map { Projet(it) }.firstOrNull { it.projetId == projet }
         if (copie == null && detections.length() == 0) return null
         val centres = JSONArray()
+        val arbres = JSONArray()
         copie?.let { p ->
             SQLiteDatabase.openDatabase(p.gpkg.path, null, SQLiteDatabase.OPEN_READONLY).use { db ->
                 val s = SqliteAndroid(db)
@@ -102,9 +104,10 @@ class ServeurLocal(private val dossierJson: File, private val dossierCopies: Fil
                 if (avecCentres) for (c in GeoPackage.dernierCentreParPlacette(s)) {
                     centres.put(JSONObject().apply { for ((k, v) in c) if (k != "fid" && v != null) put(k, v) })
                 }
+                for (a in GeoPackage.arbresSaisis(s)) arbres.put(JSONObject().apply { for ((k, v) in a) if (v != null) put(k, v) })
             }
         }
-        return JSONObject().put("projet_id", projet).put("detections", detections).put("centres", centres)
+        return JSONObject().put("projet_id", projet).put("detections", detections).put("centres", centres).put("arbres", arbres)
     }
 
     companion object {
