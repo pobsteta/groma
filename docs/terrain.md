@@ -342,17 +342,32 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    (couverture < 90 %, suivi perdu plus de 5 s, cible vue moins de 3 fois,
    plus de 30 % d'images floues). Puis calcul provisoire, objectif moins de
    2 minutes : arbres numérotés, diamètres et hauteurs approximatifs.
-5. Dans QField, saisir l'essence (`essence_arbre`), le statut, la qualité,
-   les notes et les photos. Les arbres provisoires apparaissent dans la
-   couche `arbres`.
+5. Saisir les attributs des arbres : **dans Groma** (décision du 2026-11-11 ;
+   la vue de saisie sur le plan de la placette vient avec la mission 019)
+   l'essence (`essence_arbre`, code BD Forêt v2), le **diamètre au ruban**
+   (`dbh_cm`, virgule ou point décimal ; il passe `dbh_source` à `mesure`),
+   le statut et la qualité ; **dans QField** les notes et les photos, et au
+   besoin tout le reste. Les arbres provisoires apparaissent dans la couche
+   `arbres` de QField. Un diamètre au ruban n'est jamais écrasé : ni par
+   une nouvelle capture, ni par le calcul définitif du serveur (l'alerte
+   `ecart_dbh` reste émise s'il diffère de 10 cm **et** de 50 %) ; vider le
+   diamètre dans Groma revient à l'estimation de la vidéo. Pour passer ce
+   que Groma a saisi à QField, appuyer sur le bouton du plugin (voir
+   « Échange entre Groma et QField ») : **rien de ce qui a été saisi dans
+   QField n'est écrasé**.
 6. Le paquet de la placette part au serveur dès qu'un réseau Wi-Fi est
    disponible (4G sur option), avec reprise après coupure.
 
 ## Échange entre Groma et QField (décision 3)
 
-Groma n'écrit que dans deux couches, en transaction SQLite courte
-(`BEGIN IMMEDIATE`, attente de verrou de 5 s) : `detections`, et
-`centres_mesures` pour un centre mesuré sur sa carte. Un centre n'est jamais
+Groma n'écrit que dans quatre couches de **sa** copie du GeoPackage, en
+transaction SQLite courte (`BEGIN IMMEDIATE`, attente de verrou de 5 s) :
+`detections`, `centres_mesures` pour un centre mesuré sur sa carte, `cibles`
+et, pour les seuls attributs saisis après la capture (essence, diamètre au
+ruban, statut, qualité), `arbres` (`GeoPackage.modifierArbre`, par `uuid`,
+seules les colonnes saisies ; une valeur vide n'efface que son attribut ;
+colonne `dbh_source` ajoutée, et déclencheurs recréés à l'identique de
+`declencheurs.sql`, dans un projet préparé avant le schéma 1.4.0). Un centre n'est jamais
 réécrit : une nouvelle mesure ajoute une ligne, et c'est la plus récente
 (`fid` le plus grand) qui compte. Comme `centres_mesures` a l'index spatial
 de GDAL, Groma retire ses déclencheurs R*Tree le temps de l'insertion, écrit
@@ -360,9 +375,10 @@ lui-même la ligne d'index, puis les remet à l'identique, dans la même
 transaction (`GeoPackage.ajouterCentreMesure`, testé). Les déclencheurs du
 GeoPackage (`core/src/groma/donnees/declencheurs.sql`) créent la ligne
 `arbres` d'une détection nouvelle et ne mettent à jour que les colonnes de
-mesure d'un arbre encore provisoire. Les attributs saisis dans QField ne
-sont jamais écrits par Groma. Une hauteur mesurée (`h_source = mesuree`) est
-conservée. Un faux positif n'est jamais promu. Testé en Python
+mesure d'un arbre encore provisoire. Les attributs saisis (essence,
+statut, qualité, notes, photos) ne sont jamais écrits par les déclencheurs.
+Une hauteur mesurée (`h_source = mesuree`) et un diamètre au ruban
+(`dbh_source = mesure`) sont conservés. Un faux positif n'est jamais promu. Testé en Python
 (`core/tests/test_gpkg.py`) et en Kotlin (`GeoPackageTest`, sur le GeoPackage
 produit par GDAL).
 
@@ -391,15 +407,29 @@ transport entre les deux bacs à sable. Options, par ordre de préférence :
    * lit `projet_id` dans la couche `projet` ;
    * appelle `http://127.0.0.1:8765/inventaire/<projet_id>`
      (`ServeurLocal.kt`) : détections provisoires de toutes les placettes
-     (exports des captures) et dernier centre mesuré de chaque placette (copie
-     de travail de Groma), en Lambert-93 ;
+     (exports des captures), dernier centre mesuré de chaque placette et
+     attributs saisis dans Groma sur les arbres (copie de travail de Groma),
+     en Lambert-93 ;
    * ajoute **par QField lui-même** les détections absentes (clé `uuid`) à
      `detections` et les centres absents (clé `plot_id` + `date_mesure`) à
      `centres_mesures`, en une édition validée par couche : les
      déclencheurs du GeoPackage créent les lignes `arbres` comme pour une
      écriture directe, et un seul processus écrit dans le fichier ;
+   * recopie ensuite, par `uuid`, ce que Groma a saisi sur les arbres
+     (réponse `arbres` du serveur local : `essence_arbre`, `dbh_cm`,
+     `dbh_source`, `statut`, `qualite`) dans `arbres` de QField, **sans jamais
+     écraser une saisie de QField** (règle `RecopieQfield.aRecopier`, Kotlin,
+     reproduite ligne à ligne dans le plugin) : essence et qualité seulement
+     si vides dans QField ; statut seulement si vide ou `vivant` dans QField ;
+     diamètre et `dbh_source` ensemble, seulement si Groma a un diamètre au
+     ruban et QField une source vide ou `estime` (le `dbh_cm` de QField n'est
+     jamais vide : il porte l'estimation de la vidéo) ; une édition validée
+     par couche ;
    * n'écrit rien si la couche est déjà en cours d'édition (il ne valide
-     jamais les modifications de quelqu'un d'autre), et affiche un bilan.
+     jamais les modifications de quelqu'un d'autre), et affiche un bilan
+     (« … n attributs recopiés »). La recopie est à essayer sur l'appareil
+     (`layer.changeAttributeValue` depuis le QML, pas encore vérifié sur
+     QField) ;
 
    Le serveur local vit avec l'application. Après une capture ou une
    mesure de centre, Groma affiche la notification « Groma — partage avec

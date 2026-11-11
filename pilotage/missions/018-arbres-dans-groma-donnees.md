@@ -8,7 +8,7 @@ le statut et la qualité d'un arbre dans sa copie du GeoPackage, avec un diamèt
 de QField, parce que Pascal veut tout saisir dans Groma (décision du 2026-11-11) sans rien perdre de
 ce qui est saisi sur le terrain (règle 5).
 
-**Redite par l'agent :** _à compléter par l'agent avant d'agir — s'il n'y arrive pas, il s'arrête._
+**Redite par l'agent :** faire passer les tests de 017 : colonne `dbh_source`, déclencheurs, écriture par Groma de l'essence, du diamètre au ruban, du statut et de la qualité dans `arbres`, conservation par le rapprochement, envoi par le serveur local et recopie par le plugin QField sans écraser une saisie QField, pour que Pascal saisisse tout dans Groma sans rien perdre du terrain.
 
 ## Les trois questions (règle de staffing)
 
