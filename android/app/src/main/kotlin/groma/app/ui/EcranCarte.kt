@@ -107,6 +107,7 @@ import java.io.File
 import groma.core.OrigineFix
 import groma.core.PlacetteCarte
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import org.osmdroid.tileprovider.MapTileProviderBasic
 import org.osmdroid.util.BoundingBox
@@ -244,27 +245,38 @@ fun EcranCarte(
     }
     // « Mesurer le centre »: refused without the RTK receiver, confirmed in float or
     // when the plot already has a centre, then measured (brief § 5.4).
-    fun mesurer(plotId: String, flottant: Boolean) {
+    fun mesurer(plotId: String, flottant: Boolean, telephone: Boolean = false) {
         val ancien = donnees?.centres?.firstOrNull { it.plotId == plotId }
-        dialogueCentre = if (ancien != null) EtapeCentre.Deja(plotId, ancien.ecartM, flottant) else EtapeCentre.Mesure(plotId, flottant)
+        // Replacing an RTK centre by a phone one is confirmed first (mission 025).
+        dialogueCentre = when {
+            telephone && ancien != null && MesureCentre.remplacementAConfirmer(ancien.qualite, "telephone") -> EtapeCentre.RemplacerRtk(plotId)
+            ancien != null -> EtapeCentre.Deja(plotId, ancien.ecartM, flottant, telephone)
+            else -> EtapeCentre.Mesure(plotId, flottant, telephone)
+        }
     }
     fun demanderMesure(plotId: String) {
         val f = fix
-        dialogueCentre = when (MesureCentre.autorisation(f)) {
+        dialogueCentre = when (MesureCentre.autorisation(f, telephoneDisponible = true)) {
             MesureCentre.Autorisation.OUI -> { mesurer(plotId, false); return }
             MesureCentre.Autorisation.CONFIRMER_FLOTTANT -> EtapeCentre.Flottant(plotId, f?.precisionHorizontaleM)
             MesureCentre.Autorisation.TELEPHONE -> EtapeCentre.Message(plotId, ctx.getString(R.string.centre_telephone))
+            MesureCentre.Autorisation.CONFIRMER_TELEPHONE -> EtapeCentre.Telephone(plotId, f?.precisionHorizontaleM)
             MesureCentre.Autorisation.SANS_RTK -> EtapeCentre.Message(plotId, ctx.getString(R.string.centre_sans_rtk, f?.qualite?.libelle ?: ""))
             MesureCentre.Autorisation.SANS_POSITION -> EtapeCentre.Message(plotId, ctx.getString(R.string.centre_sans_position))
         }
     }
-    fun terminerMesure(plotId: String, c: CentreMesure?) {
+    fun terminerMesure(plotId: String, c: CentreMesure?, telephone: Boolean = false) {
+        if (c == null && telephone) { dialogueCentre = EtapeCentre.TelephoneInsuffisant(plotId); return }
         if (c == null) { dialogueCentre = EtapeCentre.Message(plotId, ctx.getString(R.string.centre_aucun)); return }
         scope.launch {
             dialogueCentre = try {
                 val ecart = onEnregistrerCentre(plotId, c)
-                val qualite = ctx.getString(if (c.qualite == "fix") R.string.centre_qualite_fix else R.string.centre_qualite_float)
-                EtapeCentre.Message(plotId, ctx.getString(R.string.centre_enregistre, qualite, metres(c.precisionM), ecart?.let(::metres) ?: "?", c.nbFixes))
+                if (c.qualite == "telephone") {
+                    EtapeCentre.Message(plotId, ctx.getString(R.string.centre_enregistre_telephone, metres(c.precisionM), ecart?.let(::metres) ?: "?", c.nbFixes))
+                } else {
+                    val qualite = ctx.getString(if (c.qualite == "fix") R.string.centre_qualite_fix else R.string.centre_qualite_float)
+                    EtapeCentre.Message(plotId, ctx.getString(R.string.centre_enregistre, qualite, metres(c.precisionM), ecart?.let(::metres) ?: "?", c.nbFixes))
+                }
             } catch (e: Exception) {
                 EtapeCentre.Message(plotId, ctx.getString(R.string.centre_erreur, e.message ?: e.javaClass.simpleName))
             }
@@ -443,16 +455,37 @@ fun EcranCarte(
             title = { Text(stringResource(R.string.centre_titre, d.plotId)) },
             text = { Text(stringResource(R.string.centre_flottant, d.precisionM?.let(::metres) ?: "?")) },
         )
+        is EtapeCentre.Telephone -> AlertDialog(
+            onDismissRequest = { dialogueCentre = null },
+            confirmButton = { TextButton(onClick = { mesurer(d.plotId, false, telephone = true) }) { Text(stringResource(R.string.centre_telephone_mesurer)) } },
+            dismissButton = { TextButton(onClick = { dialogueCentre = null }) { Text(stringResource(R.string.annuler)) } },
+            title = { Text(stringResource(R.string.centre_titre, d.plotId)) },
+            text = { Text(stringResource(R.string.centre_telephone_avertissement, d.precisionM?.let(::metres) ?: "?", MesureCentre.DUREE_TELEPHONE_S)) },
+        )
+        is EtapeCentre.TelephoneInsuffisant -> AlertDialog(
+            onDismissRequest = { dialogueCentre = null },
+            confirmButton = { TextButton(onClick = { dialogueCentre = EtapeCentre.Mesure(d.plotId, false, true) }) { Text(stringResource(R.string.centre_telephone_recommencer)) } },
+            dismissButton = { TextButton(onClick = { dialogueCentre = null }) { Text(stringResource(R.string.fermer)) } },
+            title = { Text(stringResource(R.string.centre_titre, d.plotId)) },
+            text = { Text(stringResource(R.string.centre_telephone_insuffisant, MesureCentre.MIN_FIXES_TELEPHONE, MesureCentre.PRECISION_MAX_TELEPHONE_M.toInt())) },
+        )
+        is EtapeCentre.RemplacerRtk -> AlertDialog(
+            onDismissRequest = { dialogueCentre = null },
+            confirmButton = { TextButton(onClick = { dialogueCentre = EtapeCentre.Mesure(d.plotId, false, true) }) { Text(stringResource(R.string.centre_telephone_remplacer)) } },
+            dismissButton = { TextButton(onClick = { dialogueCentre = null }) { Text(stringResource(R.string.annuler)) } },
+            title = { Text(stringResource(R.string.centre_titre, d.plotId)) },
+            text = { Text(stringResource(R.string.centre_telephone_remplace_rtk)) },
+        )
         is EtapeCentre.Deja -> AlertDialog(
             onDismissRequest = { dialogueCentre = null },
-            confirmButton = { TextButton(onClick = { dialogueCentre = EtapeCentre.Mesure(d.plotId, d.flottant) }) { Text(stringResource(R.string.centre_mesurer_quand_meme)) } },
+            confirmButton = { TextButton(onClick = { dialogueCentre = EtapeCentre.Mesure(d.plotId, d.flottant, d.telephone) }) { Text(stringResource(R.string.centre_mesurer_quand_meme)) } },
             dismissButton = { TextButton(onClick = { dialogueCentre = null }) { Text(stringResource(R.string.annuler)) } },
             title = { Text(stringResource(R.string.centre_titre, d.plotId)) },
             text = { Text(stringResource(R.string.centre_deja, d.plotId, d.ecartM?.let(::metres) ?: "?")) },
         )
         is EtapeCentre.Mesure -> DialogueMesure(
-            d.plotId, d.flottant, remember { ConfigRtk.lire(ctx).dureeCentreS },
-            onFini = { c -> terminerMesure(d.plotId, c) },
+            d.plotId, d.flottant, d.telephone, if (d.telephone) MesureCentre.DUREE_TELEPHONE_S else remember { ConfigRtk.lire(ctx).dureeCentreS },
+            onFini = { c -> terminerMesure(d.plotId, c, d.telephone) },
             onAnnuler = { dialogueCentre = null },
         )
     }
@@ -496,6 +529,9 @@ private fun FeuillePlacette(p: PlacetteCarte, donnees: DonneesCarte?, guide: Gui
         if (rang >= 0) Text(stringResource(R.string.carte_rang, rang + 1, donnees!!.parcours.size), color = MaterialTheme.colorScheme.onSurfaceVariant)
         donnees?.centres?.firstOrNull { it.plotId == p.plotId }?.let { c ->
             Text(stringResource(R.string.carte_centre_mesure, nombreCarte(Math.round((c.ecartM ?: 0.0) * 100) / 100.0)), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (c.qualite == "telephone") {
+                Text(stringResource(R.string.carte_centre_telephone, c.precisionM?.let(::metres) ?: "?"), color = MaterialTheme.colorScheme.error)
+            }
         }
         guide?.let { g ->
             Text(stringResource(R.string.carte_distance, distance(g.distanceM)) + " · " + texteAzimut(g))
@@ -564,8 +600,8 @@ private fun BandeauGuidage(
  * must stay still. Cancelling writes nothing.
  */
 @Composable
-private fun DialogueMesure(plotId: String, flottant: Boolean, dureeS: Int, onFini: (CentreMesure?) -> Unit, onAnnuler: () -> Unit) {
-    val mesure = remember { MesureCentre(flottant) }
+private fun DialogueMesure(plotId: String, flottant: Boolean, telephone: Boolean, dureeS: Int, onFini: (CentreMesure?) -> Unit, onAnnuler: () -> Unit) {
+    val mesure = remember { MesureCentre(flottant, accepterTelephone = telephone) }
     var ecoule by remember { mutableIntStateOf(0) }
     var retenus by remember { mutableIntStateOf(0) }
     var ecartes by remember { mutableIntStateOf(0) }
@@ -573,7 +609,8 @@ private fun DialogueMesure(plotId: String, flottant: Boolean, dureeS: Int, onFin
     LaunchedEffect(Unit) {
         val debut = SystemClock.elapsedRealtime()
         val ecoute = launch {
-            SourcePosition.fix.collect { f ->
+            // Phone: the value already held when the measure starts may be up to a minute old: ignored.
+            (if (telephone) SourcePosition.fix.drop(1) else SourcePosition.fix).collect { f ->
                 if (f == null) return@collect
                 if (mesure.ajouter(f)) { retenus = mesure.nombre; precision = mesure.resultat()?.precisionM } else ecartes++
             }
@@ -583,6 +620,7 @@ private fun DialogueMesure(plotId: String, flottant: Boolean, dureeS: Int, onFin
             ecoule = ((SystemClock.elapsedRealtime() - debut) / 1000).toInt().coerceAtMost(dureeS)
         }
         ecoute.cancel()
+        // Phone: 30 s AND at least 20 accepted fixes, else nothing is recorded (resultat() is null).
         onFini(mesure.resultat())
     }
     AlertDialog(
@@ -592,10 +630,11 @@ private fun DialogueMesure(plotId: String, flottant: Boolean, dureeS: Int, onFin
         title = { Text(stringResource(R.string.centre_titre, plotId)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.centre_en_cours, ecoule, dureeS))
+                if (telephone) Text(stringResource(R.string.centre_telephone_en_cours, ecoule, dureeS), color = MaterialTheme.colorScheme.error)
+                else Text(stringResource(R.string.centre_en_cours, ecoule, dureeS))
                 LinearProgressIndicator(progress = { ecoule.toFloat() / dureeS }, modifier = Modifier.fillMaxWidth())
                 Text(stringResource(R.string.centre_fixes, retenus, precision?.let { metres(it) + " m" } ?: "—"))
-                if (ecartes > 0) Text(stringResource(R.string.centre_ignores, ecartes), color = MaterialTheme.colorScheme.error)
+                if (ecartes > 0) Text(stringResource(if (telephone) R.string.centre_ignores_telephone else R.string.centre_ignores, ecartes), color = MaterialTheme.colorScheme.error)
             }
         },
     )
@@ -699,8 +738,14 @@ private sealed interface EtapeCentre {
     val plotId: String
     data class Message(override val plotId: String, val texte: String) : EtapeCentre
     data class Flottant(override val plotId: String, val precisionM: Double?) : EtapeCentre
-    data class Deja(override val plotId: String, val ecartM: Double?, val flottant: Boolean) : EtapeCentre
-    data class Mesure(override val plotId: String, val flottant: Boolean) : EtapeCentre
+    data class Deja(override val plotId: String, val ecartM: Double?, val flottant: Boolean, val telephone: Boolean = false) : EtapeCentre
+    data class Mesure(override val plotId: String, val flottant: Boolean, val telephone: Boolean = false) : EtapeCentre
+    /** Phone GNSS offered, with its warning (mission 025). */
+    data class Telephone(override val plotId: String, val precisionM: Double?) : EtapeCentre
+    /** The plot has an RTK centre: replacing it by the phone's needs a confirmation. */
+    /** Fewer than 20 usable phone fixes in 30 s: nothing recorded, the operator may start again. */
+    data class TelephoneInsuffisant(override val plotId: String) : EtapeCentre
+    data class RemplacerRtk(override val plotId: String) : EtapeCentre
 }
 
 /** Metres to the centimetre, French decimal comma. */

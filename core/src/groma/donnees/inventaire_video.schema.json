@@ -1,6 +1,6 @@
 {
   "nom": "inventaire_video",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "crs": 2154,
   "description": "Schéma du GeoPackage inventaire_video.gpkg produit par nemeton (sous-onglet Terrain > Inventaire vidéo) et complété sur le terrain par QField (saisie) et Groma (détections). Source unique : Python (groma), Kotlin (application Groma) et brief nemeton.",
   "domaines": {
@@ -8,7 +8,7 @@
     "exposition": ["N", "NE", "E", "SE", "S", "SW", "W", "NW", "flat"],
     "unite_azimut": ["deg", "gr"],
     "etat_traitement": ["a_faire", "provisoire", "envoye", "definitif"],
-    "qualite_gnss": ["fix", "float"],
+    "qualite_gnss": ["fix", "float", "telephone"],
     "id_cible": ["C1", "C2", "C3"],
     "source_azimut": ["boussole_visee", "boussole_telephone"],
     "statut": ["vivant", "mort", "chablis", "coupe"],

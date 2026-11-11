@@ -15,7 +15,11 @@ data class PlacetteCarte(
 }
 
 /** RTK centre measured for a plot, with its distance to the planned point (m). */
-data class CentreCarte(val plotId: String, val lon: Double, val lat: Double, val ecartM: Double?)
+data class CentreCarte(
+    val plotId: String, val lon: Double, val lat: Double, val ecartM: Double?,
+    /** `qualite_gnss` of the centre ("fix", "float", "telephone"), null when unknown. */
+    val qualite: String? = null, val precisionM: Double? = null,
+)
 
 /** Cadastral parcel in WGS 84: polygons → rings (exterior first) → (lon, lat). */
 data class ParcelleCarte(
@@ -105,7 +109,10 @@ data class DonneesCarte(
                 val y = l["y"] as? Double ?: return@mapNotNull null
                 val id = l["plot_id"]?.toString() ?: return@mapNotNull null
                 val (lon, lat) = Projections.versWgs84(x, y)
-                CentreCarte(id, lon, lat, prevus[id]?.let { (px, py) -> hypot(x - px, y - py) })
+                CentreCarte(
+                    id, lon, lat, prevus[id]?.let { (px, py) -> hypot(x - px, y - py) },
+                    l["qualite_gnss"] as? String, (l["precision_h_m"] as? Number)?.toDouble(),
+                )
             }
             val parcelles = GeoPackage.lireParcelles(db).map { p ->
                 ParcelleCarte(p.idu, p.section, p.numero, p.polygones.map { anneaux ->

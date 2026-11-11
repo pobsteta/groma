@@ -329,9 +329,10 @@ fun FicheArbre(
                     ) { Text(stringResource(R.string.fiche_photo_prendre)) }
                 }
 
+                if (creation) Text(stringResource(R.string.fiche_creation_suite), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 erreurGenerale?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                 Button(enabled = !enCours, onClick = { enregistrer(onFermer) }, modifier = Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.fiche_enregistrer))
+                    Text(stringResource(if (creation) R.string.fiche_creer else R.string.fiche_enregistrer))
                 }
                 if (!creation) {
                     OutlinedButton(

@@ -75,6 +75,8 @@ fun EcranPlacette(
     declinaisonDeg: Double,
     convergenceDeg: Double,
     centreMesure: Boolean,
+    centreQualite: String? = null,
+    centrePrecisionM: Double? = null,
     initiales: List<CiblePlacee>,
     centre: Pair<Double, Double>,
     arbresInitiaux: List<ArbrePlacette>,
@@ -160,8 +162,12 @@ fun EcranPlacette(
                 arbre = ArbrePlacette("", "A?", 0.0, 0.0, null, false, null, "vivant", null),
                 suivant = null,
                 onEnregistrer = { saisie ->
+                    val avant = arbres.map { it.uuid }.toSet()
                     arbres = onAjouterArbre(az, d, saisie)
                     ajout = false; azimutTexte = ""; distanceTexte = ""
+                    // Mission 025: the tree now exists (A<n>): its full form (note, photos) opens at once,
+                    // so no photo is ever named before the number is known.
+                    fiche = arbres.firstOrNull { it.uuid !in avant }?.uuid
                 },
                 onOuvrir = {},
                 onFermer = { creation = null },
@@ -181,6 +187,12 @@ fun EcranPlacette(
         ) {
             if (!centreMesure) {
                 Text(stringResource(R.string.cibles_centre_prevu), color = MaterialTheme.colorScheme.error)
+            } else if (centreQualite == "telephone") {
+                // Mission 025: a centre taken with the phone's GNSS is flagged, like the planned-centre notice.
+                Text(
+                    stringResource(R.string.cibles_centre_telephone, centrePrecisionM?.let { (Math.round(it * 10) / 10.0).toString().replace('.', ',') } ?: "?"),
+                    color = MaterialTheme.colorScheme.error,
+                )
             }
             Plan(rayonM, unite, declinaisonDeg, convergenceDeg, cibles, choisie, arbres, centre, fiche, apercu) { fiche = it.uuid }
 

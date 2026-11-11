@@ -146,7 +146,7 @@ class MainActivity : AppCompatActivity() {
                                     try {
                                         val p = ouvert.parametres(plot)
                                         val c = ouvert.centrePourCibles(plot)
-                                        EtatCibles(p, c.mesure, ouvert.ciblesPlacees(plot, p.uniteAzimut), Pair(c.x, c.y), ouvert.arbres(plot))
+                                        EtatCibles(p, c.mesure, ouvert.ciblesPlacees(plot, p.uniteAzimut), Pair(c.x, c.y), ouvert.arbres(plot), c.qualite, c.precisionM)
                                     } catch (e: Exception) { null }
                                 }
                             }
@@ -158,6 +158,8 @@ class MainActivity : AppCompatActivity() {
                                     declinaisonDeg = e.parametres.declinaisonDeg,
                                     convergenceDeg = e.parametres.convergenceDeg,
                                     centreMesure = e.centreMesure,
+                                    centreQualite = e.centreQualite,
+                                    centrePrecisionM = e.centrePrecisionM,
                                     initiales = e.cibles,
                                     centre = e.centre,
                                     arbresInitiaux = e.arbres,
@@ -411,6 +413,7 @@ class MainActivity : AppCompatActivity() {
 private class EtatCibles(
     val parametres: ParametresPlacette, val centreMesure: Boolean, val cibles: List<CiblePlacee>,
     val centre: Pair<Double, Double>, val arbres: List<ArbrePlacette>,
+    val centreQualite: String? = null, val centrePrecisionM: Double? = null,
 )
 
 object Preferences {
