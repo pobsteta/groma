@@ -53,7 +53,9 @@ import kotlin.test.assertTrue
  *      * relative to [dossierProjet] (QField convention, e.g. "DCIM/P001_1_20261111T101500.jpg").
  *      * A photo that does not exist or leaves [dossierProjet] (absolute path, "..") is not packed, is
  *      * listed in `photosManquantes` (path as stored in the source) and does NOT stop the archive; its
- *      * path is still written in `terrain.gpkg` (rule 5: nothing is lost). [ResultatArchive.empreinte]
+ *      * path is kept AS STORED IN THE SOURCE in `terrain.gpkg` (e.g. "DCIM/absente.jpg", "../x.jpg",
+ *      * an absolute path: decision of Pascal 2026-11-11, same rule for all; nothing is lost, rule 5), while the
+ *      * photos found are rewritten to "photos/<name>". [ResultatArchive.empreinte]
  *      * equals [empreinte] for the same arguments.
  *      */
  *     fun archiver(copie: File, dossierProjet: File, plotId: String, sortie: File): ResultatArchive
@@ -280,7 +282,7 @@ class ExportTerrainTest {
             assertNotNull(z.getEntry("photos/presente.jpg"))
             assertNull(z.getEntry("photos/absente.jpg"))
             sur(gpkgDe(z)) { db ->
-                assertEquals("photos/presente.jpg;photos/absente.jpg", db.requete("SELECT photos FROM arbres WHERE uuid = ?", listOf(U1)).single()["photos"], "chemin conservé (règle 5)")
+                assertEquals("photos/presente.jpg;DCIM/absente.jpg", db.requete("SELECT photos FROM arbres WHERE uuid = ?", listOf(U1)).single()["photos"], "photo manquante : chemin d'origine conservé, la trouvée réécrite")
             }
         }
     }
