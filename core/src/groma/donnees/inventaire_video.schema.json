@@ -1,6 +1,6 @@
 {
   "nom": "inventaire_video",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "crs": 2154,
   "description": "Schéma du GeoPackage inventaire_video.gpkg produit par nemeton (sous-onglet Terrain > Inventaire vidéo) et complété sur le terrain par QField (saisie) et Groma (détections). Source unique : Python (groma), Kotlin (application Groma) et brief nemeton.",
   "domaines": {
@@ -14,6 +14,7 @@
     "statut": ["vivant", "mort", "chablis", "coupe"],
     "qualite": ["A", "B", "C", "D"],
     "h_source": ["mnh", "mesuree", "aucune"],
+    "dbh_source": ["estime", "mesure"],
     "etat_detection": ["provisoire", "definitif", "a_completer", "a_verifier", "faux_positif"],
     "methode": ["embarque", "classique", "ia"]
   },
@@ -88,7 +89,7 @@
         {"nom": "plot_id", "type": "TEXT", "requis": true, "origine": "nemeton"},
         {"nom": "tree_id", "type": "TEXT", "requis": true, "origine": "nemeton"},
         {"nom": "espece", "type": "TEXT", "lecture_seule": true, "origine": "nemeton", "remarque": "Type de peuplement nemeton, déduit d'essence_arbre par nemeton (map_bdforet_essence)."},
-        {"nom": "dbh_cm", "type": "REAL", "requis": true, "min": 0, "max": 1000, "origine": "nemeton"},
+        {"nom": "dbh_cm", "type": "REAL", "requis": true, "min": 0, "max": 1000, "lecture_seule": true, "origine": "nemeton", "remarque": "Lecture seule dans QField : le diamètre au ruban se saisit dans Groma (dbh_source = mesure) ; Groma écrit cette colonne par les déclencheurs et GeoPackage.modifierArbre."},
         {"nom": "h_m", "type": "REAL", "min": 0, "max": 80, "origine": "nemeton"},
         {"nom": "statut", "type": "TEXT", "domaine": "statut", "defaut": "vivant", "origine": "nemeton"},
         {"nom": "qualite", "type": "TEXT", "domaine": "qualite", "origine": "nemeton"},
@@ -100,6 +101,7 @@
         {"nom": "distance_m", "type": "REAL", "lecture_seule": true, "origine": "groma"},
         {"nom": "essence_arbre", "type": "TEXT", "domaine_externe": "essences_bdforet_v2", "origine": "groma"},
         {"nom": "h_source", "type": "TEXT", "domaine": "h_source", "defaut": "aucune", "origine": "groma"},
+        {"nom": "dbh_source", "type": "TEXT", "domaine": "dbh_source", "defaut": "estime", "lecture_seule": true, "origine": "groma", "remarque": "estime : diamètre de la vidéo (suit la détection) ; mesure : diamètre au ruban saisi dans Groma (lecture seule dans QField), jamais écrasé par une détection ni par le rapprochement définitif. Absente des GeoPackages préparés avant le schéma 1.4.0 (Groma l'ajoute à la première saisie)."},
         {"nom": "houppier_id", "type": "INTEGER", "lecture_seule": true, "origine": "groma"},
         {"nom": "etat_detection", "type": "TEXT", "domaine": "etat_detection", "origine": "groma"},
         {"nom": "methode", "type": "TEXT", "domaine": "methode", "lecture_seule": true, "origine": "groma"}

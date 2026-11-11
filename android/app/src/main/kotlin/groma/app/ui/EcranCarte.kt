@@ -502,7 +502,7 @@ private fun FeuillePlacette(p: PlacetteCarte, donnees: DonneesCarte?, guide: Gui
         }
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
             OutlinedButton(onClick = onYAller) { Text(stringResource(R.string.carte_y_aller)) }
-            OutlinedButton(onClick = onCibles) { Text(stringResource(R.string.cibles_bouton)) }
+            OutlinedButton(onClick = onCibles) { Text(stringResource(R.string.placette_bouton)) }
             Button(onClick = onOuvrir) { Text(stringResource(R.string.filmer)) }
         }
     }

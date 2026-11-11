@@ -8,6 +8,11 @@
 // rows exactly as for a direct write. Nothing already present is modified:
 // detections are matched on `uuid`, centres on `plot_id` + `date_mesure`.
 //
+// Mission 018: what was entered in Groma on each tree (essence_arbre, tape
+// diameter dbh_cm + dbh_source, statut, qualite; answer key `arbres`) is then
+// copied into QField's `arbres`, by `uuid`, never over a value entered in
+// QField (function aRecopier, same rule as RecopieQfield.kt, tested there).
+//
 // API checked against QField 3.7 to 4.3 sources (see docs/terrain.md).
 // Must sit next to the project as `<project name>.qml`.
 
@@ -141,6 +146,92 @@ Item {
     return isNaN(t) ? String(v) : String(t)
   }
 
+  // ---- Copy of the attributes entered in Groma ---------------------------
+  // SAME RULE, LINE FOR LINE, AS groma.core.RecopieQfield.aRecopier (Kotlin,
+  // android/groma-core, tested by RecopieQfieldTest): change both together.
+  // Returns ONLY the attributes to write in QField ({} = nothing to do).
+  function vide(v) {
+    return v === undefined || v === null || String(v).trim() === ""
+  }
+
+  function aRecopier(groma, qfield) {
+    const res = {}
+    for (const k of ["essence_arbre", "qualite"]) {
+      if (!vide(groma[k]) && vide(qfield[k])) res[k] = groma[k]
+    }
+    const sq = qfield["statut"]
+    if (!vide(groma["statut"]) && groma["statut"] !== "vivant" && (vide(sq) || sq === "vivant")) res["statut"] = groma["statut"]
+    const sourceQ = qfield["dbh_source"]
+    if (groma["dbh_source"] === "mesure" && !vide(groma["dbh_cm"]) && (vide(sourceQ) || sourceQ === "estime")) {
+      res["dbh_cm"] = groma["dbh_cm"]
+      res["dbh_source"] = "mesure"
+    }
+    return res
+  }
+
+  // Layer WITHOUT `dbh_source` (project generated before schema 1.4.0): QField's
+  // source is then unknown, and aRecopier would read it as empty and overwrite a
+  // tape diameter typed in QField. So neither dbh_cm nor dbh_source is copied
+  // there (brief nemeton section 4). Done here, not in aRecopier, whose pure rule
+  // (RecopieQfield.aRecopier, RecopieQfieldTest) stays the same on both sides;
+  // Kotlin side: nothing to do, the plugin is the only writer of QField's copy.
+  function sansDiametreSiPasDeSource(r, aDbhSource) {
+    if (aDbhSource) return r
+    const res = {}
+    for (const k of Object.keys(r)) if (k !== "dbh_cm" && k !== "dbh_source") res[k] = r[k]
+    return res
+  }
+
+  // The five attributes of QField's tree (NULL comes back null: `vide` copes).
+  function attributsArbre(f, fields) {
+    const a = {}
+    for (const c of ["essence_arbre", "dbh_cm", "dbh_source", "statut", "qualite"]) {
+      if (fields.indexOf(c) >= 0) a[c] = f.attribute(c)
+    }
+    return a
+  }
+
+  // Copies the attributes of `saisies` (answer key `arbres`, one object per
+  // uuid) into the `arbres` layer: one validated edit for the whole layer,
+  // nothing if the layer is already being edited. Returns {recopies} or {erreur}.
+  function recopierArbres(saisies) {
+    if (!saisies || saisies.length === 0) return { recopies: 0 }
+    const layer = couche("arbres")
+    if (!layer) return { erreur: qsTr("couche « arbres » absente") }
+    const fields = layer.fields
+    const aDbhSource = fields.indexOf("dbh_source") >= 0
+    const parUuid = {}
+    for (const s of saisies) parUuid[String(s.uuid)] = s
+    // Plan first, edit afterwards: no edit session when there is nothing to copy.
+    const plan = []
+    const it = LayerUtils.createFeatureIterator(layer)
+    while (it.hasNext()) {
+      const f = it.next()
+      const g = parUuid[String(f.attribute("uuid"))]
+      if (!g) continue
+      const r = sansDiametreSiPasDeSource(aRecopier(g, attributsArbre(f, fields)), aDbhSource)
+      if (Object.keys(r).length > 0) plan.push({ fid: f.id, valeurs: r })
+    }
+    it.close()
+    if (plan.length === 0) return { recopies: 0 }
+    // Never commit someone else's pending edits along with ours.
+    if (layer.isEditable || !layer.startEditing())
+      return { erreur: qsTr("« arbres » est déjà en cours d'édition : enregistrer ou annuler, puis réessayer") }
+    let recopies = 0
+    for (const p of plan) {
+      for (const k of Object.keys(p.valeurs)) {
+        const i = fields.indexOf(k)
+        // dbh_cm and dbh_source go together: counted as ONE attribute (counted on dbh_cm).
+        if (i >= 0 && layer.changeAttributeValue(p.fid, i, p.valeurs[k]) && k !== "dbh_source") recopies++
+      }
+    }
+    if (!layer.commitChanges()) {
+      layer.rollBack()
+      return { erreur: qsTr("échec de l'enregistrement dans « arbres »") }
+    }
+    return { recopies: recopies }
+  }
+
   function importer(d) {
     const det = ajouter("detections", d.detections, champsDetection,
                         f => String(f.attribute("uuid")), e => String(e.uuid))
@@ -148,15 +239,21 @@ Item {
                         f => f.attribute("plot_id") + "|" + instant(f.attribute("date_mesure")),
                         e => e.plot_id + "|" + instant(e.date_mesure))
     // Rows created by the triggers in `arbres` only show once it is re-read.
-    for (const nom of ["arbres", "detections", "centres_mesures"]) {
-      const l = couche(nom)
-      if (!l) continue
-      if (typeof l.reload === "function") l.reload()
-      l.triggerRepaint()
+    const relire = () => {
+      for (const nom of ["arbres", "detections", "centres_mesures"]) {
+        const l = couche(nom)
+        if (!l) continue
+        if (typeof l.reload === "function") l.reload()
+        l.triggerRepaint()
+      }
     }
-    const erreurs = [det.erreur, cen.erreur].filter(e => e)
-    const bilan = qsTr("Groma : %1 détection(s) et %2 centre(s) ajoutés, %3 déjà présents.")
-      .arg(det.ajoutes || 0).arg(cen.ajoutes || 0).arg((det.ignores || 0) + (cen.ignores || 0))
+    relire()
+    // The new rows are there: they receive what was entered in Groma.
+    const rec = recopierArbres(d.arbres)
+    if (rec.recopies) relire()
+    const erreurs = [det.erreur, cen.erreur, rec.erreur].filter(e => e)
+    const bilan = qsTr("Groma : %1 détection(s) et %2 centre(s) ajoutés, %3 déjà présents, %4 attributs recopiés.")
+      .arg(det.ajoutes || 0).arg(cen.ajoutes || 0).arg((det.ignores || 0) + (cen.ignores || 0)).arg(rec.recopies || 0)
     if (erreurs.length > 0) toast(bilan + " " + erreurs.join(" ; "), "error")
     else toast(bilan)
   }

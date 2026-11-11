@@ -33,7 +33,8 @@ import groma.app.carte.configurerOsmdroid
 import groma.app.gnss.ServiceGnssRtk
 import groma.app.gnss.SourcePosition
 import groma.app.ui.EcranCarte
-import groma.app.ui.EcranCibles
+import groma.app.ui.EcranPlacette
+import groma.core.ArbrePlacette
 import groma.core.CiblePlacee
 import groma.core.ParametresPlacette
 import groma.app.ui.LocalPleinEcran
@@ -142,12 +143,13 @@ class MainActivity : AppCompatActivity() {
                                 value = withContext(Dispatchers.IO) {
                                     try {
                                         val p = ouvert.parametres(plot)
-                                        EtatCibles(p, ouvert.centrePourCibles(plot).mesure, ouvert.ciblesPlacees(plot, p.uniteAzimut))
+                                        val c = ouvert.centrePourCibles(plot)
+                                        EtatCibles(p, c.mesure, ouvert.ciblesPlacees(plot, p.uniteAzimut), Pair(c.x, c.y), ouvert.arbres(plot))
                                     } catch (e: Exception) { null }
                                 }
                             }
                             etat?.let { e ->
-                                EcranCibles(
+                                EcranPlacette(
                                     plotId = plot,
                                     unite = e.parametres.uniteAzimut,
                                     rayonM = e.parametres.rayonM,
@@ -155,6 +157,12 @@ class MainActivity : AppCompatActivity() {
                                     convergenceDeg = e.parametres.convergenceDeg,
                                     centreMesure = e.centreMesure,
                                     initiales = e.cibles,
+                                    centre = e.centre,
+                                    arbresInitiaux = e.arbres,
+                                    onEnregistrerArbre = { uuid, saisie ->
+                                        withContext(Dispatchers.IO) { ouvert.modifierArbre(uuid, saisie); ouvert.arbres(plot) }
+                                            .also { ServicePartageQfield.demarrer(this@MainActivity) }
+                                    },
                                     onPlacer = { id, az, d, dbh, source ->
                                         withContext(Dispatchers.IO) { ouvert.placerCible(plot, id, az, d, dbh, source) }
                                             .also { rafraichir++; ServicePartageQfield.demarrer(this@MainActivity) }
@@ -372,7 +380,10 @@ class MainActivity : AppCompatActivity() {
 }
 
 /** What the cibles view needs, loaded off the main thread. */
-private class EtatCibles(val parametres: ParametresPlacette, val centreMesure: Boolean, val cibles: List<CiblePlacee>)
+private class EtatCibles(
+    val parametres: ParametresPlacette, val centreMesure: Boolean, val cibles: List<CiblePlacee>,
+    val centre: Pair<Double, Double>, val arbres: List<ArbrePlacette>,
+)
 
 object Preferences {
     fun kanban(ctx: Context) = ReglagesKanban(object : MagasinKanban {

@@ -119,7 +119,7 @@ private fun CartePlacette(p: LignePlacette, onCibles: () -> Unit, onOuvrir: () -
                     )
                 }
             }
-            OutlinedButton(onClick = onCibles, modifier = Modifier.padding(end = 8.dp)) { Text(stringResource(R.string.cibles_bouton)) }
+            OutlinedButton(onClick = onCibles, modifier = Modifier.padding(end = 8.dp)) { Text(stringResource(R.string.placette_bouton)) }
             EtatTraitement(p.etat)
         }
     }
