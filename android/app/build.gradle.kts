@@ -3,8 +3,9 @@ plugins {
     kotlin("plugin.compose")
 }
 
-// Single project version, bumped by release-please. versionCode is derived
-// from it (MAJOR*10000 + MINOR*100 + PATCH) so every release is monotonic.
+// Single project version (calendar YYYY.M.N), bumped by release-please.
+// versionCode is derived from it (YYYY*10000 + M*100 + N, N < 100) so every
+// release is monotonic, including after the former 0.x versions.
 val versionGroma = "0.14.0" // x-release-please-version
 val codeVersionGroma = versionGroma.split(".").map(String::toInt).let { (ma, mi, pa) -> ma * 10000 + mi * 100 + pa }
 
