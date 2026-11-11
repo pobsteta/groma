@@ -203,7 +203,8 @@ class PlacementCibleTest {
     }
 
     @Test fun ecartAngulaireDansLesDeuxSens() {
-        val a = PlacementCible.alertes(listOf(c("C1", 100.0), c("C2", 40.0), c("C3", 250.0)))
+        // C1 après C2 en azimut : 90 - 40 = 50 deg (< 60) ; avec C3 à 250 : 160 et 150 deg, pas d'autre alerte
+        val a = PlacementCible.alertes(listOf(c("C1", 90.0), c("C2", 40.0), c("C3", 250.0)))
         assertEquals(listOf(AlerteCible(TypeAlerte.ECART_ANGULAIRE, listOf("C1", "C2"))), a)
     }
 
