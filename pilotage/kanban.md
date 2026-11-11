@@ -26,19 +26,6 @@ _Modèle de carte :_
 
 ## Validé
 
-- [017](missions/017-test-arbres-dans-groma.md) · depuis le cycle 7
-  - Homme : testeur (sonnet), appuyer
-  - Mission : tests de la saisie des arbres dans Groma (contrôles, priorité du ruban `dbh_source`, rapprochement, serveur local, recopie vers QField sans écrasement)
-  - Moyens : `h_source = mesuree` comme modèle, `test_gpkg.py`, `GeoPackageTest`, tests du rapprochement
-- [018](missions/018-arbres-dans-groma-donnees.md) · depuis le cycle 7
-  - Homme : dev (sonnet), appuyer
-  - Mission : schéma `dbh_source`, déclencheurs, écriture Groma dans `arbres`, rapprochement, serveur local, plugin QField, brief nemeton
-  - Moyens : tests de 017, `ecrireCible`, `qfield/inventaire_video.qml`
-- [019](missions/019-vue-placette-arbres.md) · depuis le cycle 7
-  - Homme : dev (sonnet), appuyer
-  - Mission : vue « Placette » : arbres sur le plan (couleur d'essence de Marculus), fiche de saisie essence, ruban, statut, qualité
-  - Moyens : `EcranCibles.kt`, `qfield/symbologie.py`, 018 ; essai de Pascal sur le S23 Ultra
-
 - [020](missions/020-test-envoi-terrain.md) · depuis le cycle 7
   - Homme : testeur (sonnet), appuyer
   - Mission : tests de l'archive « terrain » d'une placette (extraction, photos, dépôt au serveur, renvoi, empreinte)
@@ -62,6 +49,18 @@ _Modèle de carte :_
 
 ## Terminé
 
+- [017](missions/017-test-arbres-dans-groma.md) · depuis le cycle 7
+  - Homme : testeur (sonnet), appuyer
+  - Mission : tests de la saisie des arbres dans Groma (contrôles, priorité du ruban `dbh_source`, rapprochement, serveur local, recopie vers QField sans écrasement)
+  - Moyens : `h_source = mesuree` comme modèle, `test_gpkg.py`, `GeoPackageTest`, tests du rapprochement · PR #91 fusionnée (e4ee318) après essai de Pascal sur le S23 Ultra
+- [018](missions/018-arbres-dans-groma-donnees.md) · depuis le cycle 7
+  - Homme : dev (sonnet), appuyer
+  - Mission : schéma `dbh_source`, déclencheurs, écriture Groma dans `arbres`, rapprochement, serveur local, plugin QField, brief nemeton
+  - Moyens : tests de 017, `ecrireCible`, `qfield/inventaire_video.qml` · PR #91 fusionnée (e4ee318) après essai de Pascal sur le S23 Ultra
+- [019](missions/019-vue-placette-arbres.md) · depuis le cycle 7
+  - Homme : dev (sonnet), appuyer
+  - Mission : vue « Placette » : arbres sur le plan (couleur d'essence de Marculus), fiche de saisie essence, ruban, statut, qualité
+  - Moyens : `EcranCibles.kt`, `qfield/symbologie.py`, 018 ; essai de Pascal sur le S23 Ultra · PR #91 fusionnée (e4ee318) après essai de Pascal sur le S23 Ultra
 - [015](missions/015-test-vue-cibles.md) · depuis le cycle 7
   - Homme : testeur (sonnet), appuyer
   - Mission : tests de `PlacementCible` (position depuis le centre, source de l'azimut, alertes de répartition)
