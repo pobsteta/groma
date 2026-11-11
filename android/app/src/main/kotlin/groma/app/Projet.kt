@@ -141,7 +141,7 @@ class Projet(val dossier: File) {
 
     /** Deletes a tree added by hand ([GeoPackage.supprimerArbreAjoute]); never a tree of the video. */
     fun supprimerArbreAjoute(uuid: String) {
-        ouvrir().use { GeoPackage.supprimerArbreAjoute(SqliteAndroid(it), uuid) }
+        ouvrir().use { GeoPackage.supprimerArbreAjoute(SqliteAndroid(it), uuid, dossier) }
     }
 
     /**

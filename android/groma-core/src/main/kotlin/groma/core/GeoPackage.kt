@@ -272,14 +272,20 @@ object GeoPackage {
         }
     }
 
-    /** Deletes a tree added by mistake: only a row with methode = 'terrain'; IllegalArgumentException otherwise. */
-    fun supprimerArbreAjoute(db: BaseSqlite, uuid: String) {
-        db.transactionImmediate {
-            val methode = db.requete("SELECT methode FROM arbres WHERE uuid = ?", listOf(uuid)).firstOrNull()
+    /**
+     * Deletes a tree added by mistake: only a row with methode = 'terrain'; IllegalArgumentException otherwise.
+     * With [dossierProjet] (mission 022), the photos Groma took for that tree and no other row cites are deleted
+     * too ([PhotosArbre.supprimerFichier]); a photo of QField stays in the project.
+     */
+    fun supprimerArbreAjoute(db: BaseSqlite, uuid: String, dossierProjet: java.io.File? = null) {
+        val photos = db.transactionImmediate {
+            val ligne = db.requete("SELECT methode, photos FROM arbres WHERE uuid = ?", listOf(uuid)).firstOrNull()
                 ?: throw IllegalArgumentException("Arbre inconnu : $uuid.")
-            require(methode["methode"] == "terrain") { "Seul un arbre ajouté à la main peut être supprimé (jamais un arbre de la vidéo)." }
+            require(ligne["methode"] == "terrain") { "Seul un arbre ajouté à la main peut être supprimé (jamais un arbre de la vidéo)." }
             db.executer("DELETE FROM arbres WHERE uuid = ? AND methode = 'terrain'", listOf(uuid))
+            PhotosArbre.lister(ligne["photos"] as? String)
         }
+        if (dossierProjet != null) for (c in photos) PhotosArbre.supprimerFichier(db, dossierProjet, c)
     }
 
     /** Drops and recreates `trg_detections_insert` and `trg_detections_update` from the resource `declencheurs.sql`. */
