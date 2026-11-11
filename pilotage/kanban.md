@@ -8,7 +8,7 @@
 
 > **PLAN.md reste la source maître de l'avancement et des décisions prises avant la méthode** (choix de Pascal, 2026-10-23). Ce kanban ne suit que les missions confiées par `/imperatrice:boucle`.
 
-**Dernier cycle :** 6 _(augmenté de 1 à la fin de chaque `/boucle`, même quand elle n'a
+**Dernier cycle :** 7 _(augmenté de 1 à la fin de chaque `/boucle`, même quand elle n'a
 rien lancé. Une carte est immobile quand dernier cycle − N ≥ 2.)_
 
 _Modèle de carte :_
@@ -26,24 +26,32 @@ _Modèle de carte :_
 
 ## Validé
 
-## Planifié
-
-- [012](missions/012-test-terrain-carte.md) · depuis le cycle 6
+- [015](missions/015-test-vue-cibles.md) · depuis le cycle 6
   - Homme : testeur (sonnet), appuyer
-  - Mission : tests d'équivalence de `terrain-carte` v0.7.1 avec le code carte de Groma (tuiles, emprise, URL WMTS)
-  - Moyens : `ZoneTuilesTest.kt`, `~/dev/terrain/terrain-carte`, brief Marculus du 2026-10-17 · une PR avec 013
-- [013](missions/013-terrain-carte.md) · depuis le cycle 6
+  - Mission : tests de `PlacementCible` (position depuis le centre, source de l'azimut, alertes de répartition)
+  - Moyens : `groma.core.Declinaison`, `georeferencement.py`, `SaisiePointage.kt` de Surculus (lecture)
+- [016](missions/016-vue-cibles.md) · depuis le cycle 6
   - Homme : dev (sonnet), appuyer
-  - Mission : la carte de Groma utilise `terrain-carte` v0.7.1, sans changer son comportement
-  - Moyens : tests de 012, brief Marculus du 2026-10-17 · après 012, même branche
-- [014](missions/014-couleurs-etat-theme.md) · depuis le cycle 6
-  - Homme : afficheur (sonnet), **tenir**
-  - Mission : plan des 18 couleurs d'état en dur (`Gnss.kt`, `EcranCarte.kt`) vers le thème, avec contrastes et options de sens
-  - Moyens : `Contraste.kt`, `Schema.kt` de terrain-style, `BadgeFix.kt` de Marculus · plan à trancher par Pascal
+  - Mission : vue « Cibles » : C1-C3 placées dans Groma (plus dans QField), plan nord en haut, boussole de visée par défaut ou du téléphone
+  - Moyens : tests de 015, vue Pointer de Surculus, écriture GeoPackage de `centres_mesures` ; schéma `source_azimut`, brief nemeton ; essai de Pascal sur le S23 Ultra
+
+## Planifié
 
 
 ## Terminé
 
+- [012](missions/012-test-terrain-carte.md) · depuis le cycle 6
+  - Homme : testeur (sonnet), appuyer
+  - Mission : tests d'équivalence de `terrain-carte` v0.7.1 avec le code carte de Groma (tuiles, emprise, URL WMTS)
+  - Moyens : `ZoneTuilesTest.kt`, `~/dev/terrain/terrain-carte`, brief Marculus du 2026-10-17 · PR #80 fusionnée (65ce940)
+- [013](missions/013-terrain-carte.md) · depuis le cycle 6
+  - Homme : dev (sonnet), appuyer
+  - Mission : la carte de Groma utilise `terrain-carte` v0.7.1, sans changer son comportement
+  - Moyens : tests de 012, brief Marculus du 2026-10-17 · PR #80 fusionnée (65ce940) après essai de Pascal sur le S23 Ultra (4 tuiles avant et après, fonds, hors ligne)
+- [014](missions/014-couleurs-etat-theme.md) · depuis le cycle 6
+  - Homme : afficheur (sonnet), **tenir**
+  - Mission : plan des 18 couleurs d'état en dur (`Gnss.kt`, `EcranCarte.kt`) vers le thème, avec contrastes et options de sens
+  - Moyens : `Contraste.kt`, `Schema.kt` de terrain-style, `BadgeFix.kt` de Marculus · plan `014-plan.md` prêt après aller-retour 1/3 ; sens tranché par Pascal (A + C, SNR à 4 niveaux, liseré) ; mission de code à écrire au cycle 7
 - [010](missions/010-test-theme-terrain-style-071.md) · depuis le cycle 5
   - Homme : testeur (sonnet), appuyer
   - Mission : test d'égalité du thème de Groma avec `terrain-style` v0.7.1 (couleurs, formes, typographie), absorbe 003
@@ -115,3 +123,5 @@ l'inscrit avec ce qu'elle nous apprend._
 - cycle 3 · Groma 0.12.0 (réglage Plein écran dans Paramètres, accueil, carte et capture) · pour Pascal, opérateur de terrain, sur le S23 Ultra · plus de place à l'écran : barres de statut et de navigation masquées, rappelées au glissement
 - cycle 4 · Groma `main` d93791b (vue Kanban des projets, plein écran sans la bande de la caméra), APK de publication installé sur le S23 Ultra · pour Pascal, opérateur de terrain · l'avancement de chaque forêt d'un coup d'œil, et toute la largeur de l'écran en paysage
 - cycle 5 · Groma 0.14.0 publiée (thème lu dans `terrain-style` v0.7.1) · pour Pascal, mainteneur de Groma, Marculus et Surculus · un changement de style fait dans terrain arrive tout seul dans Groma, sans recopie ; rien ne change à l'écran pour l'opérateur
+- cycle 6 · la carte de Groma utilise `terrain-carte` v0.7.1 (#80, 65ce940), essayée sur le S23 Ultra · pour Pascal, mainteneur de Groma, Marculus et Surculus · les tuiles et fonds IGN viennent de la bibliothèque commune au lieu d'une copie (ligne ajoutée au cycle 7, oubliée à la clôture du cycle 6)
+- cycle 7 · Groma 0.15.0 avec la planche A4 des cibles C0-C3 (`docs/cibles_groma_a4.pdf`, #83) · pour Pascal, opérateur de terrain · pour la première fois des cibles prêtes à imprimer et plastifier, conformes au détecteur (motif 15 cm)
