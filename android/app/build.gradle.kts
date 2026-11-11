@@ -50,7 +50,7 @@ android {
 
 dependencies {
     implementation(project(":groma-core"))
-    implementation("com.google.ar:core:1.56.0")                 // Apache-2.0 (client SDK)
+    implementation("com.google.ar:core:1.57.0")                 // Apache-2.0 (client SDK)
     implementation("org.opencv:opencv:5.0.0.1")                  // Apache-2.0, ArUco + blur
     implementation("androidx.appcompat:appcompat:1.8.0")
     implementation("androidx.activity:activity-ktx:1.13.0")
