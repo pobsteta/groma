@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">Groma</string>
     <string name="choisir_placette">Choisir la placette</string>
-    <string name="filmer">Filmer la placette</string>
+    <string name="filmer">Filmer</string>
     <string name="terminer">Terminer la prise de vue</string>
     <string name="suivi_ok">Suivi : OK</string>
     <string name="suivi_perdu">Suivi perdu</string>
