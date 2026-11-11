@@ -1,5 +1,23 @@
 # Changelog
 
+## [2026.11.1](https://github.com/pobsteta/groma/compare/v0.14.0...v2026.11.1) (2026-11-11)
+
+
+### Nouveautés
+
+* **server:** planche A4 des cibles ArUco à imprimer ([#83](https://github.com/pobsteta/groma/issues/83)) ([c11153c](https://github.com/pobsteta/groma/commit/c11153ca509fa739c893cb558146b5da2cc2ca83))
+
+
+### Corrections
+
+* **ci:** passer la version calendaire par la ligne de commande de release-please ([#86](https://github.com/pobsteta/groma/issues/86)) ([83ec53d](https://github.com/pobsteta/groma/commit/83ec53dbcefa6ea3de031268194f831b4d1959e5))
+
+
+### Documentation
+
+* **pilotage:** cycle 5 (thème terrain-style terminé, deux cartes du bac à sable validées) ([#78](https://github.com/pobsteta/groma/issues/78)) ([be768f1](https://github.com/pobsteta/groma/commit/be768f1f4984e68cb4796900ac977b22ff9eccb6))
+* **pilotage:** cycles 6 et 7 (plan 014, missions 015-016 vue « Cibles ») ([#84](https://github.com/pobsteta/groma/issues/84)) ([5a8d398](https://github.com/pobsteta/groma/commit/5a8d398eca0c681bdc0cb45e5ed2e62a27725efa))
+
 ## [0.14.0](https://github.com/pobsteta/groma/compare/v0.13.0...v0.14.0) (2026-10-30)
 
 
