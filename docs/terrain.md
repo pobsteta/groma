@@ -403,7 +403,10 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    ou grades ; boussole de visée tapée, ou boussole du téléphone comme pour
    les cibles) et la **distance horizontale** en mètres : l'emplacement
    s'affiche en **cercle pointillé** sur le plan. « Saisir le diamètre au
-   ruban » ouvre la fiche, **en grand** (mission 025) : l'**essence** est le premier champ
+   ruban » ouvre la fiche (mission 025 : le clavier des champs azimut et distance est
+   fermé à l'ouverture, car il masquait probablement l'essence ; la fiche
+   s'ouvre en haut ; l'essai sur le S23 Ultra le confirmera) :
+   l'**essence** est le premier champ
    (taper un code ou un nom, choisir dans la liste), puis le **diamètre au
    ruban, obligatoire** (0 à 1000 cm), le statut et la qualité (facultatifs).
    « Créer l'arbre » écrit l'arbre puis **ouvre aussitôt sa fiche complète**,

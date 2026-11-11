@@ -612,7 +612,7 @@ private fun DialogueMesure(plotId: String, flottant: Boolean, telephone: Boolean
             // Phone: the value already held when the measure starts may be up to a minute old: ignored.
             (if (telephone) SourcePosition.fix.drop(1) else SourcePosition.fix).collect { f ->
                 if (f == null) return@collect
-                if (mesure.ajouter(f)) { retenus = mesure.nombre; precision = mesure.resultat()?.precisionM } else ecartes++
+                if (mesure.ajouter(f)) { retenus = mesure.nombre; precision = if (telephone) f.precisionHorizontaleM else mesure.resultat()?.precisionM } else ecartes++
             }
         }
         while (ecoule < dureeS) {
@@ -633,7 +633,8 @@ private fun DialogueMesure(plotId: String, flottant: Boolean, telephone: Boolean
                 if (telephone) Text(stringResource(R.string.centre_telephone_en_cours, ecoule, dureeS), color = MaterialTheme.colorScheme.error)
                 else Text(stringResource(R.string.centre_en_cours, ecoule, dureeS))
                 LinearProgressIndicator(progress = { ecoule.toFloat() / dureeS }, modifier = Modifier.fillMaxWidth())
-                Text(stringResource(R.string.centre_fixes, retenus, precision?.let { metres(it) + " m" } ?: "—"))
+                if (telephone) Text(stringResource(R.string.centre_fixes_telephone, retenus, MesureCentre.MIN_FIXES_TELEPHONE, precision?.let { metres(it) + " m" } ?: "—"))
+                else Text(stringResource(R.string.centre_fixes, retenus, precision?.let { metres(it) + " m" } ?: "—"))
                 if (ecartes > 0) Text(stringResource(if (telephone) R.string.centre_ignores_telephone else R.string.centre_ignores, ecartes), color = MaterialTheme.colorScheme.error)
             }
         },
@@ -742,14 +743,14 @@ private sealed interface EtapeCentre {
     data class Mesure(override val plotId: String, val flottant: Boolean, val telephone: Boolean = false) : EtapeCentre
     /** Phone GNSS offered, with its warning (mission 025). */
     data class Telephone(override val plotId: String, val precisionM: Double?) : EtapeCentre
-    /** The plot has an RTK centre: replacing it by the phone's needs a confirmation. */
     /** Fewer than 20 usable phone fixes in 30 s: nothing recorded, the operator may start again. */
     data class TelephoneInsuffisant(override val plotId: String) : EtapeCentre
+    /** The plot has an RTK centre: replacing it by the phone's needs a confirmation. */
     data class RemplacerRtk(override val plotId: String) : EtapeCentre
 }
 
 /** Metres to the centimetre, French decimal comma. */
-private fun metres(m: Double): String = nombreCarte(Math.round(m * 100) / 100.0)
+internal fun metres(m: Double): String = nombreCarte(Math.round(m * 100) / 100.0)
 
 /** Arrow towards the plot, relative to the top of the phone; grey and upright without a heading. */
 @Composable

@@ -235,8 +235,13 @@ fun FicheArbre(
                 )
             }
 
+            // Opens at the top (essence first), keyboard closed.
+            val defilement = rememberScrollState()
+            val clavierFiche = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+            val focusFiche = androidx.compose.ui.platform.LocalFocusManager.current
+            androidx.compose.runtime.LaunchedEffect(arbre.uuid) { focusFiche.clearFocus(); clavierFiche?.hide(); defilement.scrollTo(0) }
             Column(
-                Modifier.fillMaxWidth().imePadding().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp),
+                Modifier.fillMaxWidth().imePadding().verticalScroll(defilement).padding(horizontal = 16.dp).padding(bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Text(

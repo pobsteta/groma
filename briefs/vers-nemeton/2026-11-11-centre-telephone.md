@@ -20,8 +20,9 @@ quelques mètres** : toute la placette (cibles, arbres) est décalée d'autant.
 * Domaine `qualite_gnss` : **nouvelle valeur `telephone`** (en plus de `fix`
   et `float`). Colonne `centres_mesures.qualite_gnss` inchangée.
 * `precision_h_m` d'un centre `telephone` : la plus grande de la dispersion
-  des positions (RMS) et de la précision annoncée (RMS), en mètres (jusqu'à
-  10 m). Elle **doit être prise en compte** : un centre `telephone` n'a pas la
+  des positions (RMS) et de la précision annoncée (RMS), en mètres. Chaque
+  position retenue annonce au plus 10 m, mais la dispersion RMS peut faire
+  dépasser 10 m à `precision_h_m`. Elle **doit être prise en compte** : un centre `telephone` n'a pas la
   qualité d'un centre RTK, même si le téléphone se dit « RTK fixe ».
 * Un centre RTK n'est remplacé par un centre `telephone` qu'après
   confirmation dans Groma ; une mesure RTK faite ensuite le remplace (le plus

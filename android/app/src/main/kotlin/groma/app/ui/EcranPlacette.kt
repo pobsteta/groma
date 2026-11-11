@@ -38,6 +38,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -90,6 +92,10 @@ fun EcranPlacette(
     onNettoyerPhotos: (List<String>) -> Unit = {},
 ) {
     val ctx = LocalContext.current
+    val focus = LocalFocusManager.current
+    val clavier = LocalSoftwareKeyboardController.current
+    // Mission 025: the numeric keyboard of the azimuth/distance fields must not stay over the sheets.
+    fun fermerClavier() { focus.clearFocus(); clavier?.hide() }
     val scope = rememberCoroutineScope()
     var cibles by remember { mutableStateOf(initiales) }
     var arbres by remember { mutableStateOf(arbresInitiaux) }
@@ -167,6 +173,7 @@ fun EcranPlacette(
                     ajout = false; azimutTexte = ""; distanceTexte = ""
                     // Mission 025: the tree now exists (A<n>): its full form (note, photos) opens at once,
                     // so no photo is ever named before the number is known.
+                    fermerClavier()
                     fiche = arbres.firstOrNull { it.uuid !in avant }?.uuid
                 },
                 onOuvrir = {},
@@ -190,7 +197,7 @@ fun EcranPlacette(
             } else if (centreQualite == "telephone") {
                 // Mission 025: a centre taken with the phone's GNSS is flagged, like the planned-centre notice.
                 Text(
-                    stringResource(R.string.cibles_centre_telephone, centrePrecisionM?.let { (Math.round(it * 10) / 10.0).toString().replace('.', ',') } ?: "?"),
+                    stringResource(R.string.cibles_centre_telephone, centrePrecisionM?.let(::metres) ?: "?"),
                     color = MaterialTheme.colorScheme.error,
                 )
             }
@@ -282,6 +289,7 @@ fun EcranPlacette(
                         try {
                             PlacementCible.position(Pair(0.0, 0.0), az, unite, declinaisonDeg, convergenceDeg, d)
                             erreur = null
+                            fermerClavier()
                             creation = Pair(az, d)
                         } catch (e: IllegalArgumentException) {
                             erreur = e.message
