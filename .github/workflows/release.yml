@@ -1,8 +1,12 @@
 name: release
 
-# On every push to main, release-please keeps a release PR up to date
-# (version bump in all packages + CHANGELOG.md). Merging that PR tags vX.Y.Z,
-# creates the GitHub release, and the jobs below attach the artifacts.
+# Calendar versioning YYYY.M.N, as in nemeton: year and month (no leading
+# zero) of the day the release PR is updated, N restarting at 1 each month.
+# release-please keeps the release PR and CHANGELOG.md; the version itself is
+# computed here from the existing tags and passed as `release-as`.
+# On every push to main: (1) create the release of a merged release PR;
+# (2) if releasable commits (feat, fix, perf, revert, breaking) follow the
+# last tag, open or update the release PR with the next calendar version.
 on:
   push:
     branches: [main]
@@ -21,6 +25,10 @@ jobs:
       tag: ${{ steps.rp.outputs.tag_name }}
       version: ${{ steps.rp.outputs.version }}
     steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # (1) Release of a merged release PR (tag vYYYY.M.N + GitHub release).
       - uses: googleapis/release-please-action@v5
         id: rp
         with:
@@ -29,6 +37,19 @@ jobs:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          skip-github-pull-request: true
+      - name: Version calendaire suivante
+        id: cal
+        run: python3 .github/scripts/version_calendaire.py >> "$GITHUB_OUTPUT"
+      # (2) Release PR with the calendar version, only when there is something to release.
+      - uses: googleapis/release-please-action@v5
+        if: steps.cal.outputs.publiable == 'true'
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+          skip-github-release: true
+          release-as: ${{ steps.cal.outputs.version }}
 
   tests:
     needs: release-please
