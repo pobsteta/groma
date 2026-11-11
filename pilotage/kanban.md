@@ -26,20 +26,19 @@ _Modèle de carte :_
 
 ## Validé
 
-- [015](missions/015-test-vue-cibles.md) · depuis le cycle 6
-  - Homme : testeur (sonnet), appuyer
-  - Mission : tests de `PlacementCible` (position depuis le centre, source de l'azimut, alertes de répartition)
-  - Moyens : `groma.core.Declinaison`, `georeferencement.py`, `SaisiePointage.kt` de Surculus (lecture) · rendue (61 tests, reprise 1/3), relue « prêt », dans la PR #87
-- [016](missions/016-vue-cibles.md) · depuis le cycle 6
-  - Homme : dev (sonnet), appuyer
-  - Mission : vue « Cibles » : C1-C3 placées dans Groma (plus dans QField), plan nord en haut, boussole de visée par défaut ou du téléphone
-  - Moyens : tests de 015, vue Pointer de Surculus, écriture GeoPackage de `centres_mesures` ; schéma `source_azimut`, brief nemeton ; essai de Pascal sur le S23 Ultra · relue « prêt » (5 points non bloquants), **PR #87 en brouillon, essai sur le S23 Ultra à faire**
-
 ## Planifié
 
 
 ## Terminé
 
+- [015](missions/015-test-vue-cibles.md) · depuis le cycle 7
+  - Homme : testeur (sonnet), appuyer
+  - Mission : tests de `PlacementCible` (position depuis le centre, source de l'azimut, alertes de répartition)
+  - Moyens : `groma.core.Declinaison`, `georeferencement.py`, `SaisiePointage.kt` de Surculus (lecture) · rendue (61 tests, reprise 1/3), relue « prêt » · PR #87 fusionnée (32401b2)
+- [016](missions/016-vue-cibles.md) · depuis le cycle 7
+  - Homme : dev (sonnet), appuyer
+  - Mission : vue « Cibles » : C1-C3 placées dans Groma (plus dans QField), plan nord en haut, boussole de visée par défaut ou du téléphone
+  - Moyens : tests de 015, vue Pointer de Surculus, écriture GeoPackage de `centres_mesures` ; schéma `source_azimut`, brief nemeton ; essai de Pascal sur le S23 Ultra · relue « prêt » (5 points non bloquants) ; réponses de Pascal intégrées (0 accepté, bouton « Cibles » dans la liste, `source_azimut` au serveur) · PR #87 fusionnée (32401b2) avant l'essai, à la demande de Pascal ; installée sur le S23 Ultra le 2026-11-11, essai sur le terrain à faire
 - [012](missions/012-test-terrain-carte.md) · depuis le cycle 6
   - Homme : testeur (sonnet), appuyer
   - Mission : tests d'équivalence de `terrain-carte` v0.7.1 avec le code carte de Groma (tuiles, emprise, URL WMTS)
