@@ -7,8 +7,13 @@
   placette, relié à QField en Bluetooth.
 * Cibles ArUco du dictionnaire `4x4_50` : **C0 = identifiant 0** sur la canne
   du RTK, à 1,30 m ; **C1, C2, C3 = identifiants 1, 2, 3** agrafées à 1,30 m
-  sur trois arbres, face au centre. Imprimer avec une marge blanche d'au moins
-  un module et plastifier (mat).
+  sur trois arbres, face au centre. Planche prête à imprimer, une cible par
+  page A4 : `docs/cibles_groma_a4.pdf` (motif de 15 cm, module de 2,5 cm,
+  marge blanche de 3 cm). L'imprimer à 100 % (taille réelle), noir sur papier
+  blanc mat, sans rien écrire ni agrafer dans la marge blanche, et plastifier
+  (mat). La taille du motif ne sert qu'à la détection : l'échelle vient
+  d'ARCore et des distances mesurées. Pour la régénérer :
+  `python -m groma_server.planche_cibles docs/cibles_groma_a4.pdf`.
 
 ## Préparer le projet à partir du plan d'échantillonnage
 
