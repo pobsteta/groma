@@ -11,7 +11,9 @@ Rules
   only breaks ties between close candidates (1 cm of DBH ~ 1 cm of position)
   and raises an alert when it is implausible.
 * Matched tree: field attributes kept, position and diameter updated, height
-  updated unless measured; ``definitif`` if the species is filled in, else
+  updated unless measured (``h_source == "mesuree"``); the diameter too
+  unless it is a tape diameter (``dbh_source == "mesure"``: kept, the
+  ``ecart_dbh`` alert is still raised); ``definitif`` if the species is filled in, else
   ``a_completer``. A tree marked ``faux_positif`` by the operator keeps that
   state (alert raised if the server does find a trunk there).
 * New tree (no provisional match): new uuid, ``a_completer``.
@@ -39,7 +41,7 @@ from scipy.optimize import linear_sum_assignment
 from .azimut import vers_unite
 from .numerotation import ArbreANumeroter, ParametresNumerotation, numeroter, offsets_geographiques
 
-ATTRIBUTS_TERRAIN = ("essence_arbre", "espece", "statut", "qualite", "notes", "photos")
+ATTRIBUTS_TERRAIN = ("essence_arbre", "espece", "statut", "qualite", "notes", "photos", "dbh_source")
 INTERDIT = 1e9
 
 
@@ -62,8 +64,10 @@ class ResultatRapprochement:
 
 
 def _a_attributs_terrain(a: dict) -> bool:
-    return any(a.get(k) not in (None, "") for k in ("essence_arbre", "qualite", "notes", "photos")) or (
-        a.get("statut") not in (None, "", "vivant")
+    return (
+        any(a.get(k) not in (None, "") for k in ("essence_arbre", "qualite", "notes", "photos"))
+        or a.get("statut") not in (None, "", "vivant")
+        or a.get("dbh_source") == "mesure"
     )
 
 
@@ -106,7 +110,9 @@ def rapprocher(
         p, d = provisoires[i], definitifs[j]
         a = dict(p)
         a["num_provisoire"] = p.get("tree_id") or p.get("num_provisoire")
-        a["x"], a["y"], a["dbh_cm"] = d["x"], d["y"], d["dbh_cm"]
+        a["x"], a["y"] = d["x"], d["y"]
+        if p.get("dbh_source") != "mesure":  # a tape diameter is never overwritten
+            a["dbh_cm"] = d["dbh_cm"]
         a["methode"] = d.get("methode", a.get("methode"))
         if "houppier_id" in d:
             a["houppier_id"] = d.get("houppier_id")

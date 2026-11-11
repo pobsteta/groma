@@ -2,15 +2,24 @@
 -- `detections` séparée, écrite par la seule application Groma).
 --
 -- Règles :
---   * Groma n'écrit QUE dans `detections`, en transaction courte
---     (BEGIN IMMEDIATE + busy_timeout), jamais directement dans `arbres`.
+--   * Groma écrit dans `detections` (mesures de la vidéo) et, pour les seuls
+--     attributs saisis à la main après la capture (essence_arbre, dbh_cm au
+--     ruban avec dbh_source = 'mesure', statut, qualite), dans SA copie de
+--     `arbres` (GeoPackage.modifierArbre, transaction courte : BEGIN
+--     IMMEDIATE + busy_timeout). La copie de QField n'est écrite que par son
+--     plugin, qui ne recopie jamais sur une saisie de QField.
 --   * Une détection nouvelle (uuid inconnu) crée la ligne `arbres`
---     correspondante. Une ligne `arbres` existante n'est jamais recréée.
+--     correspondante (dbh_source = 'estime'). Une ligne `arbres` existante
+--     n'est jamais recréée.
 --   * Une détection mise à jour ne touche que les colonnes de mesure d'un
---     arbre encore provisoire (ou à vérifier). Les attributs saisis dans
---     QField (essence_arbre, statut, qualite, notes, photos) ne sont jamais
---     écrits ici, et une hauteur mesurée (h_source = 'mesuree') est conservée.
+--     arbre encore provisoire (ou à vérifier). Les attributs saisis
+--     (essence_arbre, statut, qualite, notes, photos) ne sont jamais écrits
+--     ici ; une hauteur mesurée (h_source = 'mesuree') et un diamètre au
+--     ruban (dbh_source = 'mesure') sont conservés.
 --   * Un faux positif n'est jamais promu en arbre.
+--   * Kotlin (GeoPackage.modifierArbre) recrée ces deux déclencheurs, à
+--     l'identique de ce fichier (copié en ressource), dans un projet
+--     préparé avant le schéma 1.4.0 (colonne dbh_source absente).
 --
 -- Pas de fonction spatiale (ST_*) : ces déclencheurs s'exécutent avec le
 -- SQLite d'Android, sans SpatiaLite ni GDAL. C'est aussi pourquoi `placettes`,
@@ -26,12 +35,13 @@ WHEN NEW.etat_detection IS NOT 'faux_positif'
 BEGIN
   INSERT INTO arbres (
     geom, plot_id, tree_id, dbh_cm, h_m, statut, uuid, num_provisoire,
-    azimut, distance_m, h_source, houppier_id, etat_detection, methode
+    azimut, distance_m, h_source, houppier_id, etat_detection, methode,
+    dbh_source
   ) VALUES (
     NEW.geom, NEW.plot_id, NEW.num_provisoire, NEW.dbh_cm, NEW.h_m, 'vivant',
     NEW.uuid, NEW.num_provisoire, NEW.azimut, NEW.distance_m,
     COALESCE(NEW.h_source, 'aucune'), NEW.houppier_id,
-    COALESCE(NEW.etat_detection, 'provisoire'), NEW.methode
+    COALESCE(NEW.etat_detection, 'provisoire'), NEW.methode, 'estime'
   );
 END;
 
@@ -40,7 +50,7 @@ AFTER UPDATE ON detections
 BEGIN
   UPDATE arbres SET
     geom = NEW.geom,
-    dbh_cm = NEW.dbh_cm,
+    dbh_cm = CASE WHEN dbh_source = 'mesure' THEN dbh_cm ELSE NEW.dbh_cm END,
     azimut = NEW.azimut,
     distance_m = NEW.distance_m,
     num_provisoire = NEW.num_provisoire,
