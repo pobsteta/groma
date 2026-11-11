@@ -53,4 +53,21 @@ object Essences {
             mots.all { it in cible }
         }.take(max)
     }
+
+    /** Text shown in the species field: "Label (code)", or "code (hors liste)" for a code outside the list. */
+    fun affichage(code: String): String = parCode(code)?.let { "${it.libelle} (${it.code})" } ?: "$code (hors liste)"
+
+    /**
+     * Code a species field stands for, null when it stands for none (the form then refuses).
+     * [texte] is the field, [existante] the code already in `arbres` (possibly outside the list),
+     * [choisie] the code last picked in the list. Blank = "" (erase); the untouched text of the
+     * existing species (listed or not) = that code, so an out-of-list species never blocks the
+     * saving of other fields; otherwise the picked code, or the only match of the search.
+     */
+    fun resoudre(texte: String, existante: String?, choisie: String?): String? = when {
+        texte.isBlank() -> ""
+        !existante.isNullOrBlank() && texte == affichage(existante) -> existante
+        !choisie.isNullOrBlank() && parCode(choisie) != null && texte == affichage(choisie) -> choisie
+        else -> rechercher(texte, 2).singleOrNull()?.code
+    }
 }

@@ -32,13 +32,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import groma.app.R
 import groma.core.ArbrePlacette
-import groma.core.Essence
 import groma.core.Essences
 import groma.core.SaisieArbre
 import kotlinx.coroutines.launch
 
 private fun nombreAffiche(x: Double) = (Math.round(x * 10) / 10.0).toString().removeSuffix(".0").replace('.', ',')
-private fun essenceAffichee(e: Essence) = "${e.libelle} (${e.code})"
 
 /**
  * Form of one tree (mission 019): number, estimated diameter; species (search in BD Foret v2 by
@@ -61,9 +59,8 @@ fun FicheArbre(
     ModalBottomSheet(onDismissRequest = onFermer, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         // Each tree starts from its own state.
         androidx.compose.runtime.key(arbre.uuid) {
-            val essenceInitiale = Essences.parCode(arbre.essence)
             val rubanInitial = if (arbre.dbhMesure) arbre.dbhCm?.let(::nombreAffiche).orEmpty() else ""
-            var recherche by remember { mutableStateOf(essenceInitiale?.let(::essenceAffichee) ?: arbre.essence.orEmpty()) }
+            var recherche by remember { mutableStateOf(arbre.essence?.let(Essences::affichage).orEmpty()) }
             var essence by remember { mutableStateOf(arbre.essence.orEmpty()) }
             var ruban by remember { mutableStateOf(rubanInitial) }
             var statut by remember { mutableStateOf(arbre.statut) }
@@ -72,16 +69,10 @@ fun FicheArbre(
             var erreurGenerale by remember { mutableStateOf<String?>(null) }
             var enCours by remember { mutableStateOf(false) }
 
-            val choisie = Essences.parCode(essence)
-            val propositions = if (recherche.isNotBlank() && (choisie == null || recherche != essenceAffichee(choisie))) Essences.rechercher(recherche, 6) else emptyList()
+            val propositions = if (recherche.isNotBlank() && Essences.resoudre(recherche, arbre.essence, essence) == null) Essences.rechercher(recherche, 6) else emptyList()
             val erreurRuban = SaisieArbre.controler("dbh_cm", ruban)
 
-            /** Code the typed text stands for: the chosen one, a unique match, "" when blank, null when ambiguous. */
-            fun resoudreEssence(): String? = when {
-                recherche.isBlank() -> ""
-                choisie != null && recherche == essenceAffichee(choisie) -> choisie.code
-                else -> Essences.rechercher(recherche, 2).singleOrNull()?.code
-            }
+            fun resoudreEssence(): String? = Essences.resoudre(recherche, arbre.essence, essence)
 
             fun enregistrer(apres: () -> Unit) {
                 erreurGenerale = null
@@ -129,8 +120,8 @@ fun FicheArbre(
                 )
                 propositions.forEach { e ->
                     Text(
-                        essenceAffichee(e),
-                        modifier = Modifier.fillMaxWidth().clickable { essence = e.code; recherche = essenceAffichee(e); erreurEssence = null }.padding(vertical = 10.dp, horizontal = 8.dp),
+                        Essences.affichage(e.code),
+                        modifier = Modifier.fillMaxWidth().clickable { essence = e.code; recherche = Essences.affichage(e.code); erreurEssence = null }.padding(vertical = 10.dp, horizontal = 8.dp),
                         style = MaterialTheme.typography.bodyLarge,
                     )
                 }

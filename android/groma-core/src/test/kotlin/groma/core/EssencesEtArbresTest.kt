@@ -42,6 +42,22 @@ class EssencesEtArbresTest {
     }
 
     @Test
+    fun resolutionDeLEssenceDuChamp() {
+        // Out-of-list species already in the tree: shown as is, kept while the field is untouched.
+        assertEquals("orme_inconnu (hors liste)", Essences.affichage("orme_inconnu"))
+        assertEquals("orme_inconnu", Essences.resoudre("orme_inconnu (hors liste)", "orme_inconnu", null))
+        // Touched: the usual rule (a listed species or empty), not the old code.
+        assertEquals("", Essences.resoudre("  ", "orme_inconnu", null))
+        assertEquals("hetre", Essences.resoudre(Essences.affichage("hetre"), "orme_inconnu", "hetre"))
+        assertEquals("hetre", Essences.resoudre("hetre", null, null))
+        assertNull(Essences.resoudre("chene", null, null))
+        assertNull(Essences.resoudre("zzz", "orme_inconnu", null))
+        // A listed species untouched stays itself; an out-of-list one is grey.
+        assertEquals("charme", Essences.resoudre(Essences.affichage("charme"), "charme", null))
+        assertEquals(GroupeEssence.INCONNUE, Essences.groupe("orme_inconnu"))
+    }
+
+    @Test
     fun rayonBorneEtCroissant() {
         assertEquals(ArbrePlacette.RAYON_MIN_DP, ArbrePlacette.rayonDp(null))
         assertEquals(ArbrePlacette.RAYON_MIN_DP, ArbrePlacette.rayonDp(0.0))
