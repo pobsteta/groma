@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Groupes d'essence : mêmes couleurs que Marculus (core/Referentiels.kt, COULEURS_ESSENCES_DEFAUT)
+         et que qfield/symbologie.py. Seul fichier où elles sont écrites. -->
+    <color name="essence_chene">#2A7FA6</color>
+    <color name="essence_hetre">#5061B8</color>
+    <color name="essence_feuillu">#7E8E9C</color>
+    <color name="essence_sapin">#94304D</color>
+    <color name="essence_epicea">#C2502F</color>
+    <color name="essence_resineux">#AE9381</color>
+    <!-- Essence pas encore saisie. -->
+    <color name="essence_inconnue">#888888</color>
+    <!-- Contour des pastilles : fin et blanc = diamètre estimé, épais et sombre = mesuré au ruban. -->
+    <color name="arbre_contour_estime">#FFFFFF</color>
+    <color name="arbre_contour_mesure">#212121</color>
+    <!-- Halo de l'arbre dont la fiche est ouverte. -->
+    <color name="arbre_choisi">#FFB300</color>
+</resources>

@@ -44,6 +44,7 @@ import groma.app.BoussoleMagnetique
 import groma.app.EtalonnageBoussole
 import groma.app.LectureBoussoleMagnetique
 import groma.app.R
+import groma.core.ArbrePlacette
 import groma.core.CiblePlacee
 import groma.core.PlacementCible
 import groma.core.SourceAzimut
@@ -52,13 +53,16 @@ import kotlinx.coroutines.launch
 import kotlin.math.max
 
 /**
- * Vue « Cibles » (mission 016): after the centre is measured (C0, on the pole), C1 to C3 are
- * placed on a plan of the plot (north up) from the azimuth (typed from the sighting compass by
- * default, or read live on the phone compass), the horizontal distance and the diameter.
+ * Vue « Placette » (missions 016 and 019). After the centre is measured (C0, on the pole), C1 to
+ * C3 are placed on a plan of the plot (north up) from the azimuth (typed from the sighting compass
+ * by default, or read live on the phone compass), the horizontal distance and the diameter.
  * [onPlacer] validates and writes the target to the project; it throws on a refused input.
+ * The plan also shows the trees of the plot ([arbresInitiaux]); touching one opens its form
+ * ([FicheArbre]), whose "Enregistrer" calls [onEnregistrerArbre] (writes through the 018 API and
+ * returns the trees read back).
  */
 @Composable
-fun EcranCibles(
+fun EcranPlacette(
     plotId: String,
     unite: String,
     rayonM: Double,
@@ -66,6 +70,9 @@ fun EcranCibles(
     convergenceDeg: Double,
     centreMesure: Boolean,
     initiales: List<CiblePlacee>,
+    centre: Pair<Double, Double>,
+    arbresInitiaux: List<ArbrePlacette>,
+    onEnregistrerArbre: suspend (uuid: String, saisie: Map<String, String?>) -> List<ArbrePlacette>,
     onPlacer: suspend (id: String, azimut: Double, distanceM: Double, dbhCm: Double, source: SourceAzimut) -> CiblePlacee,
     onFilmer: () -> Unit,
     onRetour: () -> Unit,
@@ -73,6 +80,8 @@ fun EcranCibles(
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var cibles by remember { mutableStateOf(initiales) }
+    var arbres by remember { mutableStateOf(arbresInitiaux) }
+    var fiche by remember { mutableStateOf<String?>(null) }
     var choisie by remember { mutableStateOf("C1") }
     var azimutTexte by remember { mutableStateOf("") }
     var distanceTexte by remember { mutableStateOf("") }
@@ -109,7 +118,7 @@ fun EcranCibles(
         contentWindowInsets = margesContenu(),
         topBar = {
             BandeauCompact(
-                titre = stringResource(R.string.cibles_titre, plotId),
+                titre = stringResource(R.string.placette_titre, plotId),
                 navigationIcon = {
                     IconButton(onClick = onRetour) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.retour))
@@ -119,6 +128,17 @@ fun EcranCibles(
             )
         },
     ) { padding ->
+        fiche?.let { uuid ->
+            arbres.firstOrNull { it.uuid == uuid }?.let { a ->
+                FicheArbre(
+                    arbre = a,
+                    suivant = ArbrePlacette.suivant(arbres, uuid),
+                    onEnregistrer = { saisie -> if (saisie.isNotEmpty()) arbres = onEnregistrerArbre(uuid, saisie) },
+                    onOuvrir = { fiche = it.uuid },
+                    onFermer = { fiche = null },
+                )
+            }
+        }
         Column(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -126,7 +146,7 @@ fun EcranCibles(
             if (!centreMesure) {
                 Text(stringResource(R.string.cibles_centre_prevu), color = MaterialTheme.colorScheme.error)
             }
-            Plan(rayonM, unite, declinaisonDeg, convergenceDeg, cibles, choisie)
+            Plan(rayonM, unite, declinaisonDeg, convergenceDeg, cibles, choisie, arbres, centre, fiche) { fiche = it.uuid }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PlacementCible.IDENTIFIANTS.forEach { id ->
@@ -231,37 +251,6 @@ fun EcranCibles(
                 )
             }
             Button(onClick = onFilmer, modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) { Text(stringResource(R.string.filmer)) }
-        }
-    }
-}
-
-/** Plan of the plot, north up: circle of the radius, C0 at the centre, targets at their Lambert-93 offsets. */
-@Composable
-private fun Plan(rayonM: Double, unite: String, decl: Double, conv: Double, cibles: List<CiblePlacee>, choisie: String) {
-    val couleurCercle = MaterialTheme.colorScheme.outline
-    val couleurTexte = MaterialTheme.colorScheme.onSurface
-    val couleurChoisie = MaterialTheme.colorScheme.primary
-    val couleurCible = MaterialTheme.colorScheme.tertiary
-    // A target read from an older project may be out of range: it is left off the plan, not fatal.
-    val positions = cibles.mapNotNull { c ->
-        runCatching { c to PlacementCible.position(Pair(0.0, 0.0), PlacementCible.azimutAffiche(c.azimutDeg, unite), unite, decl, conv, c.distanceM) }.getOrNull()
-    }
-    val etendue = max(rayonM, positions.maxOfOrNull { (c, _) -> c.distanceM } ?: 0.0) * 1.15
-    Canvas(Modifier.fillMaxWidth().aspectRatio(1f)) {
-        val centre = Offset(size.width / 2, size.height / 2)
-        val echelle = (size.minDimension / 2 / etendue).toFloat()
-        drawCircle(couleurCercle, (rayonM * echelle).toFloat(), centre, style = Stroke(2f))
-        drawCircle(couleurTexte, 6f, centre)
-        val peinture = android.graphics.Paint().apply { textSize = 36f; color = couleurTexte.toArgb(); isAntiAlias = true }
-        drawIntoCanvas { cv ->
-            cv.nativeCanvas.drawText("N", centre.x - 12f, 40f, peinture)
-            cv.nativeCanvas.drawText("C0", centre.x + 12f, centre.y - 10f, peinture)
-        }
-        positions.forEach { (c, p) ->
-            val o = Offset(centre.x + (p.first * echelle).toFloat(), centre.y - (p.second * echelle).toFloat())
-            drawLine(couleurCible.copy(alpha = 0.4f), centre, o, 2f)
-            drawCircle(if (c.id == choisie) couleurChoisie else couleurCible, 12f, o)
-            drawIntoCanvas { cv -> cv.nativeCanvas.drawText(c.id, o.x + 16f, o.y - 8f, peinture) }
         }
     }
 }

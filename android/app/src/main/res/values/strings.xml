@@ -243,8 +243,23 @@ Dans nemetonshiny, génère le projet QField puis « Envoyer au téléphone ».<
     <string name="serveur_installe">Installé dans le dossier des projets. Si le projet était déjà sur le téléphone, utilise « Mettre à jour » sur sa carte.</string>
     <string name="serveur_canal">Téléchargement des projets</string>
     <string name="serveur_notif_titre">Téléchargement : %1$s</string>
-    <string name="cibles_bouton">Cibles</string>
-    <string name="cibles_titre">Cibles · %1$s</string>
+    <string name="placette_bouton">Placette</string>
+    <string name="placette_titre">Placette · %1$s</string>
+    <string name="placette_tout_voir">Tout voir</string>
+    <string name="fiche_titre">Arbre n° %1$s</string>
+    <string name="fiche_diametre_estime">Diamètre estimé (vidéo) : %1$s cm</string>
+    <string name="fiche_sans_estimation">Pas de diamètre estimé.</string>
+    <string name="fiche_essence">Essence (BD Forêt v2)</string>
+    <string name="fiche_essence_aide">Tape un code ou un nom, puis choisis dans la liste. Vide = pas d’essence.</string>
+    <string name="fiche_essence_a_choisir">Choisis une essence dans la liste (ou vide le champ).</string>
+    <string name="fiche_ruban">Diamètre au ruban (cm)</string>
+    <string name="fiche_ruban_aide">Vide = retour au diamètre estimé.</string>
+    <string name="fiche_statut">Statut</string>
+    <string name="fiche_qualite">Qualité (touche encore pour vider)</string>
+    <string name="fiche_enregistrer">Enregistrer</string>
+    <string name="fiche_suivant">Enregistrer et arbre suivant (n° %1$s)</string>
+    <string name="fiche_dernier">Dernier arbre</string>
+    <string name="fiche_erreur">Arbre non enregistré : %1$s</string>
     <string name="cibles_centre_prevu">Centre non mesuré : le plan part du centre prévu. Mesure le centre sur la carte avant de placer les cibles.</string>
     <string name="cibles_boussole_visee">Boussole de visée</string>
     <string name="cibles_boussole_telephone">Boussole du téléphone</string>

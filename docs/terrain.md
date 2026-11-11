@@ -309,7 +309,7 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    être saisi dans QField, comme avant.
 2. Poser C1-C3 sur trois arbres bien répartis (idéalement à **120°** les uns
    des autres, entre **8 et 15 m** du centre). Puis, dans Groma, bouton
-   **Cibles** de la placette, dans la liste des placettes ou sur la carte du
+   **Placette** (ancien « Cibles »), dans la liste des placettes ou sur la carte du
    projet (feuille de la placette) (c'est ici, et plus dans QField, que les
    cibles se saisissent). Le plan de la placette s'affiche, nord en haut,
    avec le cercle du rayon et C0 au centre (le dernier centre mesuré ; sans
@@ -341,10 +341,25 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
 4. « Terminer » : verdict **suffisante / à refaire** avec la raison
    (couverture < 90 %, suivi perdu plus de 5 s, cible vue moins de 3 fois,
    plus de 30 % d'images floues). Puis calcul provisoire, objectif moins de
-   2 minutes : arbres numérotés, diamètres et hauteurs approximatifs.
-5. Saisir les attributs des arbres : **dans Groma** (décision du 2026-11-11 ;
-   la vue de saisie sur le plan de la placette vient avec la mission 019)
-   l'essence (`essence_arbre`, code BD Forêt v2), le **diamètre au ruban**
+   2 minutes : arbres numérotés, diamètres et hauteurs approximatifs. Rouvrir
+   **Placette** : les arbres détectés (hors faux positifs) apparaissent sur le
+   plan, en pastilles. Couleur = groupe d'essence comme dans Marculus (chêne
+   bleu, hêtre indigo, feuillus gris-bleu, sapin bordeaux, épicéa rouille,
+   autres résineux taupe), **grise tant que l'essence n'est pas saisie** ;
+   taille croissante avec le diamètre (bornée, 7,5 à 80 cm) ; contour blanc
+   fin = diamètre estimé par la vidéo, **contour sombre épais = diamètre
+   mesuré au ruban**. L'étiquette « numéro – diamètre » s'affiche quand la
+   place le permet (zoomer pour les voir toutes). Pincer ou « + » / « − »
+   pour zoomer, glisser pour déplacer (faire défiler la page en glissant
+   hors du plan), « Tout voir » pour revenir.
+5. Saisir les attributs des arbres : **dans Groma** (décision du 2026-11-11),
+   sur le plan, en **touchant un arbre** : la fiche s'ouvre avec son numéro et
+   son diamètre estimé. Essence : taper un code ou un nom (recherche dans la
+   BD Forêt v2, accents et casse ignorés) puis choisir dans la liste ; diamètre
+   au ruban en cm ; statut ; qualité. **Enregistrer** écrit et ferme ;
+   **Enregistrer et arbre suivant** passe à l'arbre suivant dans l'ordre des
+   numéros, pour enchaîner au ruban. Une valeur refusée est expliquée sous le
+   champ et rien n'est écrit. Ce qui est saisi : l'essence (`essence_arbre`, code BD Forêt v2), le **diamètre au ruban**
    (`dbh_cm`, virgule ou point décimal ; il passe `dbh_source` à `mesure`),
    le statut et la qualité ; **dans QField** les notes et les photos, et au
    besoin tout le reste. Les arbres provisoires apparaissent dans la couche

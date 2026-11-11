@@ -1,6 +1,7 @@
 package groma.app
 
 import android.database.sqlite.SQLiteDatabase
+import groma.core.ArbrePlacette
 import groma.core.Azimut
 import groma.core.CentreMesure
 import groma.core.CiblePlacee
@@ -123,6 +124,9 @@ class Projet(val dossier: File) {
     fun modifierArbre(uuid: String, saisie: Map<String, String?>) {
         ouvrir().use { GeoPackage.modifierArbre(SqliteAndroid(it), uuid, saisie) }
     }
+
+    /** Trees of the plot for the plan (false positives left out, by number): see [ArbrePlacette.lire]. */
+    fun arbres(plotId: String): List<ArbrePlacette> = ouvrir().use { ArbrePlacette.lire(SqliteAndroid(it), plotId) }
 
     fun houppiers(plotId: String): List<Houppier> = ouvrir().use { db ->
         SqliteAndroid(db).requete("SELECT houppier_id, h_max, geom FROM houppiers WHERE plot_id = ?", listOf(plotId)).map {
