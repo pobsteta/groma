@@ -26,6 +26,10 @@ _Modèle de carte :_
 
 ## Validé
 
+- [026](missions/026-essai-fumee.md) · depuis le cycle 7
+  - Homme : dev (sonnet), appuyer
+  - Mission : essai de fumée instrumenté comme Surculus (type `fumee`, androidTest sur SQLite d'Android, émulateur et téléphone, étape CI)
+  - Moyens : Surculus (lecture), `emulator-5554`, S23 Ultra
 ## Planifié
 
 
