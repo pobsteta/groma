@@ -42,14 +42,24 @@ jobs:
         id: cal
         run: python3 .github/scripts/version_calendaire.py >> "$GITHUB_OUTPUT"
       # (2) Release PR with the calendar version, only when there is something to release.
-      - uses: googleapis/release-please-action@v5
+      # The action ignores its `release-as` input with a manifest config, so the
+      # CLI is used here (same major version as the one bundled in the action).
+      - uses: actions/setup-node@v7
         if: steps.cal.outputs.publiable == 'true'
         with:
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-          skip-github-release: true
-          release-as: ${{ steps.cal.outputs.version }}
+          node-version: "24"
+      - name: PR de publication ${{ steps.cal.outputs.version }}
+        if: steps.cal.outputs.publiable == 'true'
+        env:
+          TOKEN: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+        run: >-
+          npx --yes release-please@17 release-pr
+          --token="$TOKEN"
+          --repo-url="${{ github.repository }}"
+          --target-branch=main
+          --config-file=release-please-config.json
+          --manifest-file=.release-please-manifest.json
+          --release-as="${{ steps.cal.outputs.version }}"
 
   tests:
     needs: release-please
