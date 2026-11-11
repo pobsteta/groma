@@ -8,7 +8,7 @@ au serveur Groma, renvoyable à chaque modification, et sa mise à disposition p
 qu'aujourd'hui les saisies ne retournent à nemetonshiny que par la copie de QField et que Pascal veut
 s'en passer (décision du 2026-11-11 : QField devient facultatif).
 
-**Redite par l'agent :** _à compléter par l'agent avant d'agir — s'il n'y arrive pas, il s'arrête._
+**Redite par l'agent :** Écrire, sans code d'implémentation, les tests rouges qui fixent l'archive « terrain » d'une placette (GeoPackage au même schéma, photos, `<plot_id>.terrain.zip`, empreinte), son dépôt reprenable et remplaçable sur le serveur sans tâche GPU, son service à nemetonshiny, et l'ajout d'un arbre oublié dans Groma (point 5), pour que 021-023 les fassent passer sans les modifier et que Groma se passe de QField.
 
 ## Les trois questions (règle de staffing)
 
