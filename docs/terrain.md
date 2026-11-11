@@ -364,9 +364,10 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    champ et rien n'est écrit. Ce qui est saisi : l'essence (`essence_arbre`, code BD Forêt v2), le **diamètre au ruban**
    (`dbh_cm`, virgule ou point décimal ; il passe `dbh_source` à `mesure` ;
    **le ruban se saisit seulement dans Groma**, `dbh_cm` et `dbh_source`
-   sont en lecture seule dans QField), le statut et la qualité ; **dans
-   QField** les notes et les photos, et au besoin l'essence, le statut et
-   la qualité. Les arbres provisoires apparaissent dans la couche
+   sont en lecture seule dans QField), le statut et la qualité, une
+   **note** et des **photos** (mission 022, voir ci-dessous) ; **dans
+   QField**, facultatif, on peut encore saisir les notes et les photos, et
+   au besoin l'essence, le statut et la qualité. Les arbres provisoires apparaissent dans la couche
    `arbres` de QField. Un diamètre au ruban n'est jamais écrasé : ni par
    une nouvelle capture, ni par le calcul définitif du serveur (l'alerte
    `ecart_dbh` reste émise s'il diffère de 10 cm **et** de 50 %) ; vider le
@@ -408,6 +409,33 @@ intégrer sans passer par la copie de QField (brief
 `briefs/vers-nemeton/2026-11-11-terrain-sans-qfield.md`). Le plugin et
 « Ouvrir dans QField » restent disponibles.
 
+* **Notes et photos d'un arbre** (mission 022, fiche d'un arbre existant ;
+  pas dans le formulaire d'un arbre en cours d'ajout, dont le numéro n'existe
+  pas encore : on les ajoute en rouvrant sa fiche).
+  * **Note** : texte libre multiligne, **2000 caractères au plus** (valeur
+    provisoire), écrit dans `arbres.notes` ; vide = effacée.
+  * **Photo** : « Prendre une photo » ouvre l'appareil du téléphone (autorisation
+    « Appareil photo » demandée la première fois). Le JPEG est réduit à
+    **2048 px** de grand côté (valeur provisoire, à juger en 4G), redressé,
+    et rangé dans `DCIM/` du dossier du projet sous le nom
+    `<plot_id>_<tree_id>_<AAAAMMJJ-HHMMSS>.jpg`.
+  * **Convention de `arbres.photos`** : un ou plusieurs chemins **relatifs au
+    dossier du projet**, séparés par `;` (une seule photo = exactement ce
+    qu'écrit le widget photo de QField). **Limite connue** : le widget de QField
+    ne sait afficher qu'**un** chemin ; avec plusieurs, il n'affiche rien, et une
+    nouvelle photo prise dans QField remplace toute la liste. On ne prend donc
+    pas de photo dans QField pour un arbre qui en a déjà plusieurs.
+  * **Rien ne se perd** : la note et les photos déjà là (de QField ou de Groma)
+    sont affichées et conservées ; un enregistrement qui ne les touche pas ne les
+    modifie pas. Retirer une photo demande une **confirmation** ; elle n'est
+    effective qu'à « Enregistrer ». Le fichier n'est supprimé que si Groma l'a
+    pris (nom `DCIM/…_AAAAMMJJ-HHMMSS.jpg`) et si plus aucune ligne ne le cite ;
+    un fichier de QField reste dans le projet. Une photo prise puis abandonnée
+    (fiche fermée sans enregistrer) est supprimée.
+  * **Envoi** : l'enregistrement relance l'envoi de terrain ; les photos
+    entrent dans l'archive (`photos/`) et dans l'empreinte.
+  * **À vérifier** : deux arbres, chacun avec une note et une photo ; attendre
+    « Terrain envoyé à … » ; l'archive du serveur contient les deux photos.
 * **Quand** : après chaque enregistrement (fiche d'arbre, arbre ajouté ou supprimé, cible, centre),
   Groma attend **30 s** après la dernière modification (valeur provisoire, à
   juger sur le terrain : plusieurs saisies de suite ne font qu'un envoi), puis

@@ -7,6 +7,9 @@ package groma.core
 object SaisieArbre {
     val CHAMPS = listOf("essence_arbre", "dbh_cm", "statut", "qualite")
 
+    /** Fields added by mission 022: free note (at most [PhotosArbre.NOTE_MAX] characters) and photo paths. */
+    val CHAMPS_TERRAIN = listOf("notes", "photos")
+
     val STATUTS = listOf("vivant", "mort", "chablis", "coupe")
     val QUALITES = listOf("A", "B", "C", "D")
     const val DBH_MAX_CM = 1000.0
@@ -39,6 +42,8 @@ object SaisieArbre {
             }
             "statut" -> if (v.isEmpty() || v in STATUTS) null else "Statut inconnu : « $v » (${STATUTS.joinToString(", ")})."
             "qualite" -> if (v.isEmpty() || v in QUALITES) null else "Qualité inconnue : « $v » (${QUALITES.joinToString(", ")})."
+            "notes" -> PhotosArbre.controlerNote(valeur)
+            "photos" -> PhotosArbre.controlerPhotos(valeur)
             else -> "Champ non saisissable dans Groma : « $champ »."
         }
     }

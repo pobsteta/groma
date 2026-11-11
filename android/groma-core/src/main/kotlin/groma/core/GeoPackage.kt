@@ -193,6 +193,9 @@ object GeoPackage {
                 when (champ) {
                     "essence_arbre", "qualite" -> maj[champ] = v.ifEmpty { null }
                     "statut" -> maj[champ] = v.ifEmpty { "vivant" }
+                    // Mission 022: the value replaces the column (the form starts from the stored one; empty = explicit erase).
+                    "notes" -> maj[champ] = brut?.trim()?.takeIf { it.isNotEmpty() }
+                    "photos" -> maj[champ] = PhotosArbre.joindre(PhotosArbre.lister(brut))
                     "dbh_cm" -> if (v.isNotEmpty()) {
                         maj["dbh_cm"] = SaisieArbre.diametre(v)
                         maj["dbh_source"] = "mesure"

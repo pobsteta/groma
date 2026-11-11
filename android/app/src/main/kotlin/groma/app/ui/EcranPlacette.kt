@@ -47,6 +47,7 @@ import groma.app.R
 import groma.core.ArbrePlacette
 import groma.core.CiblePlacee
 import groma.core.PlacementCible
+import java.io.File
 import groma.core.SourceAzimut
 import groma.core.TypeAlerte
 import kotlinx.coroutines.launch
@@ -82,6 +83,8 @@ fun EcranPlacette(
     onPlacer: suspend (id: String, azimut: Double, distanceM: Double, dbhCm: Double, source: SourceAzimut) -> CiblePlacee,
     onFilmer: () -> Unit,
     onRetour: () -> Unit,
+    dossierProjet: File? = null,
+    onNettoyerPhotos: (List<String>) -> Unit = {},
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -145,6 +148,9 @@ fun EcranPlacette(
                     onOuvrir = { fiche = it.uuid },
                     onFermer = { fiche = null },
                     onSupprimer = if (a.ajoute) ({ arbres = onSupprimerArbre(uuid); fiche = null }) else null,
+                    dossierProjet = dossierProjet,
+                    plotId = plotId,
+                    onNettoyerPhotos = onNettoyerPhotos,
                 )
             }
         }

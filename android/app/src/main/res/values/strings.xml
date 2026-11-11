@@ -297,4 +297,16 @@ Dans nemetonshiny, génère le projet QField puis « Envoyer au téléphone ».<
     <string name="fiche_supprimer_message">Cet arbre a été ajouté à la main. Il disparaît de la placette et de l’envoi de terrain.</string>
     <string name="fiche_supprimer_confirmer">Supprimer</string>
     <string name="fiche_supprimer_annuler">Garder</string>
+    <string name="fiche_note">Note</string>
+    <string name="fiche_note_aide">Texte libre, %1$d caractères au plus.</string>
+    <string name="fiche_photos">Photos (%1$d)</string>
+    <string name="fiche_photo_prendre">Prendre une photo</string>
+    <string name="fiche_photo_absente">Fichier absent</string>
+    <string name="fiche_photo_retirer">Retirer</string>
+    <string name="fiche_photo_retirer_titre">Retirer cette photo ?</string>
+    <string name="fiche_photo_retirer_groma">Photo prise avec Groma : elle est retirée de la fiche et son fichier est supprimé à l’enregistrement.</string>
+    <string name="fiche_photo_retirer_autre">Photo d’un autre outil (QField) : elle est retirée de la fiche, mais son fichier reste dans le projet.</string>
+    <string name="fiche_photo_retirer_confirmer">Retirer</string>
+    <string name="fiche_photo_echec">La photo n’a pas pu être enregistrée.</string>
+    <string name="fiche_photo_permission">Groma a besoin de l’autorisation « Appareil photo » pour prendre une photo.</string>
 </resources>

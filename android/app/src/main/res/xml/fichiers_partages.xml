@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Only the QField project zips built by DepotProjets.archiveQfield. -->
+<!-- The QField project zips (DepotProjets.archiveQfield) and the camera output of the tree form (PhotoArbre). -->
 <paths>
     <cache-path name="qfield" path="qfield/" />
+    <!-- Camera output of the tree form (mission 022), resized then moved to DCIM/ of the project. -->
+    <cache-path name="photos" path="photos/" />
 </paths>

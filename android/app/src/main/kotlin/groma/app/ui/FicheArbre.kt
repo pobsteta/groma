@@ -1,6 +1,28 @@
 package groma.app.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.core.content.ContextCompat
+import groma.app.PhotoArbre
+import groma.core.PhotosArbre
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -50,6 +72,13 @@ private fun nombreAffiche(x: Double) = (Math.round(x * 10) / 10.0).toString().re
  * the tape diameter is required and every field is sent; the same requirement holds for a tree
  * already added ([ArbrePlacette.ajoute]), which also gets [onSupprimer] ("Supprimer cet arbre",
  * after a confirmation; null for a tree of the video: it is never deleted).
+ * Mission 022: a multi-line "Note" (`arbres.notes`, at most [PhotosArbre.NOTE_MAX] characters) and the photos
+ * (`arbres.photos`): thumbnails, "Prendre une photo" ([ActivityResultContracts.TakePicture] into the cache, then
+ * [PhotoArbre.enregistrer] in `DCIM/` of [dossierProjet]), removal after a confirmation. Both are shown only for an
+ * existing tree (not in [creation]) and when [dossierProjet] is known. What is already there is shown and kept
+ * (rule 5). A removed photo is only unlisted until "Enregistrer"; then [onNettoyerPhotos] gets the paths no longer
+ * cited (the core deletes the file only if Groma took it). A photo taken then abandoned (form closed without saving)
+ * is passed to [onNettoyerPhotos] too.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,6 +90,9 @@ fun FicheArbre(
     onFermer: () -> Unit,
     creation: Boolean = false,
     onSupprimer: (suspend () -> Unit)? = null,
+    dossierProjet: File? = null,
+    plotId: String = "",
+    onNettoyerPhotos: (List<String>) -> Unit = {},
 ) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -78,6 +110,41 @@ fun FicheArbre(
             var enCours by remember { mutableStateOf(false) }
             var confirmerSuppression by remember { mutableStateOf(false) }
             val rubanObligatoire = creation || arbre.ajoute
+            val avecTerrain = !creation && dossierProjet != null
+            var note by remember { mutableStateOf(arbre.notes.orEmpty()) }
+            val photos = remember { mutableStateListOf<String>().also { it.addAll(arbre.photos) } }
+            val nouvelles = remember { mutableListOf<String>() } // taken in this form, not yet saved
+            var temporaire by rememberSaveable { mutableStateOf<String?>(null) }
+            var photoARetirer by remember { mutableStateOf<String?>(null) }
+            val etat = remember { booleanArrayOf(false) } // [0] = saved
+            val erreurNote = PhotosArbre.controlerNote(note)
+
+            fun ajouterPrise(prise: File) {
+                scope.launch {
+                    val rel = withContext(Dispatchers.IO) { PhotoArbre.enregistrer(prise, dossierProjet!!, plotId, arbre.numero) }
+                    if (rel == null) erreurGenerale = ctx.getString(R.string.fiche_photo_echec)
+                    else { photos.add(rel); nouvelles.add(rel) }
+                }
+            }
+            val prise = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+                val f = temporaire?.let(::File); temporaire = null
+                if (f != null) { if (ok) ajouterPrise(f) else f.delete() }
+            }
+            fun lancerPrise() {
+                val (f, uri) = PhotoArbre.temporaire(ctx)
+                temporaire = f.path
+                prise.launch(uri)
+            }
+            val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->
+                if (ok) lancerPrise() else erreurGenerale = ctx.getString(R.string.fiche_photo_permission)
+            }
+            // Closed without saving: the photos taken in this form (and an unfinished camera file) are dropped.
+            DisposableEffect(Unit) {
+                onDispose {
+                    temporaire?.let { File(it).delete() }
+                    if (!etat[0] && nouvelles.isNotEmpty()) onNettoyerPhotos(nouvelles.toList())
+                }
+            }
 
             val propositions = if (recherche.isNotBlank() && Essences.resoudre(recherche, arbre.essence, essence) == null) Essences.rechercher(recherche, 6) else emptyList()
             val erreurRuban = SaisieArbre.controler("dbh_cm", ruban) ?: if (rubanObligatoire && ruban.isBlank()) ctx.getString(R.string.fiche_ruban_obligatoire) else null
@@ -88,16 +155,23 @@ fun FicheArbre(
                 erreurGenerale = null
                 val code = resoudreEssence()
                 erreurEssence = if (code == null) ctx.getString(R.string.fiche_essence_a_choisir) else SaisieArbre.controler("essence_arbre", code)
-                if (code == null || erreurEssence != null || erreurRuban != null) return
+                if (code == null || erreurEssence != null || erreurRuban != null || (avecTerrain && erreurNote != null)) return
                 val saisie = linkedMapOf<String, String?>()
                 if (creation || code != arbre.essence.orEmpty()) saisie["essence_arbre"] = code
                 if (creation || ruban.trim() != rubanInitial) saisie["dbh_cm"] = ruban.trim()
                 if (creation || statut != arbre.statut) saisie["statut"] = statut
                 if (creation || qualite != arbre.qualite.orEmpty()) saisie["qualite"] = qualite
+                if (avecTerrain) {
+                    if (note.trim() != arbre.notes.orEmpty()) saisie["notes"] = note.trim()
+                    if (photos.toList() != arbre.photos) saisie["photos"] = PhotosArbre.joindre(photos.toList()).orEmpty()
+                }
                 enCours = true
                 scope.launch {
                     try {
                         onEnregistrer(saisie)
+                        etat[0] = true
+                        val retirees = arbre.photos.filter { it !in photos }
+                        if (retirees.isNotEmpty()) onNettoyerPhotos(retirees)
                         apres()
                     } catch (e: IllegalArgumentException) {
                         erreurGenerale = e.message
@@ -130,6 +204,28 @@ fun FicheArbre(
                         }) { Text(stringResource(R.string.fiche_supprimer_confirmer), color = MaterialTheme.colorScheme.error) }
                     },
                     dismissButton = { TextButton(onClick = { confirmerSuppression = false }) { Text(stringResource(R.string.fiche_supprimer_annuler)) } },
+                )
+            }
+
+            photoARetirer?.let { chemin ->
+                AlertDialog(
+                    onDismissRequest = { photoARetirer = null },
+                    title = { Text(stringResource(R.string.fiche_photo_retirer_titre)) },
+                    text = {
+                        Text(
+                            if (PhotosArbre.estDeGroma(chemin)) stringResource(R.string.fiche_photo_retirer_groma)
+                            else stringResource(R.string.fiche_photo_retirer_autre),
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            photoARetirer = null
+                            photos.remove(chemin)
+                            // Never saved: nobody else cites it, the file goes now.
+                            if (nouvelles.remove(chemin)) onNettoyerPhotos(listOf(chemin))
+                        }) { Text(stringResource(R.string.fiche_photo_retirer_confirmer), color = MaterialTheme.colorScheme.error) }
+                    },
+                    dismissButton = { TextButton(onClick = { photoARetirer = null }) { Text(stringResource(R.string.fiche_supprimer_annuler)) } },
                 )
             }
 
@@ -187,6 +283,44 @@ fun FicheArbre(
                         // A second touch on the chosen quality empties it.
                         FilterChip(selected = qualite == q, onClick = { qualite = if (qualite == q) "" else q }, label = { Text(q) })
                     }
+                }
+
+                if (avecTerrain) {
+                    OutlinedTextField(
+                        value = note,
+                        onValueChange = { note = it },
+                        label = { Text(stringResource(R.string.fiche_note)) },
+                        supportingText = { Text(erreurNote ?: stringResource(R.string.fiche_note_aide, PhotosArbre.NOTE_MAX)) },
+                        isError = erreurNote != null,
+                        minLines = 3,
+                        maxLines = 8,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Text(stringResource(R.string.fiche_photos, photos.size), style = MaterialTheme.typography.labelLarge)
+                    if (photos.isNotEmpty()) {
+                        Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            photos.toList().forEach { chemin ->
+                                Column(Modifier.width(112.dp)) {
+                                    val vignette by produceState<Bitmap?>(null, chemin) {
+                                        value = withContext(Dispatchers.IO) { PhotoArbre.vignette(dossierProjet!!, chemin) }
+                                    }
+                                    Box(Modifier.size(112.dp)) {
+                                        vignette?.let { Image(it.asImageBitmap(), contentDescription = chemin, contentScale = ContentScale.Crop, modifier = Modifier.size(112.dp)) }
+                                            ?: Text(stringResource(R.string.fiche_photo_absente), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    TextButton(enabled = !enCours, onClick = { photoARetirer = chemin }) { Text(stringResource(R.string.fiche_photo_retirer)) }
+                                }
+                            }
+                        }
+                    }
+                    OutlinedButton(
+                        enabled = !enCours,
+                        onClick = {
+                            if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) lancerPrise()
+                            else permission.launch(Manifest.permission.CAMERA)
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) { Text(stringResource(R.string.fiche_photo_prendre)) }
                 }
 
                 erreurGenerale?.let { Text(it, color = MaterialTheme.colorScheme.error) }

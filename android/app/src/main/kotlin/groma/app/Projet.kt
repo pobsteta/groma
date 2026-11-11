@@ -18,6 +18,7 @@ import groma.core.Grille
 import groma.core.Houppier
 import groma.core.InfosProjet
 import groma.core.ParametresPlacette
+import groma.core.PhotosArbre
 import groma.core.Projections
 import java.io.File
 
@@ -141,6 +142,14 @@ class Projet(val dossier: File) {
     /** Deletes a tree added by hand ([GeoPackage.supprimerArbreAjoute]); never a tree of the video. */
     fun supprimerArbreAjoute(uuid: String) {
         ouvrir().use { GeoPackage.supprimerArbreAjoute(SqliteAndroid(it), uuid) }
+    }
+
+    /**
+     * Deletes the files of photos Groma took and the form no longer cites (mission 022, after a confirmed
+     * removal that was saved, or a photo taken then abandoned). Never a photo of QField: see [PhotosArbre.supprimerFichier].
+     */
+    fun supprimerPhotos(chemins: List<String>) {
+        ouvrir().use { db -> val b = SqliteAndroid(db); for (c in chemins) PhotosArbre.supprimerFichier(b, dossier, c) }
     }
 
     /** Trees of the plot for the plan (false positives left out, by number): see [ArbrePlacette.lire]. */

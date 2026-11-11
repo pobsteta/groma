@@ -7,7 +7,7 @@
 `arbres.photos` de la copie de Groma selon la convention de QField et parties avec l'envoi de terrain,
 parce qu'elles ne se saisissaient que dans QField et que Pascal veut s'en passer (décision du 2026-11-11).
 
-**Redite par l'agent :** _à compléter par l'agent avant d'agir — s'il n'y arrive pas, il s'arrête._
+**Redite par l'agent :** Ajouter à la fiche d'arbre de la vue « Placette » une note et des photos prises avec le téléphone, écrites dans `arbres.notes` et `arbres.photos` (chemins relatifs au projet, `;` entre plusieurs) de la copie de Groma sans jamais perdre ce que QField ou Groma y ont mis, pour qu'elles partent avec l'envoi de terrain et que QField devienne facultatif.
 
 ## Les trois questions (règle de staffing)
 

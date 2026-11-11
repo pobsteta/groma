@@ -177,6 +177,8 @@ class MainActivity : AppCompatActivity() {
                                     },
                                     onFilmer = { demanderPlacette(plot) },
                                     onRetour = { ciblesPlot = null },
+                                    dossierProjet = ouvert.dossier,
+                                    onNettoyerPhotos = { chemins -> lifecycleScope.launch(Dispatchers.IO) { runCatching { ouvert.supprimerPhotos(chemins) } } },
                                 )
                             }
                         }

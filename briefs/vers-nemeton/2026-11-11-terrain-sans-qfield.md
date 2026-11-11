@@ -33,7 +33,11 @@ placette : l'archive « terrain ». Elle est renvoyée à chaque modification
     Valeurs identiques à la copie de Groma (aucun attribut perdu, règle 5) ;
   * `photos/<nom>` : les photos citées ; dans `terrain.gpkg`, les colonnes
     `arbres.photos` et `placettes.photos` (un ou plusieurs chemins séparés
-    par `;`) y renvoient en chemins relatifs à l'archive. Une photo
+    par `;`) y renvoient en chemins relatifs à l'archive. Convention de
+    QField (un chemin relatif au projet, `DCIM/…`) étendue à plusieurs
+    photos ; celles prises dans Groma s'appellent
+    `<plot_id>_<tree_id>_<AAAAMMJJ-HHMMSS>.jpg` (mission 022), JPEG de 2048 px
+    au plus ; `arbres.notes` est un texte libre de 2000 caractères au plus. Une photo
     introuvable n'est pas emballée, mais son chemin (réécrit en
     `photos/<nom>`) reste.
 
