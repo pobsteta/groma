@@ -8,6 +8,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 /**
  * Mission 017: entering the attributes of a tree in Groma (essence, tape diameter, status, quality).
@@ -57,6 +58,16 @@ class SaisieArbreTest {
 
     private fun arbre(db: SqliteJdbc, uuid: String) = db.requete("SELECT * FROM arbres WHERE uuid = ?", listOf(uuid)).single()
 
+    /** geom is a ByteArray: compare by content. */
+    private fun egal(attendu: Any?, obtenu: Any?, msg: String) {
+        if (attendu is ByteArray && obtenu is ByteArray) assertTrue(attendu.contentEquals(obtenu), msg) else assertEquals(attendu, obtenu, msg)
+    }
+
+    private fun egalLigne(attendu: Map<String, Any?>, obtenu: Map<String, Any?>, msg: String) {
+        assertEquals(attendu.keys, obtenu.keys, msg)
+        for (k in attendu.keys) egal(attendu[k], obtenu[k], "$msg : $k")
+    }
+
     // --- contrôle des valeurs -------------------------------------------------------------
 
     @Test
@@ -103,8 +114,8 @@ class SaisieArbreTest {
         assertEquals("mort", a["statut"])
         assertEquals("B", a["qualite"])
         // Everything else is untouched, and so is every other tree.
-        for (k in avant.keys - setOf("essence_arbre", "dbh_cm", "dbh_source", "statut", "qualite")) assertEquals(avant[k], a[k], k)
-        assertEquals(autreAvant, arbre(db, AUTRE))
+        for (k in avant.keys - setOf("essence_arbre", "dbh_cm", "dbh_source", "statut", "qualite")) egal(avant[k], a[k], k)
+        egalLigne(autreAvant, arbre(db, AUTRE), "autre arbre")
     }
 
     @Test
@@ -114,7 +125,7 @@ class SaisieArbreTest {
         GeoPackage.modifierArbre(db, U, mapOf("qualite" to "A"))
         val a = arbre(db, U)
         assertEquals("A", a["qualite"])
-        for (k in avant.keys - "qualite") assertEquals(avant[k], a[k], k)
+        for (k in avant.keys - "qualite") egal(avant[k], a[k], k)
         assertEquals(avant["dbh_source"], a["dbh_source"], "pas de diamètre saisi : dbh_source inchangé")
     }
 
@@ -165,7 +176,7 @@ class SaisieArbreTest {
         assertFailsWith<IllegalArgumentException> {
             GeoPackage.modifierArbre(db, U, mapOf("qualite" to "Z", "statut" to "mort"))
         }
-        assertEquals(avant, arbre(db, U), "transaction annulée : ni essence ni statut écrits")
+        egalLigne(avant, arbre(db, U), "transaction annulée : ni essence ni statut écrits")
     }
 
     @Test

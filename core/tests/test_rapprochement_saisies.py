@@ -4,7 +4,7 @@ Expected API (signatures unchanged): `groma.rapprochement.rapprocher`; the `prov
 carry `dbh_source` ("estime" | "mesure"). Rules, written by hand:
   * a provisional tree with dbh_source == "mesure" keeps dbh_cm and dbh_source after matching, even
     when the definitive detection has another diameter; the `ecart_dbh` alert is still raised
-    (gap >= 10 cm, thresholds unchanged, compared with the tape diameter);
+    (gap > 10 cm AND > 50 % of the smaller, thresholds unchanged, compared with the tape diameter);
   * dbh_source == "estime" behaves as before (diameter replaced by the definitive one);
   * essence_arbre, statut, qualite entered in Groma (and dbh_source) are never lost;
   * `dbh_source` belongs to ATTRIBUTS_TERRAIN.
@@ -43,7 +43,7 @@ def _executer(provisoires, definitifs):
 @pytest.fixture
 def resultat():
     prov = [
-        _prov("u1", "1", P1, 45.0, "mesure", essence_arbre="hetre", statut="mort", qualite="B"),
+        _prov("u1", "1", P1, 52.0, "mesure", essence_arbre="hetre", statut="mort", qualite="B"),
         _prov("u2", "2", P2, 20.0, "estime", essence_arbre="frene", qualite="A"),
         _prov("u3", "3", P3, 30.0, "mesure"),
     ]
@@ -57,7 +57,7 @@ def test_dbh_source_fait_partie_des_attributs_terrain():
 
 def test_diametre_mesure_conserve_apres_rapprochement(resultat):
     _, arbres, _ = resultat
-    assert arbres["u1"]["dbh_cm"] == 45.0 and arbres["u1"]["dbh_source"] == "mesure"
+    assert arbres["u1"]["dbh_cm"] == 52.0 and arbres["u1"]["dbh_source"] == "mesure"
     assert arbres["u3"]["dbh_cm"] == 30.0 and arbres["u3"]["dbh_source"] == "mesure"
     assert arbres["u1"]["etat_detection"] == "definitif"
 
@@ -65,7 +65,7 @@ def test_diametre_mesure_conserve_apres_rapprochement(resultat):
 def test_ecart_dbh_reste_emis_pour_un_diametre_mesure(resultat):
     _, _, res = resultat
     motifs = {(a["uuid"], a["motif"]) for a in res.alertes}
-    assert ("u1", "ecart_dbh") in motifs      # 45 vs 31 cm: 14 cm
+    assert ("u1", "ecart_dbh") in motifs      # 52 vs 31 cm: 21 cm > 10 cm and > 15.5 cm (50 % of the smaller)
     assert ("u3", "ecart_dbh") not in motifs  # 30 vs 31 cm: 1 cm
 
 
