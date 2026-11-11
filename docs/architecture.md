@@ -5,20 +5,25 @@ nemetonshiny (onglet Terrain > Inventaire vidéo)
   │  Préparer : nemeton::creer_projet_inventaire_video() ──► projet QField (.qgz)
   │                                                         inventaire_video.gpkg + rasters/
   ▼
-Téléphone ── QField : centre RTK, cibles, essences ─────────┐
+Téléphone ── QField (facultatif) : notes, photos ───────────┐
    │          (corrections NTRIP Centipède)                  │ même GeoPackage
    └─ Groma : vidéo ARCore + profondeur + ArUco              │ (couche detections,
         ├─ contrôle qualité en direct, verdict               │  déclencheurs → arbres)
         ├─ calcul embarqué ──► detections provisoires ───────┘
-        └─ paquet <plot>.groma.zip ──► envoi reprenable (Wi-Fi)
-                                            │
+        ├─ saisies (centre, cibles, arbres) ──► <plot>.terrain.zip
+        │     envoi reprenable après chaque enregistrement ──────┐
+        └─ paquet <plot>.groma.zip ──► envoi reprenable (Wi-Fi)  │
+                                            │                    │
 Serveur Groma (FastAPI + worker GPU) ◄──────┘
    segmentation → reconstructions (COLMAP | VGGT | profondeur) → cibles → sol (MNT)
    → tranche 1,30 m → cercles → géoréférencement → numérotation → houppiers → rapport
    └─► <plot>_definitif.gpkg + rapport JSON/HTML
+   └─► <plot>.terrain.zip (sans tâche GPU, remplacé à chaque envoi) ◄┘
                                             │
 nemetonshiny  Suivre : nemeton::groma_etat_placettes()
               Intégrer : nemeton::importer_inventaire_video()
+                 (terrain.zip du serveur, ou copie de QField à défaut ;
+                  le serveur gagne, avec une alerte : brief 2026-11-11)
                  rapprocher_arbres() → valider → aggregate_plot_metrics(20) → NDP 3
                  fusion par plot_id dans data/field_data.gpkg
 ```
