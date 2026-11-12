@@ -63,7 +63,7 @@ def test_couches_et_colonnes(gpkg):
     # No spatial index on the layers written by the phone (no ST_* functions on Android).
     with sqlite3.connect(gpkg) as cx:
         noms = {r[0] for r in cx.execute("SELECT name FROM sqlite_master WHERE type='trigger'")}
-    assert not any(n.startswith(("rtree_placettes", "rtree_arbres", "rtree_detections")) for n in noms)
+    assert not any(n.startswith(("rtree_placettes", "rtree_arbres", "rtree_detections", "rtree_centres_mesures", "rtree_cibles")) for n in noms)
     assert {"trg_detections_insert", "trg_detections_update"} <= noms
 
 

@@ -274,10 +274,35 @@ défaut, Paramètres → Récepteur RTK) ; les positions non fixes sont
 précision 0,02 m, à 1,3 m du point prévu ») est ajouté à
 `centres_mesures`.
 
+La qualité de la réception pendant la mesure est enregistrée avec le centre
+(positions retenues, médiane des satellites utilisés, HDOP moyen, âge maximal
+des corrections, durée) et affichée après la précision, sur la feuille de
+placette de la carte et dans la vue Placette : « Réception : 24 positions,
+11 satellites, HDOP 0,9 ». Ce qui est inconnu n'est pas affiché (le téléphone
+ne donne pas de HDOP ; les centres mesurés avant cette version n'ont rien).
+
 * En RTK flottant, Groma demande confirmation (« Enregistrer en
   flottant ») ; `qualite_gnss` vaut alors `float`.
-* Avec la position du téléphone, ou sans correction, la mesure est
-  refusée.
+* **Sans récepteur RTK** (mission 025, schéma 1.6.0) : quand la position
+  vient du téléphone, Groma propose **Mesurer avec le téléphone**, avec un
+  avertissement : « précision de quelques mètres : toute la placette sera
+  décalée d'autant ; à remplacer par une mesure RTK si possible ». Il faut
+  **confirmer** ; Groma fait alors la moyenne des positions du téléphone
+  pendant **30 s** (téléphone immobile, ciel dégagé). Seules comptent les
+  positions dont la précision annoncée est connue et d'au plus **10 m** ; il
+  en faut **20 au moins** (sinon rien n'est enregistré, message clair et
+  bouton « Recommencer »). Le centre est écrit avec `qualite_gnss =
+  telephone` et une précision qui est la plus grande de la dispersion et de
+  la précision annoncée ; ce n'est jamais « fixe », même si le téléphone se
+  dit RTK. Sur une placette qui a déjà un centre RTK (fixe ou flottant),
+  Groma demande une **confirmation supplémentaire** avant de le remplacer
+  (l'ancien reste dans `centres_mesures`). La carte (fiche de la placette)
+  et la vue « Placette » signalent en rouge un centre pris au téléphone,
+  avec sa précision. Une mesure RTK faite ensuite le remplace (le plus
+  récent compte). Avec un récepteur connecté mais sans RTK (DGPS,
+  autonome), le téléphone n'est pas proposé : attendre le fix RTK.
+  *Valeurs provisoires (30 s, 20 positions, 10 m) à figer après trois
+  placettes d'essai.*
 * Si la placette a déjà un centre, le nouveau est **ajouté** (l'ancien est
   conservé) et c'est lui qui compte, pour la carte comme pour la capture.
 * La capture reprend ce centre (le plus récent) à la place du point prévu.
@@ -305,7 +330,10 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    le fix RTK, caler la bulle et toucher **Mesurer le centre** (voir
    « Carte du projet ») : ligne ajoutée à `centres_mesures` avec
    `qualite_gnss`, `precision_h_m`, `ecart_prevu_m` et `date_mesure`.
-   **Libérer le récepteur** avant de passer à QField. Le centre peut aussi
+   **Libérer le récepteur** avant de passer à QField. Sans récepteur RTK,
+   **Mesurer avec le téléphone** (30 s, confirmation, qualité `telephone`,
+   précision de quelques mètres : à remplacer par une mesure RTK si
+   possible). Le centre peut aussi
    être saisi dans QField, comme avant. Une **seule cible C0** sur la canne,
    **orientée vers le début du premier tour** (décision de Pascal du
    2026-11-11).
@@ -382,8 +410,19 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    ou grades ; boussole de visée tapée, ou boussole du téléphone comme pour
    les cibles) et la **distance horizontale** en mètres : l'emplacement
    s'affiche en **cercle pointillé** sur le plan. « Saisir le diamètre au
-   ruban » ouvre la fiche : le **diamètre au ruban est obligatoire** (0 à
-   1000 cm) ; essence, statut et qualité sont facultatifs. L'arbre reçoit le
+   ruban » ouvre la fiche (mission 025 : le clavier des champs azimut et distance est
+   fermé à l'ouverture, car il masquait probablement l'essence ; la fiche
+   s'ouvre en haut ; l'essai sur le S23 Ultra le confirmera) :
+   l'**essence** est le premier champ
+   (taper un code ou un nom, choisir dans la liste), puis le **diamètre au
+   ruban, obligatoire** (0 à 1000 cm), le statut et la qualité (facultatifs).
+   « Créer l'arbre » écrit l'arbre puis **ouvre aussitôt sa fiche complète**,
+   la même que celle d'un arbre de la vidéo : **note**, **photos** (« Prendre
+   une photo »), arbre suivant. *Choix : on crée d'abord l'arbre (le numéro
+   est alors connu), puis on complète ; plutôt que de saisir note et photos
+   avant la création, ce qui obligerait à nommer et renommer les fichiers
+   photo avant de connaître `A<n>` : plus simple, et aucune photo orpheline
+   si l'on abandonne.* L'arbre reçoit le
    numéro provisoire **A1, A2…** (par placette), `methode = terrain`,
    `dbh_source = mesure`, `etat_detection = provisoire` ; il est écrit
    directement dans `arbres` (rien dans `detections`) et part avec l'archive
@@ -467,10 +506,10 @@ seules les colonnes saisies ; une valeur vide n'efface que son attribut ;
 colonne `dbh_source` ajoutée, et déclencheurs recréés à l'identique de
 `declencheurs.sql`, dans un projet préparé avant le schéma 1.4.0). Un centre n'est jamais
 réécrit : une nouvelle mesure ajoute une ligne, et c'est la plus récente
-(`fid` le plus grand) qui compte. Comme `centres_mesures` a l'index spatial
-de GDAL, Groma retire ses déclencheurs R*Tree le temps de l'insertion, écrit
-lui-même la ligne d'index, puis les remet à l'identique, dans la même
-transaction (`GeoPackage.ajouterCentreMesure`, testé). Les déclencheurs du
+(`fid` le plus grand) qui compte. `centres_mesures` et `cibles` n'ont pas d'index
+spatial ; dans un projet ancien qui en a un, Groma le retire à la première écriture
+(`GeoPackage.retirerIndexSpatial`, sans le module `rtree` que le SQLite d'Android n'a pas ;
+aucune ligne perdue, voir `docs/adr/0001-pas-d-index-spatial-sur-le-telephone.md`). Les déclencheurs du
 GeoPackage (`core/src/groma/donnees/declencheurs.sql`) créent la ligne
 `arbres` d'une détection nouvelle et ne mettent à jour que les colonnes de
 mesure d'un arbre encore provisoire. Les attributs saisis (essence,
@@ -480,7 +519,7 @@ Une hauteur mesurée (`h_source = mesuree`) et un diamètre au ruban
 (`core/tests/test_gpkg.py`) et en Kotlin (`GeoPackageTest`, sur le GeoPackage
 produit par GDAL).
 
-`placettes`, `arbres` et `detections` sont créées **sans index spatial**.
+`placettes`, `arbres`, `detections`, `centres_mesures` et `cibles` sont créées **sans index spatial**.
 Les déclencheurs R*Tree de GDAL appellent `ST_IsEmpty`, absente du SQLite
 d'Android, et ils se préparent sur tout `UPDATE`. Le cas a été vérifié par un
 test.

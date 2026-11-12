@@ -38,6 +38,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -75,6 +77,9 @@ fun EcranPlacette(
     declinaisonDeg: Double,
     convergenceDeg: Double,
     centreMesure: Boolean,
+    centreQualite: String? = null,
+    centrePrecisionM: Double? = null,
+    centreReception: String? = null,
     initiales: List<CiblePlacee>,
     centre: Pair<Double, Double>,
     arbresInitiaux: List<ArbrePlacette>,
@@ -88,6 +93,10 @@ fun EcranPlacette(
     onNettoyerPhotos: (List<String>) -> Unit = {},
 ) {
     val ctx = LocalContext.current
+    val focus = LocalFocusManager.current
+    val clavier = LocalSoftwareKeyboardController.current
+    // Mission 025: the numeric keyboard of the azimuth/distance fields must not stay over the sheets.
+    fun fermerClavier() { focus.clearFocus(); clavier?.hide() }
     val scope = rememberCoroutineScope()
     var cibles by remember { mutableStateOf(initiales) }
     var arbres by remember { mutableStateOf(arbresInitiaux) }
@@ -160,8 +169,13 @@ fun EcranPlacette(
                 arbre = ArbrePlacette("", "A?", 0.0, 0.0, null, false, null, "vivant", null),
                 suivant = null,
                 onEnregistrer = { saisie ->
+                    val avant = arbres.map { it.uuid }.toSet()
                     arbres = onAjouterArbre(az, d, saisie)
                     ajout = false; azimutTexte = ""; distanceTexte = ""
+                    // Mission 025: the tree now exists (A<n>): its full form (note, photos) opens at once,
+                    // so no photo is ever named before the number is known.
+                    fermerClavier()
+                    fiche = arbres.firstOrNull { it.uuid !in avant }?.uuid
                 },
                 onOuvrir = {},
                 onFermer = { creation = null },
@@ -181,6 +195,15 @@ fun EcranPlacette(
         ) {
             if (!centreMesure) {
                 Text(stringResource(R.string.cibles_centre_prevu), color = MaterialTheme.colorScheme.error)
+            } else if (centreQualite == "telephone") {
+                // Mission 025: a centre taken with the phone's GNSS is flagged, like the planned-centre notice.
+                Text(
+                    stringResource(R.string.cibles_centre_telephone, centrePrecisionM?.let(::metres) ?: "?"),
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+            if (centreMesure && centreReception != null) {
+                Text(stringResource(R.string.cibles_centre_reception, centreReception), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Plan(rayonM, unite, declinaisonDeg, convergenceDeg, cibles, choisie, arbres, centre, fiche, apercu) { fiche = it.uuid }
 
@@ -270,6 +293,7 @@ fun EcranPlacette(
                         try {
                             PlacementCible.position(Pair(0.0, 0.0), az, unite, declinaisonDeg, convergenceDeg, d)
                             erreur = null
+                            fermerClavier()
                             creation = Pair(az, d)
                         } catch (e: IllegalArgumentException) {
                             erreur = e.message

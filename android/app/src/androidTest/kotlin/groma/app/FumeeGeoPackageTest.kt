@@ -46,6 +46,10 @@ class FumeeGeoPackageTest {
     private fun ouvrir(f: File = gpkg, ecriture: Boolean = true) =
         SqliteAndroid(SQLiteDatabase.openDatabase(f.path, null, if (ecriture) SQLiteDatabase.OPEN_READWRITE else SQLiteDatabase.OPEN_READONLY))
 
+    private fun ancien(): File = File(dossier, "projet_ancien.gpkg").also { f ->
+        InstrumentationRegistry.getInstrumentation().context.assets.open("projet_ancien.gpkg").use { e -> f.outputStream().use { e.copyTo(it) } }
+    }
+
     private fun nombre(db: SqliteAndroid, sql: String, args: List<Any?> = emptyList()) =
         (db.requete(sql, args).single().values.single() as Number).toInt()
 
@@ -67,8 +71,8 @@ class FumeeGeoPackageTest {
             assertEquals(18, GeoPackage.lirePoints(db, "arbres").size)
             assertEquals(2, GeoPackage.lirePoints(db, "centres_mesures").size)
             assertNotNull(GeoPackage.lireProjet(db))
-            // R*Tree is compiled in Android's SQLite; GDAL's triggers are present (and call ST_IsEmpty).
-            assertEquals(1, nombre(db, "SELECT count(*) FROM sqlite_master WHERE name = 'rtree_centres_mesures_geom'"))
+            // ADR 0001: no R*Tree on the layers the phone writes (Android's SQLite has no rtree module).
+            assertEquals(0, nombre(db, "SELECT count(*) FROM sqlite_master WHERE name LIKE 'rtree_centres_mesures_%' OR name LIKE 'rtree_cibles_%'"))
             GeoPackage.arbresSaisis(db) // readable without error
         }
     }
@@ -108,7 +112,7 @@ class FumeeGeoPackageTest {
             val c = GeoPackage.lirePoints(db, "cibles", "P002").single { it["id_cible"] == "C3" }
             assertEquals("boussole_visee", c["source_azimut"])
             assertEquals(30.0, (c["dbh_mesure_cm"] as Number).toDouble(), 1e-9)
-            assertEquals(1, nombre(db, "SELECT count(*) FROM rtree_cibles_geom WHERE id = ?", listOf(fid)))
+            assertEquals(1, nombre(db, "SELECT count(*) FROM cibles WHERE fid = ?", listOf(fid)))
             assertEquals("déclencheurs remis tels quels", avant, declencheurs(db))
             // Placed again: replaced, never duplicated.
             GeoPackage.ecrireCible(db, "P002", CiblePlacee("C3", 20.0, 9.0, 31.0, SourceAzimut.BOUSSOLE_TELEPHONE), 925011.0, 6700021.0, 20.0)
@@ -122,7 +126,7 @@ class FumeeGeoPackageTest {
             val avant = declencheurs(db)
             val fid = GeoPackage.ajouterCentreMesure(db, "P002", 925200.0, 6700200.0, "rtk_fix", 0.02, 1.5, "2026-11-11T10:00:00Z")
             assertEquals(3, nombre(db, "SELECT count(*) FROM centres_mesures"))
-            assertEquals(1, nombre(db, "SELECT count(*) FROM rtree_centres_mesures_geom WHERE id = ?", listOf(fid)))
+            assertEquals(1, nombre(db, "SELECT count(*) FROM centres_mesures WHERE fid = ?", listOf(fid)))
             val dernier = GeoPackage.dernierCentreParPlacette(db, "P002").single()
             assertEquals(925200.0, dernier["x"] as Double, 1e-6)
             assertEquals(6700200.0, dernier["y"] as Double, 1e-6)
@@ -174,21 +178,38 @@ class FumeeGeoPackageTest {
 
     @Test
     fun migrationDUnProjetAncien_sansDbhSource() {
-        ouvrir().use { db ->
-            // Android's SQLite must know DROP COLUMN (3.35+).
+        // projet_ancien.gpkg: the example as of before schema 1.3.0 (like the phone's projects of October 2026):
+        // GDAL's R*Tree on centres_mesures, cibles and houppiers, no dbh_source. ADD COLUMN must work on Android
+        // with the R*Tree of houppiers still in the schema.
+        ouvrir(ancien()).use { db ->
             fun detections() = declencheurs(db).filter { it["name"].toString().startsWith("trg_detections_") }
-            val attendus = detections()
-            assertEquals(2, attendus.size)
-            db.executer("DROP TRIGGER trg_detections_insert")
-            db.executer("DROP TRIGGER trg_detections_update")
-            db.executer("ALTER TABLE arbres DROP COLUMN dbh_source")
             assertTrue("dbh_source" !in db.requete("PRAGMA table_info(arbres)").map { it["name"] })
             GeoPackage.modifierArbre(db, arbre14, mapOf("dbh_cm" to "42,5", "essence_arbre" to "hetre"))
             assertTrue("dbh_source" in db.requete("PRAGMA table_info(arbres)").map { it["name"] })
-            assertEquals("déclencheurs recréés comme declencheurs.sql", attendus, detections())
+            assertEquals(2, detections().size)
             assertEquals("mesure", db.requete("SELECT dbh_source FROM arbres WHERE uuid = ?", listOf(arbre14)).single()["dbh_source"])
-            assertEquals("estime", db.requete("SELECT dbh_source FROM arbres WHERE uuid = ?", listOf(arbre21)).single()["dbh_source"])
+            assertEquals(18, nombre(db, "SELECT count(*) FROM arbres"))
+            assertEquals("ok", db.requete("PRAGMA integrity_check").single().values.single())
         }
+    }
+
+    @Test
+    fun projetAncienAvecIndex_centreCibleEtEnvoi() {
+        // The real case of the phone (ADR 0001): an old project with GDAL's R*Tree, which Android cannot load.
+        val f = ancien()
+        ouvrir(f).use { db ->
+            GeoPackage.ajouterCentreMesure(db, "P002", 925200.0, 6700200.0, "telephone", 3.5, 1.5, "2026-11-12T08:00:00Z")
+            GeoPackage.ecrireCible(db, "P002", CiblePlacee("C3", 10.0, 9.0, 30.0, SourceAzimut.BOUSSOLE_VISEE), 925010.0, 6700020.0, 10.0)
+            assertEquals(3, nombre(db, "SELECT count(*) FROM centres_mesures"))
+            assertEquals(1, GeoPackage.lirePoints(db, "cibles", "P002").count { it["id_cible"] == "C3" })
+            assertEquals(18, nombre(db, "SELECT count(*) FROM arbres"))
+            assertEquals(0, nombre(db, "SELECT count(*) FROM sqlite_master WHERE name LIKE 'rtree_centres_mesures_%' OR name LIKE 'rtree_cibles_%'"))
+            assertEquals("ok", db.requete("PRAGMA integrity_check").single().values.single())
+        }
+        val sortie = File(dossier, "terrain-ancien-P001.zip")
+        val resultat = ExportTerrain { ouvrir(it) }.archiver(f, dossier, "P001", sortie)
+        assertTrue(resultat.empreinte.isNotEmpty())
+        ouvrir(f, ecriture = false).use { db -> assertEquals(3, nombre(db, "SELECT count(*) FROM centres_mesures")) }
     }
 
     @Test
