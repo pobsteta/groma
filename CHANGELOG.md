@@ -1,5 +1,12 @@
 # Changelog
 
+## [2026.11.4](https://github.com/pobsteta/groma/compare/v2026.11.3...v2026.11.4) (2026-11-12)
+
+
+### Nouveautés
+
+* **app:** « Relever C0 » partout et depuis la vue Placette ([#100](https://github.com/pobsteta/groma/issues/100)) ([858fb11](https://github.com/pobsteta/groma/commit/858fb11edb5b9fa94725dd7b0bf3c3049600a037))
+
 ## [2026.11.3](https://github.com/pobsteta/groma/compare/v2026.11.2...v2026.11.3) (2026-11-12)
 
 
