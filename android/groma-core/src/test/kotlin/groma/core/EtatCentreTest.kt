@@ -10,16 +10,16 @@ import kotlin.test.assertTrue
 class EtatCentreTest {
     private val paris = ZoneId.of("Europe/Paris")
 
-    @Test fun `non mesure`() = assertEquals("Centre C0 non mesuré", EtatCentre.ligne(false, null, null, null, paris))
+    @Test fun `non releve`() = assertEquals("Centre C0 non relevé", EtatCentre.ligne(false, null, null, null, paris))
 
     @Test fun `rtk fixe avec precision et date locale`() = assertEquals(
-        "Centre C0 : RTK fixe, précision 0,02 m, mesuré le 12/11 à 10:05",
+        "Centre C0 : RTK fixe, précision 0,02 m, relevé le 12/11 à 10:05",
         EtatCentre.ligne(true, "fix", 0.02, "2026-11-12T09:05:00.123Z", paris),
     )
 
     @Test fun `flottant et telephone en clair`() {
-        assertEquals("Centre C0 : RTK flottant, précision 0,35 m, mesuré le 01/07 à 14:30", EtatCentre.ligne(true, "float", 0.35, "2026-07-01T12:30:00Z", paris))
-        assertEquals("Centre C0 : GNSS du téléphone, précision 3,10 m, mesuré le 12/11 à 10:05", EtatCentre.ligne(true, "telephone", 3.1, "2026-11-12T09:05:00Z", paris))
+        assertEquals("Centre C0 : RTK flottant, précision 0,35 m, relevé le 01/07 à 14:30", EtatCentre.ligne(true, "float", 0.35, "2026-07-01T12:30:00Z", paris))
+        assertEquals("Centre C0 : GNSS du téléphone, précision 3,10 m, relevé le 12/11 à 10:05", EtatCentre.ligne(true, "telephone", 3.1, "2026-11-12T09:05:00Z", paris))
     }
 
     @Test fun `date absente ou illisible omise sans planter`() {

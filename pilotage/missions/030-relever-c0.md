@@ -8,7 +8,7 @@ relevé que la carte, parce que Pascal regarde l'état de C0 dans la vue « Plac
 le bouton, et veut un verbe de relevé GNSS (RTK ou téléphone) (demande du 2026-11-12, libellé choisi
 par Pascal : « Relever C0 »).
 
-**Redite par l'agent :** _à remplir par l'agent._
+**Redite par l'agent :** renommer « Mesurer le centre » en « Relever C0 » partout et ajouter ce bouton sur la ligne d'état de C0 de la vue « Placette », avec le même relevé que la carte (flux extrait et partagé), parce que Pascal n'y trouve pas le bouton et veut un verbe de relevé GNSS.
 
 ## Les trois questions
 

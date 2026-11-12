@@ -261,28 +261,33 @@ en bas de la carte :
 * flèche relative au cap du téléphone (« Pas de boussole : suivre
   l'azimut » si le téléphone n'en a pas) et ligne de la position à la
   placette ;
-* à moins de 5 m, « Arrivé à P012 » et **Mesurer le centre** ;
+* à moins de 5 m, « Arrivé à P012 » et **Relever C0** ;
   **Suivante** passe à la placette suivante du parcours, **Arrêter le
   guidage** ferme le bandeau. L'écran reste allumé pendant le guidage.
 
-### Mesurer le centre
+### Relever C0
 
-**Où lancer la mesure.** Deux endroits, même mesure, mêmes confirmations
+« Relever » veut dire relevé GNSS : au récepteur RTK, ou à défaut au GNSS du téléphone.
+
+**Où lancer le relevé.** Trois endroits, même relevé (un seul code), mêmes confirmations
 (flottant, téléphone, remplacement d'un centre RTK) : le bandeau « Arrivé »
-(à moins de 5 m) et le bouton **Mesurer le centre** de la fiche de la
-placette sur la carte, **sans condition de distance**. À plus de 30 m du point
-prévu, Groma avertit (« Tu es à 42 m du point prévu : le centre sera enregistré
-là où tu es. Continuer ? ») mais ne refuse jamais.
+(à moins de 5 m), le bouton **Relever C0** de la fiche de la
+placette sur la carte, **sans condition de distance**, et le bouton **Relever C0**
+de la vue « Placette », à droite de la ligne d'état de C0. À plus de 30 m du point
+prévu, Groma avertit (« Tu es à 42 m du point prévu : C0 sera relevé
+là où tu es. Continuer ? ») mais ne refuse jamais. Dans la vue « Placette », la
+position est écoutée pendant le relevé, et à la fin la ligne d'état, le plan et
+« Ajouter un arbre » prennent le nouveau C0 sans quitter la vue.
 
 **État du centre.** La vue « Placette » affiche en haut, en permanence, l'état
-de C0 : « Centre C0 : RTK fixe, précision 0,02 m, mesuré le 12/11 à 10:05 »
-(date et heure locales du téléphone), ou « Centre C0 non mesuré ».
+de C0 : « Centre C0 : RTK fixe, précision 0,02 m, relevé le 12/11 à 10:05 »
+(date et heure locales du téléphone), ou « Centre C0 non relevé ».
 
-Canne immobile sur le point, bulle calée : **Mesurer le centre** fait la
+Canne immobile sur le point, bulle calée : **Relever C0** fait la
 moyenne des positions **RTK fixes** pendant la durée réglée (10 s par
 défaut, Paramètres → Récepteur RTK) ; les positions non fixes sont
-écartées et comptées. Le résultat (« Centre enregistré : RTK fixe,
-précision 0,02 m, à 1,3 m du point prévu ») est ajouté à
+écartées et comptées. Le résultat (« C0 relevé au RTK fixe,
+précision 0,02 m, à 1,3 m du point prévu (moyenne de 24 positions) ») est ajouté à
 `centres_mesures`.
 
 La qualité de la réception pendant la mesure est enregistrée avec le centre
@@ -295,9 +300,9 @@ ne donne pas de HDOP ; les centres mesurés avant cette version n'ont rien).
 * En RTK flottant, Groma demande confirmation (« Enregistrer en
   flottant ») ; `qualite_gnss` vaut alors `float`.
 * **Sans récepteur RTK** (mission 025, schéma 1.6.0) : quand la position
-  vient du téléphone, Groma propose **Mesurer avec le téléphone**, avec un
+  vient du téléphone, Groma propose **Relever avec le téléphone**, avec un
   avertissement : « précision de quelques mètres : toute la placette sera
-  décalée d'autant ; à remplacer par une mesure RTK si possible ». Il faut
+  décalée d'autant ; à remplacer par un relevé RTK si possible ». Il faut
   **confirmer** ; Groma fait alors la moyenne des positions du téléphone
   pendant **30 s** (téléphone immobile, ciel dégagé). Seules comptent les
   positions dont la précision annoncée est connue et d'au plus **10 m** ; il
@@ -338,12 +343,12 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
 1. Planter la canne au point prévu. Dans Groma, carte du projet → **Y
    aller** (ou « Aller à la prochaine placette à faire ») : distance et
    azimut magnétique dans l'unité de la placette. À moins de 5 m, attendre
-   le fix RTK, caler la bulle et toucher **Mesurer le centre** (voir
+   le fix RTK, caler la bulle et toucher **Relever C0** (voir
    « Carte du projet ») : ligne ajoutée à `centres_mesures` avec
    `qualite_gnss`, `precision_h_m`, `ecart_prevu_m` et `date_mesure`.
    **Libérer le récepteur** avant de passer à QField. Sans récepteur RTK,
-   **Mesurer avec le téléphone** (30 s, confirmation, qualité `telephone`,
-   précision de quelques mètres : à remplacer par une mesure RTK si
+   **Relever avec le téléphone** (30 s, confirmation, qualité `telephone`,
+   précision de quelques mètres : à remplacer par un relevé RTK si
    possible). Le centre peut aussi
    être saisi dans QField, comme avant. Une **seule cible C0** sur la canne,
    **orientée vers le début du premier tour** (décision de Pascal du
@@ -353,8 +358,8 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    **Placette** (ancien « Cibles »), dans la liste des placettes ou sur la carte du
    projet (feuille de la placette) (c'est ici, et plus dans QField, que les
    cibles se saisissent). Le plan de la placette s'affiche, nord en haut,
-   avec le cercle du rayon et C0 au centre (le dernier centre mesuré ; sans
-   centre mesuré, le centre prévu, avec une mention en rouge). Pour chaque
+   avec le cercle du rayon et C0 au centre (le dernier C0 relevé ; sans
+   C0 relevé, le centre prévu, avec une mention en rouge). Pour chaque
    cible : choisir C1, C2 ou C3, taper l'**azimut magnétique lu à la boussole
    de visée** dans l'unité de la placette (source `boussole_visee`, par
    défaut) ou, en option, lire le cap à la boussole du téléphone (« Prendre
