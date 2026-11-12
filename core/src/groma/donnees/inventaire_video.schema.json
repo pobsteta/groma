@@ -53,9 +53,9 @@
     {
       "nom": "centres_mesures",
       "geometrie": "POINT",
-      "index_spatial": true,
+      "index_spatial": false,
       "lecture_seule": false,
-      "remarque": "Centre mesuré au RTK ou au téléphone (pied de la canne). La géométrie est la position mesurée. Qualité de la réception (nb_positions, nb_satellites, hdop, age_corrections_s, duree_mesure_s) enregistrée avec le centre pour juger de sa fiabilité ; vides pour les centres antérieurs.",
+      "remarque": "Sans index spatial (le SQLite d'Android n'a pas le module rtree ; le serveur le recrée au besoin). Centre mesuré au RTK ou au téléphone (pied de la canne). La géométrie est la position mesurée. Qualité de la réception (nb_positions, nb_satellites, hdop, age_corrections_s, duree_mesure_s) enregistrée avec le centre pour juger de sa fiabilité ; vides pour les centres antérieurs.",
       "colonnes": [
         {"nom": "plot_id", "type": "TEXT", "requis": true},
         {"nom": "qualite_gnss", "type": "TEXT", "domaine": "qualite_gnss"},
@@ -72,9 +72,9 @@
     {
       "nom": "cibles",
       "geometrie": "POINT",
-      "index_spatial": true,
+      "index_spatial": false,
       "lecture_seule": true,
-      "remarque": "Cibles C1 à C3 placées dans Groma (vue Cibles) depuis le centre ; plus de saisie dans QField. Azimut magnétique dans l'unité de la placette, lu à la boussole de visée (tapé) ou à la boussole du téléphone. Une ligne par plot_id et id_cible, remplacée si la cible est replacée ; la géométrie (Lambert 93) est calculée par Groma.",
+      "remarque": "Sans index spatial (voir centres_mesures). Cibles C1 à C3 placées dans Groma (vue Cibles) depuis le centre ; plus de saisie dans QField. Azimut magnétique dans l'unité de la placette, lu à la boussole de visée (tapé) ou à la boussole du téléphone. Une ligne par plot_id et id_cible, remplacée si la cible est replacée ; la géométrie (Lambert 93) est calculée par Groma.",
       "colonnes": [
         {"nom": "plot_id", "type": "TEXT", "requis": true},
         {"nom": "id_cible", "type": "TEXT", "domaine": "id_cible", "requis": true},

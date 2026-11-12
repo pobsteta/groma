@@ -506,10 +506,10 @@ seules les colonnes saisies ; une valeur vide n'efface que son attribut ;
 colonne `dbh_source` ajoutée, et déclencheurs recréés à l'identique de
 `declencheurs.sql`, dans un projet préparé avant le schéma 1.4.0). Un centre n'est jamais
 réécrit : une nouvelle mesure ajoute une ligne, et c'est la plus récente
-(`fid` le plus grand) qui compte. Comme `centres_mesures` a l'index spatial
-de GDAL, Groma retire ses déclencheurs R*Tree le temps de l'insertion, écrit
-lui-même la ligne d'index, puis les remet à l'identique, dans la même
-transaction (`GeoPackage.ajouterCentreMesure`, testé). Les déclencheurs du
+(`fid` le plus grand) qui compte. `centres_mesures` et `cibles` n'ont pas d'index
+spatial ; dans un projet ancien qui en a un, Groma le retire à la première écriture
+(`GeoPackage.retirerIndexSpatial`, sans le module `rtree` que le SQLite d'Android n'a pas ;
+aucune ligne perdue, voir `docs/adr/0001-pas-d-index-spatial-sur-le-telephone.md`). Les déclencheurs du
 GeoPackage (`core/src/groma/donnees/declencheurs.sql`) créent la ligne
 `arbres` d'une détection nouvelle et ne mettent à jour que les colonnes de
 mesure d'un arbre encore provisoire. Les attributs saisis (essence,
@@ -519,7 +519,7 @@ Une hauteur mesurée (`h_source = mesuree`) et un diamètre au ruban
 (`core/tests/test_gpkg.py`) et en Kotlin (`GeoPackageTest`, sur le GeoPackage
 produit par GDAL).
 
-`placettes`, `arbres` et `detections` sont créées **sans index spatial**.
+`placettes`, `arbres`, `detections`, `centres_mesures` et `cibles` sont créées **sans index spatial**.
 Les déclencheurs R*Tree de GDAL appellent `ST_IsEmpty`, absente du SQLite
 d'Android, et ils se préparent sur tout `UPDATE`. Le cas a été vérifié par un
 test.

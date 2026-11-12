@@ -28,13 +28,12 @@ class EcritureCibleTest {
         val n0 = compte(db)
         val c = CiblePlacee("C2", 130.0, 11.0, 41.0, SourceAzimut.BOUSSOLE_TELEPHONE)
         val fid1 = GeoPackage.ecrireCible(db, "P002", c, 925010.0, 6700020.0, 144.4444)
-        assertEquals(avant, declencheurs(db), "déclencheurs R*Tree remis tels quels")
+        assertEquals(avant, declencheurs(db), "déclencheurs inchangés (aucun index R*Tree)")
         val l = GeoPackage.lirePoints(db, "cibles", "P002").filter { it["id_cible"] == "C2" }
         assertEquals(1, l.size)
         assertEquals("boussole_telephone", l.single()["source_azimut"])
         assertEquals(144.4444, (l.single()["azimut_mesure"] as Number).toDouble(), 1e-9)
         assertEquals(925010.0, l.single()["x"] as Double, 1e-6)
-        assertEquals(1, db.requete("SELECT 1 AS u FROM rtree_cibles_geom WHERE id = ?", listOf(fid1)).size)
         assertEquals(lignes0, GeoPackage.lirePoints(db, "cibles", "P002").size)
 
         // Replaced: still one row, old R*Tree row gone, other targets of the plot kept.
@@ -44,8 +43,6 @@ class EcritureCibleTest {
         assertEquals(1, l2.size)
         assertEquals(12.0, (l2.single()["distance_mesuree_m"] as Number).toDouble(), 0.0)
         assertEquals("boussole_visee", l2.single()["source_azimut"])
-        assertEquals(0, db.requete("SELECT 1 AS u FROM rtree_cibles_geom WHERE id = ?", listOf(fid1)).size)
-        assertEquals(1, db.requete("SELECT 1 AS u FROM rtree_cibles_geom WHERE id = ?", listOf(fid2)).size)
         assertEquals(lignes0, GeoPackage.lirePoints(db, "cibles", "P002").size)
         assertEquals(n0, compte(db))
         assertEquals(avant, declencheurs(db))

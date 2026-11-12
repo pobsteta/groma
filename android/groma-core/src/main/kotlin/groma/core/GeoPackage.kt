@@ -105,73 +105,120 @@ object GeoPackage {
 
     fun maintenant(): String = Instant.now().truncatedTo(ChronoUnit.MILLIS).toString()
 
+    /** Layers the phone writes to: they carry no R*Tree index (mission 028). */
+    val TABLES_SANS_INDEX = listOf("centres_mesures", "cibles")
+
+    private fun likeEchappe(s: String) = s.replace("\\", "\\\\").replace("_", "\\_").replace("%", "\\%")
+
+    /**
+     * Removes the R*Tree spatial index of [tables] (mission 028), WITHOUT ever loading the `rtree`
+     * module, which Android's SQLite lacks ("no such module: rtree"): any statement that touches the
+     * virtual table, or a table whose triggers call it, fails there. So no DROP TABLE / DELETE /
+     * INSERT on the virtual table: the `rtree_*` triggers are dropped (DROP TRIGGER does not compile
+     * the body), the virtual table row is deleted from `sqlite_master` under `writable_schema`
+     * (a virtual table owns no page: nothing is orphaned) and `schema_version` incremented, then its
+     * ordinary shadow tables `_node/_rowid/_parent` are dropped and the `gpkg_rtree_index` row of
+     * `gpkg_extensions` removed. One immediate transaction: rolled back if a row of the table is
+     * lost or `integrity_check` is not ok. Idempotent; a pure read when there is nothing to remove.
+     * Call it BEFORE any write to these tables, outside a transaction. Returns true if it removed something.
+     */
+    fun retirerIndexSpatial(db: BaseSqlite, tables: List<String> = TABLES_SANS_INDEX): Boolean {
+        class Index(val table: String, val rtree: String)
+        val aRetirer = tables.mapNotNull { t ->
+            if (db.requete("SELECT 1 AS un FROM sqlite_master WHERE type = 'table' AND name = ?", listOf(t)).isEmpty()) return@mapNotNull null
+            val g = db.requete("SELECT column_name FROM gpkg_geometry_columns WHERE table_name = ?", listOf(t))
+                .firstOrNull()?.get("column_name")?.toString() ?: GEOMETRIE
+            val rtree = "rtree_${t}_$g"
+            val present = db.requete(
+                "SELECT 1 AS un FROM sqlite_master WHERE name IN (?, ?, ?, ?) " +
+                    "OR (type = 'trigger' AND tbl_name = ? AND name LIKE ? ESCAPE '\\')",
+                listOf(rtree, rtree + "_node", rtree + "_rowid", rtree + "_parent", t, likeEchappe(rtree) + "\\_%"),
+            ).isNotEmpty() ||
+                db.requete("SELECT 1 AS un FROM gpkg_extensions WHERE table_name = ? AND extension_name = 'gpkg_rtree_index'", listOf(t)).isNotEmpty()
+            if (present) Index(t, rtree) else null
+        }
+        if (aRetirer.isEmpty()) return false
+        db.transactionImmediate {
+            for (i in aRetirer) {
+                val avant = (db.requete("SELECT COUNT(*) AS n FROM \"${i.table}\"").single()["n"] as Number).toLong()
+                val declencheurs = db.requete(
+                    "SELECT name FROM sqlite_master WHERE type = 'trigger' AND tbl_name = ? AND name LIKE ? ESCAPE '\\'",
+                    listOf(i.table, likeEchappe(i.rtree) + "\\_%"),
+                )
+                for (d in declencheurs) db.executer("DROP TRIGGER \"${d["name"]}\"")
+                if (db.requete("SELECT 1 AS un FROM sqlite_master WHERE name = ?", listOf(i.rtree)).isNotEmpty()) {
+                    val version = (db.requete("PRAGMA schema_version").single().values.first() as Number).toLong()
+                    db.executer("PRAGMA writable_schema = ON")
+                    try {
+                        db.executer("DELETE FROM sqlite_master WHERE type = 'table' AND name = ?", listOf(i.rtree))
+                        db.executer("PRAGMA schema_version = ${version + 1}")
+                    } finally {
+                        db.executer("PRAGMA writable_schema = OFF")
+                    }
+                }
+                for (suffixe in listOf("_node", "_rowid", "_parent")) db.executer("DROP TABLE IF EXISTS \"${i.rtree}$suffixe\"")
+                db.executer("DELETE FROM gpkg_extensions WHERE table_name = ? AND extension_name = 'gpkg_rtree_index'", listOf(i.table))
+                check(db.requete("SELECT 1 AS un FROM sqlite_master WHERE name LIKE ? ESCAPE '\\'", listOf(likeEchappe(i.rtree) + "%")).isEmpty()) {
+                    "Index spatial de ${i.table} : retrait incomplet."
+                }
+                val apres = (db.requete("SELECT COUNT(*) AS n FROM \"${i.table}\"").single()["n"] as Number).toLong()
+                check(apres == avant) { "Index spatial de ${i.table} : $avant lignes avant, $apres après, retrait annulé." }
+            }
+            val ok = db.requete("PRAGMA integrity_check").singleOrNull()?.values?.firstOrNull()
+            check(ok == "ok") { "Index spatial : base illisible après retrait ($ok), retrait annulé." }
+        }
+        return true
+    }
+
     /**
      * Appends an RTK centre measured in Groma to `centres_mesures` (brief carte
      * RTK, § 5.4). A centre is never rewritten: a new measurement adds a row,
-     * and the latest one counts. The layer has GDAL's R*Tree index, whose
-     * triggers call ST_IsEmpty, missing from Android's SQLite: they are set
-     * aside for the insert, the index row written here, and the triggers put
-     * back unchanged, all in one transaction. Returns the new fid.
+     * and the latest one counts. The layer has no R*Tree index (mission 028);
+     * a project prepared with one loses it first ([retirerIndexSpatial]), as
+     * Android's SQLite cannot run its triggers. Returns the new fid.
      */
     fun ajouterCentreMesure(
         db: BaseSqlite, plotId: String, x: Double, y: Double, qualite: String, precisionM: Double,
         ecartPrevuM: Double?, date: String = maintenant(), reception: CentreMesure? = null,
-    ): Long = db.transactionImmediate {
-        assurerQualiteReception(db)
-        val declencheurs = db.requete(
-            "SELECT name, sql FROM sqlite_master WHERE type = 'trigger' AND tbl_name = 'centres_mesures' AND name LIKE 'rtree_%'",
-        )
-        for (d in declencheurs) db.executer("DROP TRIGGER \"${d["name"]}\"")
-        db.executer(
-            "INSERT INTO centres_mesures ($GEOMETRIE, plot_id, qualite_gnss, precision_h_m, ecart_prevu_m, date_mesure, " +
-                "nb_positions, nb_satellites, hdop, age_corrections_s, duree_mesure_s) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            listOf(
-                encoderPoint(x, y), plotId, qualite, precisionM, ecartPrevuM, date,
-                reception?.nbFixes, reception?.nbSatellites, reception?.hdop?.let { Math.round(it * 100) / 100.0 },
-                reception?.ageCorrectionsS?.let { Math.round(it * 10) / 10.0 }, reception?.dureeS?.let { Math.round(it * 10) / 10.0 },
-            ),
-        )
-        val fid = (db.requete("SELECT last_insert_rowid() AS fid").single()["fid"] as Number).toLong()
-        val rtree = "rtree_centres_mesures_$GEOMETRIE"
-        if (db.requete("SELECT 1 AS un FROM sqlite_master WHERE name = ?", listOf(rtree)).isNotEmpty()) {
-            db.executer("INSERT OR REPLACE INTO $rtree VALUES (?, ?, ?, ?, ?)", listOf(fid, x, x, y, y))
+    ): Long {
+        retirerIndexSpatial(db)
+        return db.transactionImmediate {
+            assurerQualiteReception(db)
+            db.executer(
+                "INSERT INTO centres_mesures ($GEOMETRIE, plot_id, qualite_gnss, precision_h_m, ecart_prevu_m, date_mesure, " +
+                    "nb_positions, nb_satellites, hdop, age_corrections_s, duree_mesure_s) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                listOf(
+                    encoderPoint(x, y), plotId, qualite, precisionM, ecartPrevuM, date,
+                    reception?.nbFixes, reception?.nbSatellites, reception?.hdop?.let { Math.round(it * 100) / 100.0 },
+                    reception?.ageCorrectionsS?.let { Math.round(it * 10) / 10.0 }, reception?.dureeS?.let { Math.round(it * 10) / 10.0 },
+                ),
+            )
+            (db.requete("SELECT last_insert_rowid() AS fid").single()["fid"] as Number).toLong()
         }
-        for (d in declencheurs) db.executer(d["sql"] as String)
-        fid
     }
 
     /**
      * Writes a target placed in Groma (vue Cibles, schema 1.3.0) to `cibles`: one row per
      * (plot_id, id_cible), replaced if the target is placed again (the old measure is not
-     * kept). Same R*Tree handling as [ajouterCentreMesure]: the GDAL triggers call
-     * ST_IsEmpty, missing from Android's SQLite, so they are set aside, the index row
-     * written here, then the triggers put back unchanged, in one transaction. A project
-     * prepared before 1.3.0 gets the `source_azimut` column added. Returns the new fid.
+     * kept). No R*Tree index (mission 028): a project prepared with one loses it first
+     * ([retirerIndexSpatial]). A project prepared before 1.3.0 gets the `source_azimut`
+     * column added. Returns the new fid.
      */
     fun ecrireCible(
         db: BaseSqlite, plotId: String, c: CiblePlacee, x: Double, y: Double, azimutUnite: Double,
-    ): Long = db.transactionImmediate {
-        val declencheurs = db.requete(
-            "SELECT name, sql FROM sqlite_master WHERE type = 'trigger' AND tbl_name = 'cibles' AND name LIKE 'rtree_%'",
-        )
-        for (d in declencheurs) db.executer("DROP TRIGGER \"${d["name"]}\"")
-        val colonnes = db.requete("PRAGMA table_info(cibles)").map { it["name"] }
-        if ("source_azimut" !in colonnes) db.executer("ALTER TABLE cibles ADD COLUMN source_azimut TEXT")
-        val rtree = "rtree_cibles_$GEOMETRIE"
-        val aRtree = db.requete("SELECT 1 AS un FROM sqlite_master WHERE name = ?", listOf(rtree)).isNotEmpty()
-        val anciennes = db.requete("SELECT fid FROM cibles WHERE plot_id = ? AND id_cible = ?", listOf(plotId, c.id))
-        for (a in anciennes) {
-            if (aRtree) db.executer("DELETE FROM $rtree WHERE id = ?", listOf(a["fid"]))
-            db.executer("DELETE FROM cibles WHERE fid = ?", listOf(a["fid"]))
+    ): Long {
+        retirerIndexSpatial(db)
+        return db.transactionImmediate {
+            val colonnes = db.requete("PRAGMA table_info(cibles)").map { it["name"] }
+            if ("source_azimut" !in colonnes) db.executer("ALTER TABLE cibles ADD COLUMN source_azimut TEXT")
+            val anciennes = db.requete("SELECT fid FROM cibles WHERE plot_id = ? AND id_cible = ?", listOf(plotId, c.id))
+            for (a in anciennes) db.executer("DELETE FROM cibles WHERE fid = ?", listOf(a["fid"]))
+            db.executer(
+                "INSERT INTO cibles ($GEOMETRIE, plot_id, id_cible, azimut_mesure, distance_mesuree_m, dbh_mesure_cm, source_azimut) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                listOf(encoderPoint(x, y), plotId, c.id, azimutUnite, c.distanceM, c.dbhCm, c.source.code),
+            )
+            (db.requete("SELECT last_insert_rowid() AS fid").single()["fid"] as Number).toLong()
         }
-        db.executer(
-            "INSERT INTO cibles ($GEOMETRIE, plot_id, id_cible, azimut_mesure, distance_mesuree_m, dbh_mesure_cm, source_azimut) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            listOf(encoderPoint(x, y), plotId, c.id, azimutUnite, c.distanceM, c.dbhCm, c.source.code),
-        )
-        val fid = (db.requete("SELECT last_insert_rowid() AS fid").single()["fid"] as Number).toLong()
-        if (aRtree) db.executer("INSERT OR REPLACE INTO $rtree VALUES (?, ?, ?, ?, ?)", listOf(fid, x, x, y, y))
-        for (d in declencheurs) db.executer(d["sql"] as String)
-        fid
     }
 
     /**

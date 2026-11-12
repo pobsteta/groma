@@ -53,6 +53,9 @@ class ExportTerrain(private val ouvrir: (File) -> BaseSqlite) {
         }
         avec(sortie) { db ->
             db.requete("PRAGMA journal_mode = DELETE") // folds a possible -wal copy into the file
+            // Android's SQLite has no rtree module: the DELETEs below would not even compile while an
+            // index (and its triggers) is there. The archive goes to the server, which recreates it if needed.
+            GeoPackage.retirerIndexSpatial(db, TABLES_PLACETTE + TABLES_VIDEES)
             db.transactionImmediate {
                 for (t in TABLES_PLACETTE) db.executer("DELETE FROM $t WHERE plot_id IS NOT ?", listOf(plotId))
                 for (t in TABLES_VIDEES) db.executer("DELETE FROM $t")

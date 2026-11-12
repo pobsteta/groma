@@ -217,9 +217,9 @@ class ExportTerrainTest {
                 val table = c["table_name"].toString()
                 assertEquals(compte(db, table), (c["feature_count"] as Number).toLong(), "feature_count de $table")
             }
-            // R*Tree indexes (centres_mesures, cibles) hold exactly the rows kept.
+            // Mission 028: no R*Tree index left in the archive (Android's SQLite has no rtree module).
             for (table in listOf("centres_mesures", "cibles")) {
-                assertEquals(compte(db, table), compte(db, "rtree_${table}_geom"), "index R*Tree de $table")
+                assertEquals(0, db.requete("SELECT 1 AS u FROM sqlite_master WHERE name LIKE 'rtree\\_${table}\\_%' ESCAPE '\\'").size, "index R*Tree de $table")
             }
         }
     }
