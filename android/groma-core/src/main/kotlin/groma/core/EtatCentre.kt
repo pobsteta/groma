@@ -13,7 +13,7 @@ import java.util.Locale
  * Pure functions, so the wording and the 30 m threshold are testable on the JVM.
  */
 object EtatCentre {
-    /** Beyond this distance to the planned point, measuring the centre asks for a (non blocking) confirmation. */
+    /** Beyond this distance to the planned point, surveying the centre asks for a (non blocking) confirmation. */
     const val SEUIL_AVERTISSEMENT_M = 30.0
 
     fun eloigne(distanceM: Double?): Boolean = distanceM != null && distanceM > SEUIL_AVERTISSEMENT_M
@@ -41,13 +41,13 @@ object EtatCentre {
             ?: runCatching { LocalDateTime.parse(s.replace(' ', 'T')).toInstant(ZoneOffset.UTC) }.getOrNull()
     }
 
-    /** « Centre C0 : RTK fixe, précision 0,02 m, mesuré le 12/11 à 10:05 »; « Centre C0 non mesuré » when [mesure] is false. */
+    /** « Centre C0 : RTK fixe, précision 0,02 m, relevé le 12/11 à 10:05 »; « Centre C0 non relevé » when [mesure] is false. */
     fun ligne(mesure: Boolean, qualite: String?, precisionM: Double?, dateIso: String?, zone: ZoneId = ZoneId.systemDefault()): String {
-        if (!mesure) return "Centre C0 non mesuré"
+        if (!mesure) return "Centre C0 non relevé"
         val parties = listOfNotNull(
             libelleQualite(qualite),
             precisionM?.let { "précision " + String.format(Locale.FRANCE, "%.2f", it) + " m" },
-            dateLocale(dateIso, zone)?.let { "mesuré le $it" },
+            dateLocale(dateIso, zone)?.let { "relevé le $it" },
         )
         return "Centre C0 : " + parties.joinToString(", ")
     }

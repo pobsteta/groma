@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.toArgb
@@ -50,7 +51,9 @@ import groma.app.LectureBoussoleMagnetique
 import groma.app.R
 import groma.core.ArbrePlacette
 import groma.core.CiblePlacee
+import groma.core.CentreMesure
 import groma.core.EtatCentre
+import groma.core.Position
 import groma.core.PlacementCible
 import java.io.File
 import groma.core.SourceAzimut
@@ -83,6 +86,11 @@ fun EcranPlacette(
     centrePrecisionM: Double? = null,
     centreReception: String? = null,
     centreDate: String? = null,
+    centreEcartM: Double? = null,
+    /** Planned point of the plot (WGS 84), for the 30 m warning of « Relever C0 ». */
+    centrePrevu: Position? = null,
+    /** Writes a centre surveyed here (mission 030) and returns its distance to the planned point; the view is then reloaded. */
+    onEnregistrerCentre: suspend (plotId: String, centre: CentreMesure) -> Double? = { _, _ -> null },
     initiales: List<CiblePlacee>,
     centre: Pair<Double, Double>,
     arbresInitiaux: List<ArbrePlacette>,
@@ -115,6 +123,14 @@ fun EcranPlacette(
     var telephone by remember { mutableStateOf(false) }
     var lecture by remember { mutableStateOf(LectureBoussoleMagnetique(null, EtalonnageBoussole.A_ETALONNER)) }
     var sansCapteur by remember { mutableStateOf(false) }
+
+    // Mission 030: same « Relever C0 » flow as the map; the position is listened to while this view is shown.
+    EcouteGnss()
+    val releve = rememberReleveC0(
+        ancien = { if (centreMesure) AncienC0(centreQualite, centreEcartM) else null },
+        enregistrer = onEnregistrerCentre,
+    )
+    DialoguesReleveC0(releve)
 
     DisposableEffect(telephone) {
         val b = if (telephone) BoussoleMagnetique(ctx) { lecture = it } else null
@@ -197,11 +213,15 @@ fun EcranPlacette(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             // Mission 029: the state of C0 is always visible, measured or not.
-            Text(
-                EtatCentre.ligne(centreMesure, centreQualite, centrePrecisionM, centreDate),
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    EtatCentre.ligne(centreMesure, centreQualite, centrePrecisionM, centreDate),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f),
+                )
+                OutlinedButton(onClick = { fermerClavier(); releve.demanderDepuisFiche(plotId, centrePrevu) }) { Text(stringResource(R.string.relever_c0)) }
+            }
             if (!centreMesure) {
                 Text(stringResource(R.string.cibles_centre_prevu), color = MaterialTheme.colorScheme.error)
             } else if (centreQualite == "telephone") {

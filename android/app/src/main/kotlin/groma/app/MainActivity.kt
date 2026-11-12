@@ -37,6 +37,7 @@ import groma.app.ui.EcranPlacette
 import groma.core.ArbrePlacette
 import groma.core.CiblePlacee
 import groma.core.ParametresPlacette
+import groma.core.Position
 import groma.app.ui.LocalPleinEcran
 import groma.app.ui.EcranParametres
 import groma.app.ui.EcranPlacettes
@@ -141,14 +142,16 @@ class MainActivity : AppCompatActivity() {
                         ouvert != null && ciblesPlot != null -> {
                             val plot = ciblesPlot!!
                             BackHandler { ciblesPlot = null }
-                            val etat by produceState<EtatCibles?>(null, ouvert, plot) {
+                            // Mission 030: reloaded after « Relever C0 » without leaving the view (a failed reload keeps the previous state).
+                            var centreVersion by remember(plot) { mutableIntStateOf(0) }
+                            val etat by produceState<EtatCibles?>(null, ouvert, plot, centreVersion) {
                                 value = withContext(Dispatchers.IO) {
                                     try {
                                         val p = ouvert.parametres(plot)
                                         val c = ouvert.centrePourCibles(plot)
-                                        EtatCibles(p, c.mesure, ouvert.ciblesPlacees(plot, p.uniteAzimut), Pair(c.x, c.y), ouvert.arbres(plot), c.qualite, c.precisionM, c.reception, c.dateMesure)
+                                        EtatCibles(p, c.mesure, ouvert.ciblesPlacees(plot, p.uniteAzimut), Pair(c.x, c.y), ouvert.arbres(plot), c.qualite, c.precisionM, c.reception, c.dateMesure, c.ecartM, c.prevu)
                                     } catch (e: Exception) { null }
-                                }
+                                } ?: if (centreVersion > 0) value else null
                             }
                             etat?.let { e ->
                                 EcranPlacette(
@@ -162,6 +165,12 @@ class MainActivity : AppCompatActivity() {
                                     centrePrecisionM = e.centrePrecisionM,
                                     centreReception = e.centreReception,
                                     centreDate = e.centreDate,
+                                    centreEcartM = e.centreEcartM,
+                                    centrePrevu = e.centrePrevu,
+                                    onEnregistrerCentre = { plotId, centre ->
+                                        withContext(Dispatchers.IO) { ouvert.ajouterCentre(plotId, centre).also { EnvoiTerrainWorker.apresEnregistrement(this@MainActivity, ouvert, plotId) } }
+                                            .also { rafraichir++; centreVersion++; ServicePartageQfield.demarrer(this@MainActivity) }
+                                    },
                                     initiales = e.cibles,
                                     centre = e.centre,
                                     arbresInitiaux = e.arbres,
@@ -417,6 +426,7 @@ private class EtatCibles(
     val centre: Pair<Double, Double>, val arbres: List<ArbrePlacette>,
     val centreQualite: String? = null, val centrePrecisionM: Double? = null,
     val centreReception: String? = null, val centreDate: String? = null,
+    val centreEcartM: Double? = null, val centrePrevu: Position? = null,
 )
 
 object Preferences {
