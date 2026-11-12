@@ -42,6 +42,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import groma.app.BoussoleMagnetique
 import groma.app.EtalonnageBoussole
@@ -49,6 +50,7 @@ import groma.app.LectureBoussoleMagnetique
 import groma.app.R
 import groma.core.ArbrePlacette
 import groma.core.CiblePlacee
+import groma.core.EtatCentre
 import groma.core.PlacementCible
 import java.io.File
 import groma.core.SourceAzimut
@@ -80,6 +82,7 @@ fun EcranPlacette(
     centreQualite: String? = null,
     centrePrecisionM: Double? = null,
     centreReception: String? = null,
+    centreDate: String? = null,
     initiales: List<CiblePlacee>,
     centre: Pair<Double, Double>,
     arbresInitiaux: List<ArbrePlacette>,
@@ -193,6 +196,12 @@ fun EcranPlacette(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
+            // Mission 029: the state of C0 is always visible, measured or not.
+            Text(
+                EtatCentre.ligne(centreMesure, centreQualite, centrePrecisionM, centreDate),
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+            )
             if (!centreMesure) {
                 Text(stringResource(R.string.cibles_centre_prevu), color = MaterialTheme.colorScheme.error)
             } else if (centreQualite == "telephone") {

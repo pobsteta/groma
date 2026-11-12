@@ -92,7 +92,8 @@ class Projet(val dossier: File) {
         val p = GeoPackage.lirePoints(s, "placettes", plotId).single()
         val c = mesure ?: p
         CentreCibles(c["x"] as Double, c["y"] as Double, mesure != null, mesure?.get("qualite_gnss") as? String, (mesure?.get("precision_h_m") as? Number)?.toDouble(),
-            resumeReception((mesure?.get("nb_positions") as? Number)?.toInt(), (mesure?.get("nb_satellites") as? Number)?.toInt(), (mesure?.get("hdop") as? Number)?.toDouble()))
+            resumeReception((mesure?.get("nb_positions") as? Number)?.toInt(), (mesure?.get("nb_satellites") as? Number)?.toInt(), (mesure?.get("hdop") as? Number)?.toDouble()),
+            mesure?.get("date_mesure")?.toString())
     }
 
     /** Targets already in `cibles` (placed here or read from an existing project), azimuth back in degrees. */
@@ -170,4 +171,4 @@ class Projet(val dossier: File) {
 }
 
 /** Centre used by the cibles view; [mesure] false when only the planned point is known. */
-data class CentreCibles(val x: Double, val y: Double, val mesure: Boolean, val qualite: String? = null, val precisionM: Double? = null, val reception: String? = null)
+data class CentreCibles(val x: Double, val y: Double, val mesure: Boolean, val qualite: String? = null, val precisionM: Double? = null, val reception: String? = null, val dateMesure: String? = null)

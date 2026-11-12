@@ -8,7 +8,7 @@ la fiche de la placette sur la carte, utilisable quelle que soit la distance au 
 plus de 30 m), parce que Pascal ne voit pas qu'un centre RTK est mesuré et ne peut lancer la mesure
 qu'une fois « Arrivé » à moins de 5 m (demande du 2026-11-12).
 
-**Redite par l'agent :** _à remplir par l'agent._
+**Redite par l'agent :** Afficher en permanence l'état de C0 dans la vue « Placette » et permettre de lancer « Mesurer le centre » depuis la fiche de placette de la carte à n'importe quelle distance (avertissement non bloquant au-delà de 30 m), pour que Pascal voie qu'un centre RTK est mesuré et n'ait plus à être « Arrivé » à moins de 5 m.
 
 ## Les trois questions
 
