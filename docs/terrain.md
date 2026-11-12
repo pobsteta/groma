@@ -662,6 +662,27 @@ téléphone, signalé par le badge (« Position du téléphone, précision 4 m �
 que Groma tient le récepteur, QField n'y a pas accès, et inversement.
 Libérer le récepteur dans Groma avant de passer à QField.
 
+## Essai de fumée de l'APK (émulateur ou téléphone)
+
+Un jeu de tests instrumentés (`android/app/src/androidTest/`) écrit puis relit un projet d'exemple avec le SQLite
+**d'Android** (version, pas de fonctions `ST_*`), ce que les tests JVM (sqlite-jdbc) ne montrent pas, et lance
+l'écran des projets. Il tourne sur le type de build `fumee`, copie de la release dont l'identifiant porte le
+suffixe `.fumee` : l'APK s'installe **à côté** de l'application (`fr.nemeton.groma.fumee` et
+`fr.nemeton.groma.fumee.test`), sans jamais la remplacer ni la désinstaller, donc sans toucher aux données de
+terrain. Un test vérifie ce suffixe.
+
+```bash
+adb devices                       # choisir l'appareil
+cd android
+ANDROID_HOME=$HOME/Android/Sdk ANDROID_SERIAL=emulator-5554 gradle :app:connectedFumeeAndroidTest
+# téléphone : ANDROID_SERIAL=<numéro de série> ; sur un petit émulateur : ajouter -PabiFumee=x86_64
+```
+
+La tâche efface l'ancien rapport avant l'essai puis lance `scripts/verifier-fumee.sh` : zéro test joué est un échec.
+Sans keystore (`GROMA_KEYSTORE`), l'APK est signé avec la clé de debug. Ne jamais lancer
+`adb uninstall fr.nemeton.groma` ni `pm clear` pour « nettoyer » après l'essai. La release de CI joue le même essai
+sur un émulateur x86_64 (API 34) avant de publier l'APK ; le chemin ARM n'est essayé que sur téléphone.
+
 ## Unités et nords
 
 Les azimuts mesurés sont **magnétiques**, dans l'unité de la placette (degrés

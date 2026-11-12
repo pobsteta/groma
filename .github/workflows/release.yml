@@ -146,8 +146,45 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  android:
+  # Essai de fumée (mission 026, calqué sur Surculus ADR 0011) : le code d'écriture de groma-core joué sur le SQLite
+  # d'Android, sur un émulateur x86_64 (API 34), avec le type de build `fumee` (copie de la release, identifiant
+  # suffixé .fumee). Seulement à la release, pas à chaque PR. x86_64 seulement : le chemin ARM est essayé sur téléphone.
+  # Le job `android` en dépend : s'il échoue, l'APK n'est pas publié (le job `android` reste, lui, non bloquant).
+  fumee:
     needs: [release-please, tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release-please.outputs.tag }}
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: "9.8.1"
+      - name: Activer KVM (émulateur)
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Essai de fumée sur émulateur
+        # v2.38.0, épinglée par SHA (commit du tag annoté), comme dans Surculus.
+        uses: reactivecircus/android-emulator-runner@a421e43855164a8197daf9d8d40fe71c6996bb0d
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          working-directory: android
+          # Gradle rend « réussi » une instrumentation qui plante avant le premier test : verifierFumee
+          # (finalizedBy) exige au moins un test joué et aucun échec.
+          script: gradle :app:connectedFumeeAndroidTest -PabiFumee=x86_64
+
+  android:
+    needs: [release-please, tests, fumee]
     runs-on: ubuntu-latest
     # The app is not field-tested yet: never block a release on it.
     continue-on-error: true

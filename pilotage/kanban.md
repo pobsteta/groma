@@ -26,6 +26,10 @@ _Modèle de carte :_
 
 ## Validé
 
+- [026](missions/026-essai-fumee.md) · depuis le cycle 7
+  - Homme : dev (sonnet), appuyer
+  - Mission : essai de fumée instrumenté comme Surculus (type `fumee`, androidTest sur SQLite d'Android, émulateur et téléphone, étape CI)
+  - Moyens : Surculus (lecture), `emulator-5554`, S23 Ultra
 - [024](missions/024-test-centre-telephone.md) · depuis le cycle 7
   - Homme : testeur (sonnet), appuyer
   - Mission : tests du centre au GNSS du téléphone (confirmation, moyenne 30 s, qualité `telephone`, jamais sur un centre RTK sans confirmation)
