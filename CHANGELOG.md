@@ -1,5 +1,12 @@
 # Changelog
 
+## [2026.11.3](https://github.com/pobsteta/groma/compare/v2026.11.2...v2026.11.3) (2026-11-12)
+
+
+### Nouveautés
+
+* **app:** centre C0 toujours visible dans la vue Placette et mesurable depuis la fiche de placette ([#98](https://github.com/pobsteta/groma/issues/98)) ([e551c57](https://github.com/pobsteta/groma/commit/e551c57eaf319917bab500ded213a725ce4d311b))
+
 ## [2026.11.2](https://github.com/pobsteta/groma/compare/v2026.11.1...v2026.11.2) (2026-11-12)
 
 
