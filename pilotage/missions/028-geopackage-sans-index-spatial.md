@@ -9,7 +9,7 @@ l'envoi de terrain échouent (« no such module: rtree », essai de fumée du 20
 les 3 projets du téléphone ont l'index et aucun centre). Choix de Pascal du 2026-11-12 : pas d'index
 sur le téléphone, le serveur le recrée s'il en a besoin.
 
-**Redite par l'agent :** _à remplir par l'agent._
+**Redite par l'agent :** ne plus créer d'index R*Tree sur `centres_mesures` et `cibles` et retirer celui des projets anciens à la première écriture, sans le module `rtree` ni perte de ligne, parce que le SQLite d'Android ne l'a pas.
 
 ## Les trois questions
 
