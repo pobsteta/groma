@@ -65,21 +65,14 @@ class MesureCentreTest {
         db.requete("SELECT name, sql FROM sqlite_master WHERE type = 'trigger' AND tbl_name = 'centres_mesures' ORDER BY name")
 
     @Test
-    fun ecriture_malgre_les_declencheurs_rtree() = exemple { db ->
-        // Like Android's SQLite, this one has no ST_IsEmpty: a plain insert fails.
-        assertFailsWith<Exception> {
-            db.executer("INSERT INTO centres_mesures (geom, plot_id) VALUES (?, 'P002')", listOf(GeoPackage.encoderPoint(1.0, 2.0)))
-        }
+    fun ecriture_sans_index_spatial_et_declencheurs_inchanges() = exemple { db ->
         val avant = declencheurs(db)
         val p2 = GeoPackage.lirePoints(db, "placettes", "P002").single()
         val x = (p2["x"] as Double) + 3.0
         val y = (p2["y"] as Double) + 4.0
         val fid = GeoPackage.ajouterCentreMesure(db, "P002", x, y, "fix", 0.02, 5.0, "2026-10-15T10:00:00Z")
-        // Triggers back unchanged, R*Tree row written, feature count kept by GDAL's trigger.
+        // No R*Tree (mission 028), triggers unchanged, feature count kept by GDAL's trigger.
         assertEquals(avant, declencheurs(db))
-        val r = db.requete("SELECT minx, maxx, miny, maxy FROM rtree_centres_mesures_geom WHERE id = ?", listOf(fid)).single()
-        assertEquals(x, (r["minx"] as Number).toDouble(), 0.1)
-        assertEquals(y, (r["maxy"] as Number).toDouble(), 0.1)
         assertEquals(3L, (db.requete("SELECT feature_count FROM gpkg_ogr_contents WHERE table_name = 'centres_mesures'").single()["feature_count"] as Number).toLong())
         // The earlier centre of P002 is kept; the map and the capture use the latest one.
         assertEquals(2, GeoPackage.lirePoints(db, "centres_mesures", "P002").size)
@@ -88,15 +81,5 @@ class MesureCentreTest {
         assertEquals("fix", dernier["qualite_gnss"])
         val centre = DonneesCarte.lire(db).centres.single { it.plotId == "P002" }
         assertEquals(5.0, centre.ecartM!!, 1e-6)
-    }
-
-    @Test
-    fun ecriture_sans_index_spatial() = exemple { db ->
-        // A GeoPackage without the R*Tree (or prepared otherwise): plain insert.
-        for (d in declencheurs(db)) if ((d["name"] as String).startsWith("rtree_")) db.executer("DROP TRIGGER \"${d["name"]}\"")
-        db.executer("DROP TABLE rtree_centres_mesures_geom")
-        val fid = GeoPackage.ajouterCentreMesure(db, "P001", 1.0, 2.0, "float", 0.4, null)
-        assertEquals("P001", GeoPackage.dernierCentreParPlacette(db, "P001").single()["plot_id"])
-        assertEquals(fid, (GeoPackage.dernierCentreParPlacette(db, "P001").single()["fid"] as Number).toLong())
     }
 }

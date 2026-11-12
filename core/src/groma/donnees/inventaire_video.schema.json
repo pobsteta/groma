@@ -1,6 +1,6 @@
 {
   "nom": "inventaire_video",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "crs": 2154,
   "description": "Schéma du GeoPackage inventaire_video.gpkg produit par nemeton (sous-onglet Terrain > Inventaire vidéo) et complété sur le terrain par QField (saisie) et Groma (détections). Source unique : Python (groma), Kotlin (application Groma) et brief nemeton.",
   "domaines": {
@@ -8,7 +8,7 @@
     "exposition": ["N", "NE", "E", "SE", "S", "SW", "W", "NW", "flat"],
     "unite_azimut": ["deg", "gr"],
     "etat_traitement": ["a_faire", "provisoire", "envoye", "definitif"],
-    "qualite_gnss": ["fix", "float"],
+    "qualite_gnss": ["fix", "float", "telephone"],
     "id_cible": ["C1", "C2", "C3"],
     "source_azimut": ["boussole_visee", "boussole_telephone"],
     "statut": ["vivant", "mort", "chablis", "coupe"],
@@ -53,23 +53,28 @@
     {
       "nom": "centres_mesures",
       "geometrie": "POINT",
-      "index_spatial": true,
+      "index_spatial": false,
       "lecture_seule": false,
-      "remarque": "Centre mesuré au RTK (pied de la canne). La géométrie est la position mesurée.",
+      "remarque": "Sans index spatial (le SQLite d'Android n'a pas le module rtree ; le serveur le recrée au besoin). Centre mesuré au RTK ou au téléphone (pied de la canne). La géométrie est la position mesurée. Qualité de la réception (nb_positions, nb_satellites, hdop, age_corrections_s, duree_mesure_s) enregistrée avec le centre pour juger de sa fiabilité ; vides pour les centres antérieurs.",
       "colonnes": [
         {"nom": "plot_id", "type": "TEXT", "requis": true},
         {"nom": "qualite_gnss", "type": "TEXT", "domaine": "qualite_gnss"},
         {"nom": "precision_h_m", "type": "REAL", "min": 0, "max": 100},
         {"nom": "ecart_prevu_m", "type": "REAL", "min": 0, "lecture_seule": true},
-        {"nom": "date_mesure", "type": "DATETIME"}
+        {"nom": "date_mesure", "type": "DATETIME"},
+        {"nom": "nb_positions", "type": "INTEGER", "min": 0, "remarque": "Positions retenues dans la moyenne du centre."},
+        {"nom": "nb_satellites", "type": "INTEGER", "min": 0, "remarque": "Médiane des satellites utilisés pendant la mesure ; vide si inconnu (0 compté comme inconnu)."},
+        {"nom": "hdop", "type": "REAL", "min": 0, "remarque": "HDOP moyen pendant la mesure ; vide si inconnu (le GNSS du téléphone n'en donne pas)."},
+        {"nom": "age_corrections_s", "type": "REAL", "min": 0, "remarque": "Âge maximal des corrections RTK (s) ; vide hors RTK."},
+        {"nom": "duree_mesure_s", "type": "REAL", "min": 0, "remarque": "Durée (s) du premier au dernier fix retenu."}
       ]
     },
     {
       "nom": "cibles",
       "geometrie": "POINT",
-      "index_spatial": true,
+      "index_spatial": false,
       "lecture_seule": true,
-      "remarque": "Cibles C1 à C3 placées dans Groma (vue Cibles) depuis le centre ; plus de saisie dans QField. Azimut magnétique dans l'unité de la placette, lu à la boussole de visée (tapé) ou à la boussole du téléphone. Une ligne par plot_id et id_cible, remplacée si la cible est replacée ; la géométrie (Lambert 93) est calculée par Groma.",
+      "remarque": "Sans index spatial (voir centres_mesures). Cibles C1 à C3 placées dans Groma (vue Cibles) depuis le centre ; plus de saisie dans QField. Azimut magnétique dans l'unité de la placette, lu à la boussole de visée (tapé) ou à la boussole du téléphone. Une ligne par plot_id et id_cible, remplacée si la cible est replacée ; la géométrie (Lambert 93) est calculée par Groma.",
       "colonnes": [
         {"nom": "plot_id", "type": "TEXT", "requis": true},
         {"nom": "id_cible", "type": "TEXT", "domaine": "id_cible", "requis": true},

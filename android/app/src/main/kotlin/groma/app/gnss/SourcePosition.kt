@@ -4,10 +4,12 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.GnssStatus
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
+import android.os.Handler
 import android.os.Looper
 import androidx.core.content.ContextCompat
 import groma.core.FixGnss
@@ -31,6 +33,9 @@ object SourcePosition {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private val telephone = MutableStateFlow<FixGnss?>(null)
 
+    /** Satellites used in the phone's fix (GnssStatus.usedInFix); 0 = unknown (no status yet). */
+    @Volatile private var satellitesUtilises = 0
+
     val fix: StateFlow<FixGnss?> = combine(ServiceGnssRtk.fix, telephone) { r, t -> r ?: t }
         .stateIn(scope, SharingStarted.Eagerly, null)
 
@@ -52,6 +57,13 @@ object SourcePosition {
             override fun onProviderEnabled(provider: String) {}
             override fun onProviderDisabled(provider: String) { telephone.value = null }
         }
+        val etat = object : GnssStatus.Callback() {
+            override fun onSatelliteStatusChanged(status: GnssStatus) {
+                satellitesUtilises = (0 until status.satelliteCount).count { status.usedInFix(it) }
+            }
+            override fun onStopped() { satellitesUtilises = 0 }
+        }
+        runCatching { lm.registerGnssStatusCallback(etat, Handler(Looper.getMainLooper())) }
         runCatching {
             lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.takeIf { System.currentTimeMillis() - it.time < 60_000 }
                 ?.let { telephone.value = fixDepuis(it) }
@@ -59,6 +71,8 @@ object SourcePosition {
         }
         return AutoCloseable {
             runCatching { lm.removeUpdates(auditeur) }
+            runCatching { lm.unregisterGnssStatusCallback(etat) }
+            satellitesUtilises = 0
             telephone.value = null
         }
     }
@@ -86,7 +100,8 @@ object SourcePosition {
             position = Position(l.latitude, l.longitude),
             // The phone is never RTK, whatever its accuracy claims: autonomous at best.
             qualite = if (precision == null) QualiteFix.AUCUN else QualiteFix.AUTONOME,
-            nbSatellites = l.extras?.getInt("satellites") ?: 0,
+            // Count from GnssStatus (usedInFix), not the unreliable "satellites" extra; 0 = unknown.
+            nbSatellites = satellitesUtilises,
             hdop = null,
             altitudeM = if (l.hasAltitude()) l.altitude else null,
             ageCorrectionsS = null,

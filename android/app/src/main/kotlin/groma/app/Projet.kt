@@ -4,6 +4,7 @@ import android.database.sqlite.SQLiteDatabase
 import groma.core.ArbrePlacette
 import groma.core.Azimut
 import groma.core.CentreMesure
+import groma.core.resumeReception
 import groma.core.CiblePlacee
 import groma.core.PlacementCible
 import groma.core.SaisieArbre
@@ -71,7 +72,7 @@ class Projet(val dossier: File) {
         val p = GeoPackage.lirePoints(s, "placettes", plotId).singleOrNull()
         val ecart = p?.let { c.ecartPrevuM(it["x"] as Double, it["y"] as Double) }?.let { Math.round(it * 1000) / 1000.0 }
         val (x, y) = c.lambert93
-        GeoPackage.ajouterCentreMesure(s, plotId, x, y, c.qualite, Math.round(c.precisionM * 1000) / 1000.0, ecart)
+        GeoPackage.ajouterCentreMesure(s, plotId, x, y, c.qualite, Math.round(c.precisionM * 1000) / 1000.0, ecart, reception = c)
         ecart
     }
 
@@ -90,7 +91,8 @@ class Projet(val dossier: File) {
         val mesure = GeoPackage.dernierCentreParPlacette(s, plotId).firstOrNull()
         val p = GeoPackage.lirePoints(s, "placettes", plotId).single()
         val c = mesure ?: p
-        CentreCibles(c["x"] as Double, c["y"] as Double, mesure != null)
+        CentreCibles(c["x"] as Double, c["y"] as Double, mesure != null, mesure?.get("qualite_gnss") as? String, (mesure?.get("precision_h_m") as? Number)?.toDouble(),
+            resumeReception((mesure?.get("nb_positions") as? Number)?.toInt(), (mesure?.get("nb_satellites") as? Number)?.toInt(), (mesure?.get("hdop") as? Number)?.toDouble()))
     }
 
     /** Targets already in `cibles` (placed here or read from an existing project), azimuth back in degrees. */
@@ -168,4 +170,4 @@ class Projet(val dossier: File) {
 }
 
 /** Centre used by the cibles view; [mesure] false when only the planned point is known. */
-data class CentreCibles(val x: Double, val y: Double, val mesure: Boolean)
+data class CentreCibles(val x: Double, val y: Double, val mesure: Boolean, val qualite: String? = null, val precisionM: Double? = null, val reception: String? = null)
