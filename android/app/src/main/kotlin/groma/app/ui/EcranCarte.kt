@@ -95,6 +95,7 @@ import groma.app.gnss.ConfigRtk
 import groma.app.gnss.ServiceGnssRtk
 import groma.app.gnss.SourcePosition
 import groma.core.DonneesCarte
+import groma.core.EtatCentre
 import groma.core.FixGnss
 import groma.core.Guidage
 import groma.core.CentreMesure
@@ -264,6 +265,11 @@ fun EcranCarte(
             MesureCentre.Autorisation.SANS_RTK -> EtapeCentre.Message(plotId, ctx.getString(R.string.centre_sans_rtk, f?.qualite?.libelle ?: ""))
             MesureCentre.Autorisation.SANS_POSITION -> EtapeCentre.Message(plotId, ctx.getString(R.string.centre_sans_position))
         }
+    }
+    // Same flow as the banner, from the plot sheet at any distance: beyond 30 m a non blocking warning comes first (mission 029).
+    fun demanderMesureDepuisFiche(pl: PlacetteCarte) {
+        val distance = fix?.let { Guidage.calculer(it.position, pl).distanceM }
+        if (EtatCentre.eloigne(distance)) dialogueCentre = EtapeCentre.Eloigne(pl.plotId, distance!!) else demanderMesure(pl.plotId)
     }
     fun terminerMesure(plotId: String, c: CentreMesure?, telephone: Boolean = false) {
         if (c == null && telephone) { dialogueCentre = EtapeCentre.TelephoneInsuffisant(plotId); return }
@@ -448,6 +454,13 @@ fun EcranCarte(
             title = { Text(stringResource(R.string.centre_titre, d.plotId)) },
             text = { Text(d.texte) },
         )
+        is EtapeCentre.Eloigne -> AlertDialog(
+            onDismissRequest = { dialogueCentre = null },
+            confirmButton = { TextButton(onClick = { demanderMesure(d.plotId) }) { Text(stringResource(R.string.centre_eloigne_continuer)) } },
+            dismissButton = { TextButton(onClick = { dialogueCentre = null }) { Text(stringResource(R.string.annuler)) } },
+            title = { Text(stringResource(R.string.centre_titre, d.plotId)) },
+            text = { Text(stringResource(R.string.centre_eloigne, distance(d.distanceM))) },
+        )
         is EtapeCentre.Flottant -> AlertDialog(
             onDismissRequest = { dialogueCentre = null },
             confirmButton = { TextButton(onClick = { mesurer(d.plotId, true) }) { Text(stringResource(R.string.centre_enregistrer_flottant)) } },
@@ -494,6 +507,7 @@ fun EcranCarte(
             FeuillePlacette(
                 pl, donnees, fix?.let { Guidage.calculer(it.position, pl) },
                 onYAller = { allerA(pl) },
+                onMesurer = { choisie = null; demanderMesureDepuisFiche(pl) },
                 onCibles = { choisie = null; onOuvrirCibles(pl.plotId) },
                 onOuvrir = { choisie = null; onOuvrirPlacette(pl.plotId) },
             )
@@ -512,7 +526,7 @@ private fun Case(libelle: String, coche: Boolean, onChange: (Boolean) -> Unit) {
 
 /** Sheet of a tapped plot, with distance and azimuth from the position and « Y aller » (brief § 3, § 5.3). */
 @Composable
-private fun FeuillePlacette(p: PlacetteCarte, donnees: DonneesCarte?, guide: Guidage?, onYAller: () -> Unit, onCibles: () -> Unit, onOuvrir: () -> Unit) {
+private fun FeuillePlacette(p: PlacetteCarte, donnees: DonneesCarte?, guide: Guidage?, onYAller: () -> Unit, onMesurer: () -> Unit, onCibles: () -> Unit, onOuvrir: () -> Unit) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(p.plotId, style = MaterialTheme.typography.headlineSmall)
         val etat = stringResource(
@@ -537,8 +551,12 @@ private fun FeuillePlacette(p: PlacetteCarte, donnees: DonneesCarte?, guide: Gui
         guide?.let { g ->
             Text(stringResource(R.string.carte_distance, distance(g.distanceM)) + " · " + texteAzimut(g))
         }
+        // Two rows so that four buttons stay readable on a phone (mission 029).
         Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
             OutlinedButton(onClick = onYAller) { Text(stringResource(R.string.carte_y_aller)) }
+            OutlinedButton(onClick = onMesurer) { Text(stringResource(R.string.carte_mesurer_centre)) }
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
             OutlinedButton(onClick = onCibles) { Text(stringResource(R.string.placette_bouton)) }
             Button(onClick = onOuvrir) { Text(stringResource(R.string.filmer)) }
         }
@@ -740,6 +758,8 @@ private sealed interface EtapeCentre {
     val plotId: String
     data class Message(override val plotId: String, val texte: String) : EtapeCentre
     data class Flottant(override val plotId: String, val precisionM: Double?) : EtapeCentre
+    /** The position is more than 30 m from the planned point: warned, never refused (mission 029). */
+    data class Eloigne(override val plotId: String, val distanceM: Double) : EtapeCentre
     data class Deja(override val plotId: String, val ecartM: Double?, val flottant: Boolean, val telephone: Boolean = false) : EtapeCentre
     data class Mesure(override val plotId: String, val flottant: Boolean, val telephone: Boolean = false) : EtapeCentre
     /** Phone GNSS offered, with its warning (mission 025). */

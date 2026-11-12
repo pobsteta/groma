@@ -267,6 +267,17 @@ en bas de la carte :
 
 ### Mesurer le centre
 
+**Où lancer la mesure.** Deux endroits, même mesure, mêmes confirmations
+(flottant, téléphone, remplacement d'un centre RTK) : le bandeau « Arrivé »
+(à moins de 5 m) et le bouton **Mesurer le centre** de la fiche de la
+placette sur la carte, **sans condition de distance**. À plus de 30 m du point
+prévu, Groma avertit (« Tu es à 42 m du point prévu : le centre sera enregistré
+là où tu es. Continuer ? ») mais ne refuse jamais.
+
+**État du centre.** La vue « Placette » affiche en haut, en permanence, l'état
+de C0 : « Centre C0 : RTK fixe, précision 0,02 m, mesuré le 12/11 à 10:05 »
+(date et heure locales du téléphone), ou « Centre C0 non mesuré ».
+
 Canne immobile sur le point, bulle calée : **Mesurer le centre** fait la
 moyenne des positions **RTK fixes** pendant la durée réglée (10 s par
 défaut, Paramètres → Récepteur RTK) ; les positions non fixes sont
