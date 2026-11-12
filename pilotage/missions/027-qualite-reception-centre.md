@@ -7,7 +7,7 @@ dans Groma (RTK ou téléphone), la qualité de la réception pendant la mesure 
 satellites, HDOP, âge des corrections, durée), parce que Pascal veut pouvoir juger après coup, dans
 le fichier, de la fiabilité d'un centre (demande du 2026-11-12).
 
-**Redite par l'agent :** _à remplir par l'agent._
+**Redite par l'agent :** Enregistrer dans `centres_mesures`, avec chaque centre mesuré (RTK ou téléphone), cinq valeurs de qualité de réception (positions retenues, satellites, HDOP, âge des corrections, durée), pour que Pascal juge après coup, dans le fichier, de la fiabilité d'un centre.
 
 ## Les trois questions (règle de staffing)
 

@@ -8,8 +8,14 @@ import kotlin.math.sqrt
  * receiver's RTK fixed fixes during a few seconds; float fixes only when the
  * operator confirmed it. The phone's own GNSS is accepted only when explicitly confirmed (mission 025).
  */
-class MesureCentre(val accepterFlottant: Boolean, val accepterTelephone: Boolean = false) {
+class MesureCentre(
+    val accepterFlottant: Boolean,
+    val accepterTelephone: Boolean = false,
+    /** Wall clock in ms, injectable for tests; fixes carry no timestamp so each accepted fix is stamped here. */
+    private val horloge: () -> Long = System::currentTimeMillis,
+) {
     private val fixes = mutableListOf<FixGnss>()
+    private val instants = mutableListOf<Long>()
 
     val nombre: Int get() = fixes.size
 
@@ -26,6 +32,7 @@ class MesureCentre(val accepterFlottant: Boolean, val accepterTelephone: Boolean
         val ok = if (f.origine == OrigineFix.TELEPHONE) accepteTelephone(f, accepterTelephone) else accepte(f, accepterFlottant)
         if (!ok) return false
         fixes += f
+        instants += horloge()
         return true
     }
 
@@ -41,7 +48,17 @@ class MesureCentre(val accepterFlottant: Boolean, val accepterTelephone: Boolean
         val annoncees = fixes.mapNotNull { it.precisionHorizontaleM }
         val annoncee = if (annoncees.isEmpty()) 0.0 else sqrt(annoncees.sumOf { it * it } / annoncees.size)
         val qualite = if (mesureTelephone) "telephone" else if (fixes.all { it.qualite == QualiteFix.RTK_FIXE }) "fix" else "float"
-        return CentreMesure(lat, lon, qualite, maxOf(dispersion, annoncee), fixes.size)
+        // Reception quality (mission 027): unknown stays null, a satellite count of 0 means unknown.
+        val satellites = fixes.map { it.nbSatellites }.filter { it > 0 }.sorted()
+        val hdops = fixes.mapNotNull { it.hdop }
+        val ages = fixes.mapNotNull { it.ageCorrectionsS }
+        return CentreMesure(
+            lat, lon, qualite, maxOf(dispersion, annoncee), fixes.size,
+            nbSatellites = if (satellites.isEmpty()) null else satellites[(satellites.size - 1) / 2], // lower median
+            hdop = if (hdops.isEmpty()) null else hdops.average(),
+            ageCorrectionsS = if (mesureTelephone || ages.isEmpty()) null else ages.max(),
+            dureeS = (instants.last() - instants.first()) / 1000.0,
+        )
     }
 
     companion object {
@@ -78,10 +95,29 @@ class MesureCentre(val accepterFlottant: Boolean, val accepterTelephone: Boolean
 }
 
 /** Measured centre in WGS 84; [qualite] in the `qualite_gnss` domain ("fix", "float", "telephone"). */
-data class CentreMesure(val latitude: Double, val longitude: Double, val qualite: String, val precisionM: Double, val nbFixes: Int) {
+data class CentreMesure(val latitude: Double, val longitude: Double, val qualite: String, val precisionM: Double, val nbFixes: Int,
+    /** Median of the satellites used (lower median), null when unknown. */
+    val nbSatellites: Int? = null,
+    /** Mean HDOP, null when unknown. */
+    val hdop: Double? = null,
+    /** Maximum age of the corrections (s), null outside RTK. */
+    val ageCorrectionsS: Double? = null,
+    /** Seconds from the first to the last retained fix. */
+    val dureeS: Double? = null,
+) {
     /** Lambert 93 (x, y). */
     val lambert93: Pair<Double, Double> get() = Projections.versLambert93(longitude, latitude)
 
     /** Distance (m) to the planned point (x, y) in Lambert 93. */
     fun ecartPrevuM(xPrevu: Double, yPrevu: Double): Double = lambert93.let { (x, y) -> hypot(x - xPrevu, y - yPrevu) }
+}
+
+/** « N positions, S satellites, HDOP h »: only what is known; null when there is no position count. */
+fun resumeReception(nbPositions: Int?, nbSatellites: Int?, hdop: Double?): String? {
+    if (nbPositions == null) return null
+    return listOfNotNull(
+        "$nbPositions position" + if (nbPositions > 1) "s" else "",
+        nbSatellites?.let { "$it satellite" + if (it > 1) "s" else "" },
+        hdop?.let { "HDOP " + String.format(java.util.Locale.FRANCE, "%.1f", it) },
+    ).joinToString(", ")
 }

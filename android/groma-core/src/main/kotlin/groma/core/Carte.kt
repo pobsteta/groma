@@ -19,7 +19,11 @@ data class CentreCarte(
     val plotId: String, val lon: Double, val lat: Double, val ecartM: Double?,
     /** `qualite_gnss` of the centre ("fix", "float", "telephone"), null when unknown. */
     val qualite: String? = null, val precisionM: Double? = null,
-)
+    /** Reception quality recorded with the centre (mission 027), null when absent. */
+    val nbPositions: Int? = null, val nbSatellites: Int? = null, val hdop: Double? = null,
+) {
+    val reception: String? get() = resumeReception(nbPositions, nbSatellites, hdop)
+}
 
 /** Cadastral parcel in WGS 84: polygons → rings (exterior first) → (lon, lat). */
 data class ParcelleCarte(
@@ -112,6 +116,7 @@ data class DonneesCarte(
                 CentreCarte(
                     id, lon, lat, prevus[id]?.let { (px, py) -> hypot(x - px, y - py) },
                     l["qualite_gnss"] as? String, (l["precision_h_m"] as? Number)?.toDouble(),
+                    (l["nb_positions"] as? Number)?.toInt(), (l["nb_satellites"] as? Number)?.toInt(), (l["hdop"] as? Number)?.toDouble(),
                 )
             }
             val parcelles = GeoPackage.lireParcelles(db).map { p ->

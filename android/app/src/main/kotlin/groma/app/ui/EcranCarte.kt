@@ -532,6 +532,7 @@ private fun FeuillePlacette(p: PlacetteCarte, donnees: DonneesCarte?, guide: Gui
             if (c.qualite == "telephone") {
                 Text(stringResource(R.string.carte_centre_telephone, c.precisionM?.let(::metres) ?: "?"), color = MaterialTheme.colorScheme.error)
             }
+            c.reception?.let { Text(stringResource(R.string.carte_centre_reception, it), color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
         guide?.let { g ->
             Text(stringResource(R.string.carte_distance, distance(g.distanceM)) + " · " + texteAzimut(g))

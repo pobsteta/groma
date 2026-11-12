@@ -274,6 +274,13 @@ défaut, Paramètres → Récepteur RTK) ; les positions non fixes sont
 précision 0,02 m, à 1,3 m du point prévu ») est ajouté à
 `centres_mesures`.
 
+La qualité de la réception pendant la mesure est enregistrée avec le centre
+(positions retenues, médiane des satellites utilisés, HDOP moyen, âge maximal
+des corrections, durée) et affichée après la précision, sur la feuille de
+placette de la carte et dans la vue Placette : « Réception : 24 positions,
+11 satellites, HDOP 0,9 ». Ce qui est inconnu n'est pas affiché (le téléphone
+ne donne pas de HDOP ; les centres mesurés avant cette version n'ont rien).
+
 * En RTK flottant, Groma demande confirmation (« Enregistrer en
   flottant ») ; `qualite_gnss` vaut alors `float`.
 * **Sans récepteur RTK** (mission 025, schéma 1.6.0) : quand la position

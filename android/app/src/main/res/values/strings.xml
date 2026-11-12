@@ -160,6 +160,8 @@ Téléchargements/groma/%2$s/qfield</string>
     <string name="centre_enregistre_telephone">Centre enregistré avec le GNSS du téléphone : précision %1$s m, à %2$s m du point prévu (moyenne de %3$d positions). À remplacer par une mesure RTK si possible.</string>
     <string name="carte_centre_telephone">Centre pris au téléphone (précision %1$s m) : à remplacer par une mesure RTK si possible</string>
     <string name="cibles_centre_telephone">Centre pris avec le GNSS du téléphone (précision %1$s m) : toute la placette est décalée d’autant. À remplacer par une mesure RTK si possible.</string>
+    <string name="carte_centre_reception">Réception : %1$s</string>
+    <string name="cibles_centre_reception">Réception du centre : %1$s</string>
     <string name="centre_qualite_fix">fixe</string>
     <string name="centre_qualite_float">flottant</string>
     <string name="hl_menu">Hors ligne…</string>

@@ -115,15 +115,21 @@ object GeoPackage {
      */
     fun ajouterCentreMesure(
         db: BaseSqlite, plotId: String, x: Double, y: Double, qualite: String, precisionM: Double,
-        ecartPrevuM: Double?, date: String = maintenant(),
+        ecartPrevuM: Double?, date: String = maintenant(), reception: CentreMesure? = null,
     ): Long = db.transactionImmediate {
+        assurerQualiteReception(db)
         val declencheurs = db.requete(
             "SELECT name, sql FROM sqlite_master WHERE type = 'trigger' AND tbl_name = 'centres_mesures' AND name LIKE 'rtree_%'",
         )
         for (d in declencheurs) db.executer("DROP TRIGGER \"${d["name"]}\"")
         db.executer(
-            "INSERT INTO centres_mesures ($GEOMETRIE, plot_id, qualite_gnss, precision_h_m, ecart_prevu_m, date_mesure) VALUES (?, ?, ?, ?, ?, ?)",
-            listOf(encoderPoint(x, y), plotId, qualite, precisionM, ecartPrevuM, date),
+            "INSERT INTO centres_mesures ($GEOMETRIE, plot_id, qualite_gnss, precision_h_m, ecart_prevu_m, date_mesure, " +
+                "nb_positions, nb_satellites, hdop, age_corrections_s, duree_mesure_s) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            listOf(
+                encoderPoint(x, y), plotId, qualite, precisionM, ecartPrevuM, date,
+                reception?.nbFixes, reception?.nbSatellites, reception?.hdop?.let { Math.round(it * 100) / 100.0 },
+                reception?.ageCorrectionsS?.let { Math.round(it * 10) / 10.0 }, reception?.dureeS?.let { Math.round(it * 10) / 10.0 },
+            ),
         )
         val fid = (db.requete("SELECT last_insert_rowid() AS fid").single()["fid"] as Number).toLong()
         val rtree = "rtree_centres_mesures_$GEOMETRIE"
@@ -209,6 +215,15 @@ object GeoPackage {
                 db.executer("UPDATE arbres SET ${maj.keys.joinToString(", ") { "$it = ?" }} WHERE uuid = ?", maj.values.toList() + uuid)
             }
         }
+    }
+
+    /** Adds the five reception-quality columns (schema 1.6.0) to `centres_mesures` of a project prepared before; rows kept. */
+    private fun assurerQualiteReception(db: BaseSqlite) {
+        val colonnes = db.requete("PRAGMA table_info(centres_mesures)").map { it["name"] }
+        for ((nom, type) in listOf(
+            "nb_positions" to "INTEGER", "nb_satellites" to "INTEGER", "hdop" to "REAL",
+            "age_corrections_s" to "REAL", "duree_mesure_s" to "REAL",
+        )) if (nom !in colonnes) db.executer("ALTER TABLE centres_mesures ADD COLUMN $nom $type")
     }
 
     /** Adds the `dbh_source` column and recreates the two `detections` triggers in a project prepared before 1.4.0. */

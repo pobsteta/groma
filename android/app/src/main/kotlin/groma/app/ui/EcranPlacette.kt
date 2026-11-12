@@ -79,6 +79,7 @@ fun EcranPlacette(
     centreMesure: Boolean,
     centreQualite: String? = null,
     centrePrecisionM: Double? = null,
+    centreReception: String? = null,
     initiales: List<CiblePlacee>,
     centre: Pair<Double, Double>,
     arbresInitiaux: List<ArbrePlacette>,
@@ -200,6 +201,9 @@ fun EcranPlacette(
                     stringResource(R.string.cibles_centre_telephone, centrePrecisionM?.let(::metres) ?: "?"),
                     color = MaterialTheme.colorScheme.error,
                 )
+            }
+            if (centreMesure && centreReception != null) {
+                Text(stringResource(R.string.cibles_centre_reception, centreReception), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Plan(rayonM, unite, declinaisonDeg, convergenceDeg, cibles, choisie, arbres, centre, fiche, apercu) { fiche = it.uuid }
 

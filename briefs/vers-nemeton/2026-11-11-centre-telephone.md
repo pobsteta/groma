@@ -46,3 +46,20 @@ quelques mètres** : toute la placette (cibles, arbres) est décalée d'autant.
 Aucune autre colonne ni autre domaine. Le rapport du serveur Groma n'est pas
 modifié. Les projets déjà générés n'ont rien à migrer : `telephone` est une
 simple valeur de domaine.
+
+## Qualité de la réception (mission 027)
+
+Cinq colonnes ajoutées à `centres_mesures` (schéma 1.6.0, toujours non publié),
+pour juger après coup de la fiabilité d'un centre, RTK ou téléphone :
+
+| Colonne | Type | Sens | Vide quand |
+|---|---|---|---|
+| `nb_positions` | INTEGER | positions retenues dans la moyenne | centre antérieur |
+| `nb_satellites` | INTEGER | médiane (basse) des satellites utilisés | inconnu (0 compté comme inconnu) |
+| `hdop` | REAL | HDOP moyen | inconnu ; toujours vide au téléphone |
+| `age_corrections_s` | REAL | âge maximal des corrections (s) | hors RTK |
+| `duree_mesure_s` | REAL | secondes du premier au dernier fix retenu | centre antérieur |
+
+Un GeoPackage préparé avant reçoit les colonnes à la première mesure (ALTER TABLE
+ADD COLUMN, lignes conservées) : toutes les colonnes peuvent donc être absentes
+ou vides, à lire sans les supposer.

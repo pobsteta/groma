@@ -111,8 +111,12 @@ class ExportTerrain(private val ouvrir: (File) -> BaseSqlite) {
 
     private fun hex(b: ByteArray) = b.joinToString("") { "%02x".format(it) }
 
+    // Reception-quality columns (mission 027) are added on the fly to old GeoPackages: when empty they must not
+    // change the fingerprint of the other plots (nor of earlier sends), so an empty one is left out.
+    private val COLONNES_RECEPTION = setOf("nb_positions", "nb_satellites", "hdop", "age_corrections_s", "duree_mesure_s")
+
     private fun ligne(r: Map<String, Any?>): String =
-        r.keys.filter { it != "fid" }.sorted().joinToString("|") { k ->
+        r.keys.filter { it != "fid" && !(it in COLONNES_RECEPTION && r[it] == null) }.sorted().joinToString("|") { k ->
             val v = r[k]
             "$k=" + when (v) {
                 null -> "n:"
