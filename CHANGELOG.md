@@ -1,5 +1,27 @@
 # Changelog
 
+## [2026.11.2](https://github.com/pobsteta/groma/compare/v2026.11.1...v2026.11.2) (2026-11-12)
+
+
+### Nouveautés
+
+* **arbres:** saisie des arbres dans Groma, vue « Placette », schéma 1.4.0 ([#91](https://github.com/pobsteta/groma/issues/91)) ([e4ee318](https://github.com/pobsteta/groma/commit/e4ee318137fd8e0b5b69b598b92625891c251856))
+* **centre:** centre au GNSS du téléphone, fiche complète d'un arbre ajouté, qualité de la réception, sans index spatial ([#96](https://github.com/pobsteta/groma/issues/96)) ([b6c8f5e](https://github.com/pobsteta/groma/commit/b6c8f5ee8918829d2c83ebae81f71fa9adb10166))
+* **cibles:** vue « Cibles » dans Groma, schéma 1.3.0 ([#87](https://github.com/pobsteta/groma/issues/87)) ([32401b2](https://github.com/pobsteta/groma/commit/32401b23d3a837dd3860fc7ef4d20fd1c9173167))
+* **terrain:** se passer de QField (envoi de terrain, notes et photos, arbre oublié) ([#94](https://github.com/pobsteta/groma/issues/94)) ([828d266](https://github.com/pobsteta/groma/commit/828d266c0e0c4903af6939c17fdfb1dcf823a646))
+
+
+### Corrections
+
+* **app:** bouton « Filmer » au lieu de « Filmer la placette » ([#92](https://github.com/pobsteta/groma/issues/92)) ([bf76182](https://github.com/pobsteta/groma/commit/bf76182889667f581f4007d4a412acf68b8c205c))
+
+
+### Documentation
+
+* **pilotage:** cycle 7 (version 2026.11.1, missions 015-016 en PR [#87](https://github.com/pobsteta/groma/issues/87)) ([#88](https://github.com/pobsteta/groma/issues/88)) ([f7e0379](https://github.com/pobsteta/groma/commit/f7e0379ec75ab0d434061aef6362055878bb7030))
+* **pilotage:** missions 015-016 terminées (PR [#87](https://github.com/pobsteta/groma/issues/87) fusionnée, APK installée) ([#90](https://github.com/pobsteta/groma/issues/90)) ([56ef408](https://github.com/pobsteta/groma/commit/56ef408e85a620fcf31b5c573a5bf5b6e4a70783))
+* **pilotage:** missions 020-023 terminées (PR [#94](https://github.com/pobsteta/groma/issues/94) fusionnée) ([#95](https://github.com/pobsteta/groma/issues/95)) ([73b789b](https://github.com/pobsteta/groma/commit/73b789ba62a2d53b250897454de8205eed5adf9a))
+
 ## [2026.11.1](https://github.com/pobsteta/groma/compare/v0.14.0...v2026.11.1) (2026-11-11)
 
 
