@@ -99,6 +99,9 @@ import groma.core.DonneesCarte
 import groma.core.EtatCentre
 import groma.core.FixGnss
 import groma.core.Guidage
+import groma.core.OrientationCarte
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import groma.core.CentreMesure
 import groma.core.MesureCentre
 import androidx.work.WorkInfo
@@ -160,6 +163,9 @@ fun EcranCarte(
     val cible = cibleId?.let { id -> donnees?.placettes?.firstOrNull { it.plotId == id } }
     // Heading shown (GNSS course when moving, else the compass), for the guidance arrow.
     var cap by remember { mutableStateOf<Float?>(null) }
+    // Mission 034: north up, or heading up (what is in front at the top of the screen).
+    var capEnHaut by rememberSaveable { mutableStateOf(false) }
+    var rotationCarte by remember { mutableStateOf(0f) }
     var horsLigne by remember { mutableStateOf(false) }
     val racineTuiles = remember(dossierProjet) { dossierProjet?.let(TuilesHorsLigne::racine) }
     val travailTuiles = remember(dossierProjet) {
@@ -222,6 +228,12 @@ fun EcranCarte(
         val f = fix
         if (f != null && suivi == Suivi.SUIVI) mapView.controller.setCenter(GeoPoint(f.position.latitude, f.position.longitude))
         mapView.invalidate()
+    }
+    LaunchedEffect(capEnHaut, cap) {
+        OrientationCarte.aTourner(rotationCarte.toDouble(), OrientationCarte.rotation(capEnHaut, cap?.toDouble()))?.let {
+            rotationCarte = it.toFloat()
+            mapView.mapOrientation = rotationCarte
+        }
     }
     LaunchedEffect(cible) {
         guidage.cible = cible
@@ -332,6 +344,25 @@ fun EcranCarte(
                     SmallFloatingActionButton(onClick = { donnees.prochaine()?.let(::allerA) }) {
                         Icon(IconeYAller, contentDescription = stringResource(R.string.carte_prochaine))
                     }
+                }
+                // North up / heading up; the « N » points to the north of the map.
+                SmallFloatingActionButton(
+                    onClick = {
+                        capEnHaut = !capEnHaut
+                        val f = fix
+                        if (capEnHaut && f != null) {
+                            suivi = Suivi.SUIVI
+                            mapView.controller.animateTo(GeoPoint(f.position.latitude, f.position.longitude))
+                        }
+                    },
+                    containerColor = if (capEnHaut) MaterialTheme.colorScheme.primary else FloatingActionButtonDefaults.containerColor,
+                ) {
+                    Text(
+                        "N", fontSize = 18.sp, fontWeight = FontWeight.Bold,
+                        modifier = Modifier.rotate(rotationCarte).semantics {
+                            contentDescription = ctx.getString(if (capEnHaut) R.string.carte_cap_en_haut else R.string.carte_nord_en_haut)
+                        },
+                    )
                 }
                 SmallFloatingActionButton(onClick = { mapView.controller.zoomIn() }) { Text("+", fontSize = 22.sp) }
                 SmallFloatingActionButton(onClick = { mapView.controller.zoomOut() }) { Text("−", fontSize = 22.sp) }

@@ -120,6 +120,8 @@ Téléchargements/groma/%2$s/qfield</string>
     <string name="carte_rang">Placette %1$d sur %2$d du parcours</string>
     <string name="carte_centre_mesure">C0 relevé à %1$s m du point prévu</string>
     <string name="carte_ma_position">Ma position</string>
+    <string name="carte_nord_en_haut">Nord en haut (toucher pour orienter la carte selon le cap)</string>
+    <string name="carte_cap_en_haut">Cap en haut : la carte tourne avec le téléphone (toucher pour remettre le nord en haut)</string>
     <string name="carte_suivi">Suivi de la position</string>
     <string name="carte_y_aller">Y aller</string>
     <string name="carte_prochaine">Aller à la prochaine placette à faire</string>
