@@ -23,8 +23,8 @@ interface BaseSqlite {
 /** Azimuth unit, magnetic declination and grid convergence of a plot, to place a point from C0. */
 data class OrientationPlacette(val unite: String, val declinaisonDeg: Double, val convergenceDeg: Double)
 
-/** A C0 survey written by [GeoPackage.releverC0]: its fid and the targets moved to it. */
-data class CentreReleve(val fid: Long, val ciblesRecalees: List<String>)
+/** A C0 survey written by [GeoPackage.releverC0]: its fid, the targets and the trees added by hand moved to it. */
+data class CentreReleve(val fid: Long, val ciblesRecalees: List<String>, val arbresRecales: List<String> = emptyList())
 
 object GeoPackage {
     const val SRS_ID = 2154
@@ -196,7 +196,9 @@ object GeoPackage {
      * transaction, moves every target of the plot to the new C0. A target keeps its typed azimuth
      * (`azimut_mesure`, magnetic, plot unit), distance, diameter and source; only its point is
      * recomputed ([PlacementCible.position] with [orientation]). A row without azimuth or distance
-     * is left untouched. Returns the new fid and the ids of the targets moved.
+     * is left untouched. The trees added by hand (`methode = 'terrain'`, mission 032) follow too, from
+     * their stored geographic azimuth and distance; every other attribute and every tree of the video
+     * are left untouched. Returns the new fid and the ids of the targets and trees moved.
      */
     fun releverC0(
         db: BaseSqlite, plotId: String, x: Double, y: Double, qualite: String, precisionM: Double,
@@ -212,7 +214,17 @@ object GeoPackage {
                 db.executer("UPDATE cibles SET $GEOMETRIE = ? WHERE fid = ?", listOf(encoderPoint(cx, cy), c["fid"]))
                 c["id_cible"]?.toString()
             }.sorted()
-            CentreReleve(fid, recalees)
+            // Trees added by hand (mission 032): stored azimuth is geographic, plot unit (see [ajouterArbre]).
+            val arbres = db.requete(
+                "SELECT fid, tree_id, azimut, distance_m FROM arbres WHERE plot_id = ? AND methode = 'terrain'", listOf(plotId),
+            ).mapNotNull { a ->
+                val az = (a["azimut"] as? Number)?.toDouble() ?: return@mapNotNull null
+                val d = (a["distance_m"] as? Number)?.toDouble() ?: return@mapNotNull null
+                val (ax, ay) = PlacementCible.position(Pair(x, y), az, orientation.unite, 0.0, orientation.convergenceDeg, d)
+                db.executer("UPDATE arbres SET $GEOMETRIE = ? WHERE fid = ?", listOf(encoderPoint(ax, ay), a["fid"]))
+                a["tree_id"]?.toString()
+            }.sortedWith(compareBy({ it.length }, { it }))
+            CentreReleve(fid, recalees, arbres)
         }
     }
 

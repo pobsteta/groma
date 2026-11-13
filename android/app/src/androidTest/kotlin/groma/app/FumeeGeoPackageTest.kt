@@ -222,14 +222,23 @@ class FumeeGeoPackageTest {
             db.executer("DELETE FROM cibles WHERE plot_id = 'P002'")
             GeoPackage.ecrireCible(db, "P002", CiblePlacee("C1", 90.0, 10.0, 41.0, SourceAzimut.BOUSSOLE_VISEE), 925010.0, 6700000.0, 90.0)
             GeoPackage.ecrireCible(db, "P002", CiblePlacee("C2", 0.0, 5.0, 33.0, SourceAzimut.BOUSSOLE_VISEE), 925000.0, 6700005.0, 0.0)
+            // Mission 032: a tree added by hand from the old C0 at 90° / 10 m follows to (925013, 6700004).
+            db.executer("UPDATE placettes SET declinaison_deg = 0, convergence_deg = 0 WHERE plot_id = 'P002'")
+            GeoPackage.ajouterCentreMesure(db, "P002", 925000.0, 6700000.0, "rtk_fix", 0.02, null, "2026-11-13T07:00:00Z")
+            val uuid = GeoPackage.ajouterArbre(db, "P002", 90.0, 10.0, 37.5, "hetre")
             val r = GeoPackage.releverC0(db, "P002", 925003.0, 6700004.0, "rtk_fix", 0.02, 1.5, OrientationPlacette("deg", 0.0, 0.0), "2026-11-13T08:00:00Z")
             assertEquals(listOf("C1", "C2"), r.ciblesRecalees)
+            assertEquals(1, r.arbresRecales.size)
+            val a = GeoPackage.lirePoints(db, "arbres", "P002").single { it["uuid"] == uuid }
+            assertEquals(925013.0, a["x"] as Double, 1e-6)
+            assertEquals(6700004.0, a["y"] as Double, 1e-6)
+            assertEquals(18, nombre(db, "SELECT count(*) FROM arbres WHERE methode = 'embarque'"))
             val c = GeoPackage.lirePoints(db, "cibles", "P002").associateBy { it["id_cible"] }
             assertEquals(925013.0, c["C1"]!!["x"] as Double, 1e-6)
             assertEquals(6700004.0, c["C1"]!!["y"] as Double, 1e-6)
             assertEquals(925003.0, c["C2"]!!["x"] as Double, 1e-6)
             assertEquals(6700009.0, c["C2"]!!["y"] as Double, 1e-6)
-            assertEquals(3, nombre(db, "SELECT count(*) FROM centres_mesures"))
+            assertEquals(4, nombre(db, "SELECT count(*) FROM centres_mesures"))
             assertEquals("ok", db.requete("PRAGMA integrity_check").single().values.single())
         }
     }
