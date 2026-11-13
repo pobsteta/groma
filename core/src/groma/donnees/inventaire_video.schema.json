@@ -42,7 +42,7 @@
         {"nom": "strat_height", "type": "TEXT", "cache": true, "lecture_seule": true, "origine": "plan"},
         {"nom": "strat_type", "type": "TEXT", "cache": true, "lecture_seule": true, "origine": "plan"},
         {"nom": "strat_topo", "type": "TEXT", "cache": true, "lecture_seule": true, "origine": "plan"},
-        {"nom": "rayon_m", "type": "REAL", "defaut": 20, "min": 1, "max": 50, "origine": "groma"},
+        {"nom": "rayon_m", "type": "REAL", "defaut": 15, "min": 1, "max": 50, "origine": "groma"},
         {"nom": "seuil_diam_cm", "type": "REAL", "defaut": 7.5, "min": 0, "max": 100, "origine": "groma"},
         {"nom": "unite_azimut", "type": "TEXT", "domaine": "unite_azimut", "defaut": "deg", "origine": "groma"},
         {"nom": "declinaison_deg", "type": "REAL", "min": -30, "max": 30, "origine": "groma", "remarque": "Déclinaison magnétique, positive vers l'est : az_geo = az_mag + declinaison_deg."},

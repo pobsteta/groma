@@ -79,7 +79,7 @@ class Centre(BaseModel):
 
 
 class ParametresPlacette(BaseModel):
-    rayon_m: float = 20.0
+    rayon_m: float = 15.0
     seuil_diam_cm: float = 7.5
     unite_azimut: str = "deg"
     declinaison_deg: float = 0.0

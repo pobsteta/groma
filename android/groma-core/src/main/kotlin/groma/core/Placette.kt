@@ -8,7 +8,7 @@ data class ParametresPlacette(
     val plotId: String,
     val centreX: Double,
     val centreY: Double,
-    val rayonM: Double = 20.0,
+    val rayonM: Double = 15.0,
     val seuilDiamCm: Double = 7.5,
     val uniteAzimut: String = "deg",
     val declinaisonDeg: Double = 0.0,

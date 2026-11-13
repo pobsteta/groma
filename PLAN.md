@@ -58,6 +58,7 @@ Source unique de l'état d'avancement. Mis à jour à chaque étape.
 | 7x | Les arbres ajoutés à la main suivent C0 relevé à nouveau (décision de Pascal du 2026-11-13, mission 032, non essayée sur appareil) | `GeoPackage.releverC0` recalcule aussi les arbres `methode = 'terrain'` (azimut géographique et distance stockés, convergence de la placette) ; arbres de la vidéo immobiles ; message « Arbres ajoutés … recalés » | à essayer sur le S23 |
 | 7y | Images de capture illisibles (premiers tournages de Marsannay, 2026-11-13, mission 033) | `ImageYuv` : la lecture de l'image ARCore recopiait la première ligne du capteur sur toute l'image (nouveau tampon à chaque `getBuffer()`), aucune cible détectable ; lecture par index absolus, tampon pris une fois ; P065 et P067 à refilmer | à essayer sur le S23 |
 | 7z | Bouton boussole sur la carte (demande de Pascal du 2026-11-13, mission 034, non essayée sur appareil) | bouton « N » : nord en haut ou cap en haut (la carte tourne avec le téléphone et suit la position) ; `groma.core.OrientationCarte` | à essayer sur le S23 |
+| 7aa | Placettes de 15 m de rayon par défaut (décision de Pascal du 2026-11-13, mission 035) | défaut du schéma et replis à 15 m ; contrôle de couverture sur le rayon de la placette ; brief nemeton `2026-11-13-rayon-15-m.md` ; projets déjà préparés inchangés | brief à traiter dans nemeton |
 | 8 | Essence proposée par photo d'écorce ou de feuilles | plus tard |
 
 ## Résultats sur données synthétiques (pas encore sur le terrain)

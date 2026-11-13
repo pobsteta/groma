@@ -50,7 +50,7 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
     private lateinit var etat: TextView
     private lateinit var alerte: TextView
     private val fond = RenduFond()
-    private val cq = ControleQualite()
+    private lateinit var cq: ControleQualite
     private val calcul = CalculEmbarque()
     private lateinit var projet: Projet
     private lateinit var plotId: String
@@ -68,6 +68,8 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         OpenCVLoader.initLocal()
         projet = Projet(File(intent.getStringExtra(EXTRA_PROJET)!!))
         plotId = intent.getStringExtra(EXTRA_PLOT)!!
+        // Mission 035: coverage checked over the plot's radius, not a fixed 20 m.
+        cq = ControleQualite.pourRayon(runCatching { projet.parametres(plotId).rayonM }.getOrDefault(15.0))
         travail = File(cacheDir, "capture/" + CleProjet.chemin(projet.projetId, plotId)).apply { deleteRecursively(); mkdirs() }
         enregistreur = EnregistreurPaquet(travail, projet.projetId, plotId)
         vue = findViewById(R.id.vue); etat = findViewById(R.id.etat); alerte = findViewById(R.id.alerte)
