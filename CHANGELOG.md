@@ -1,5 +1,12 @@
 # Changelog
 
+## [2026.11.5](https://github.com/pobsteta/groma/compare/v2026.11.4...v2026.11.5) (2026-11-13)
+
+
+### Nouveautés
+
+* **app:** les cibles suivent C0 relevé à nouveau (mission 031) ([#102](https://github.com/pobsteta/groma/issues/102)) ([6244f14](https://github.com/pobsteta/groma/commit/6244f14fe47dd495d25bfecbc0351804d0bb1a1d))
+
 ## [2026.11.4](https://github.com/pobsteta/groma/compare/v2026.11.3...v2026.11.4) (2026-11-12)
 
 
