@@ -1,5 +1,12 @@
 # Changelog
 
+## [2026.11.6](https://github.com/pobsteta/groma/compare/v2026.11.5...v2026.11.6) (2026-11-13)
+
+
+### Nouveautés
+
+* **app:** les arbres ajoutés à la main suivent C0 relevé à nouveau (mission 032) ([#104](https://github.com/pobsteta/groma/issues/104)) ([e2516a3](https://github.com/pobsteta/groma/commit/e2516a344155d1beca830b023b95685fb2c7ad31))
+
 ## [2026.11.5](https://github.com/pobsteta/groma/compare/v2026.11.4...v2026.11.5) (2026-11-13)
 
 
