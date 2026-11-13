@@ -20,6 +20,12 @@ interface BaseSqlite {
     fun <T> transactionImmediate(bloc: () -> T): T
 }
 
+/** Azimuth unit, magnetic declination and grid convergence of a plot, to place a point from C0. */
+data class OrientationPlacette(val unite: String, val declinaisonDeg: Double, val convergenceDeg: Double)
+
+/** A C0 survey written by [GeoPackage.releverC0]: its fid and the targets moved to it. */
+data class CentreReleve(val fid: Long, val ciblesRecalees: List<String>)
+
 object GeoPackage {
     const val SRS_ID = 2154
     const val GEOMETRIE = "geom"
@@ -182,19 +188,49 @@ object GeoPackage {
         ecartPrevuM: Double?, date: String = maintenant(), reception: CentreMesure? = null,
     ): Long {
         retirerIndexSpatial(db)
+        return db.transactionImmediate { insererCentre(db, plotId, x, y, qualite, precisionM, ecartPrevuM, date, reception) }
+    }
+
+    /**
+     * Surveys C0 again (mission 031): appends the centre as [ajouterCentreMesure] and, in the same
+     * transaction, moves every target of the plot to the new C0. A target keeps its typed azimuth
+     * (`azimut_mesure`, magnetic, plot unit), distance, diameter and source; only its point is
+     * recomputed ([PlacementCible.position] with [orientation]). A row without azimuth or distance
+     * is left untouched. Returns the new fid and the ids of the targets moved.
+     */
+    fun releverC0(
+        db: BaseSqlite, plotId: String, x: Double, y: Double, qualite: String, precisionM: Double,
+        ecartPrevuM: Double?, orientation: OrientationPlacette, date: String = maintenant(), reception: CentreMesure? = null,
+    ): CentreReleve {
+        retirerIndexSpatial(db)
         return db.transactionImmediate {
-            assurerQualiteReception(db)
-            db.executer(
-                "INSERT INTO centres_mesures ($GEOMETRIE, plot_id, qualite_gnss, precision_h_m, ecart_prevu_m, date_mesure, " +
-                    "nb_positions, nb_satellites, hdop, age_corrections_s, duree_mesure_s) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                listOf(
-                    encoderPoint(x, y), plotId, qualite, precisionM, ecartPrevuM, date,
-                    reception?.nbFixes, reception?.nbSatellites, reception?.hdop?.let { Math.round(it * 100) / 100.0 },
-                    reception?.ageCorrectionsS?.let { Math.round(it * 10) / 10.0 }, reception?.dureeS?.let { Math.round(it * 10) / 10.0 },
-                ),
-            )
-            (db.requete("SELECT last_insert_rowid() AS fid").single()["fid"] as Number).toLong()
+            val fid = insererCentre(db, plotId, x, y, qualite, precisionM, ecartPrevuM, date, reception)
+            val recalees = lirePoints(db, "cibles", plotId).mapNotNull { c ->
+                val az = (c["azimut_mesure"] as? Number)?.toDouble() ?: return@mapNotNull null
+                val d = (c["distance_mesuree_m"] as? Number)?.toDouble() ?: return@mapNotNull null
+                val (cx, cy) = PlacementCible.position(Pair(x, y), az, orientation.unite, orientation.declinaisonDeg, orientation.convergenceDeg, d)
+                db.executer("UPDATE cibles SET $GEOMETRIE = ? WHERE fid = ?", listOf(encoderPoint(cx, cy), c["fid"]))
+                c["id_cible"]?.toString()
+            }.sorted()
+            CentreReleve(fid, recalees)
         }
+    }
+
+    private fun insererCentre(
+        db: BaseSqlite, plotId: String, x: Double, y: Double, qualite: String, precisionM: Double,
+        ecartPrevuM: Double?, date: String, reception: CentreMesure?,
+    ): Long {
+        assurerQualiteReception(db)
+        db.executer(
+            "INSERT INTO centres_mesures ($GEOMETRIE, plot_id, qualite_gnss, precision_h_m, ecart_prevu_m, date_mesure, " +
+                "nb_positions, nb_satellites, hdop, age_corrections_s, duree_mesure_s) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            listOf(
+                encoderPoint(x, y), plotId, qualite, precisionM, ecartPrevuM, date,
+                reception?.nbFixes, reception?.nbSatellites, reception?.hdop?.let { Math.round(it * 100) / 100.0 },
+                reception?.ageCorrectionsS?.let { Math.round(it * 10) / 10.0 }, reception?.dureeS?.let { Math.round(it * 10) / 10.0 },
+            ),
+        )
+        return (db.requete("SELECT last_insert_rowid() AS fid").single()["fid"] as Number).toLong()
     }
 
     /**

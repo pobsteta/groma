@@ -7,6 +7,7 @@ import groma.core.CiblePlacee
 import groma.core.Detection
 import groma.core.ExportTerrain
 import groma.core.GeoPackage
+import groma.core.OrientationPlacette
 import groma.core.SourceAzimut
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -210,6 +211,27 @@ class FumeeGeoPackageTest {
         val resultat = ExportTerrain { ouvrir(it) }.archiver(f, dossier, "P001", sortie)
         assertTrue(resultat.empreinte.isNotEmpty())
         ouvrir(f, ecriture = false).use { db -> assertEquals(3, nombre(db, "SELECT count(*) FROM centres_mesures")) }
+    }
+
+    @Test
+    fun releverC0_ciblesSuivent() {
+        // Mission 031 on the old project (R*Tree of GDAL on cibles): UPDATE of the target points on Android's SQLite.
+        // By hand: C1 at 90° / 10 m and C2 at 0° / 5 m from the new C0 (925003, 6700004), deg, no declination.
+        ouvrir(ancien()).use { db ->
+            GeoPackage.retirerIndexSpatial(db) // as Groma does before any write (ADR 0001)
+            db.executer("DELETE FROM cibles WHERE plot_id = 'P002'")
+            GeoPackage.ecrireCible(db, "P002", CiblePlacee("C1", 90.0, 10.0, 41.0, SourceAzimut.BOUSSOLE_VISEE), 925010.0, 6700000.0, 90.0)
+            GeoPackage.ecrireCible(db, "P002", CiblePlacee("C2", 0.0, 5.0, 33.0, SourceAzimut.BOUSSOLE_VISEE), 925000.0, 6700005.0, 0.0)
+            val r = GeoPackage.releverC0(db, "P002", 925003.0, 6700004.0, "rtk_fix", 0.02, 1.5, OrientationPlacette("deg", 0.0, 0.0), "2026-11-13T08:00:00Z")
+            assertEquals(listOf("C1", "C2"), r.ciblesRecalees)
+            val c = GeoPackage.lirePoints(db, "cibles", "P002").associateBy { it["id_cible"] }
+            assertEquals(925013.0, c["C1"]!!["x"] as Double, 1e-6)
+            assertEquals(6700004.0, c["C1"]!!["y"] as Double, 1e-6)
+            assertEquals(925003.0, c["C2"]!!["x"] as Double, 1e-6)
+            assertEquals(6700009.0, c["C2"]!!["y"] as Double, 1e-6)
+            assertEquals(3, nombre(db, "SELECT count(*) FROM centres_mesures"))
+            assertEquals("ok", db.requete("PRAGMA integrity_check").single().values.single())
+        }
     }
 
     @Test
