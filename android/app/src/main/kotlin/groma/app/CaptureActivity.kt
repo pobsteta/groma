@@ -17,6 +17,7 @@ import com.google.ar.core.Frame
 import com.google.ar.core.Session
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.NotYetAvailableException
+import groma.core.ImageYuv
 import groma.core.CleProjet
 import groma.core.ControleQualite
 import groma.core.EchantillonPrise
@@ -123,7 +124,7 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
 
         var gris: ByteArray? = null; var nv21: ByteArray? = null; var lI = 0; var hI = 0
         try {
-            frame.acquireCameraImage().use { img -> lI = img.width; hI = img.height; gris = luminance(img); nv21 = versNv21(img) }
+            frame.acquireCameraImage().use { img -> lI = img.width; hI = img.height; val y = luminance(img); gris = y; nv21 = versNv21(img, y) }
         } catch (e: NotYetAvailableException) { }
 
         val vues = HashSet<String>()
@@ -225,21 +226,32 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         lifecycleScope.launch {
             val p = withContext(Dispatchers.IO) { projet.parametres(plotId) }
             val message = withContext(Dispatchers.Default) {
-                val prec = projet.ouvrir().use { db -> GeoPackage.lirePoints(SqliteAndroid(db), "detections", plotId) }.map { l ->
-                    groma.core.Detection(l["uuid"] as String, plotId, l["x"] as Double, l["y"] as Double, l["num_provisoire"] as String,
-                        0.0, 0.0, (l["dbh_cm"] as Number).toDouble(), null, "aucune", null, "provisoire", "embarque", null)
+                // Mission 033: the package is written FIRST, so a failed on-phone computation never loses a capture.
+                val ecrit = try {
+                    val sortie = File(getExternalFilesDir("paquets"), CleProjet.chemin(projet.projetId, plotId, ".groma.zip"))
+                    sortie.parentFile!!.mkdirs()
+                    val paquet = enregistreur.terminer(manifeste(p), sortie)
+                    Preferences.planifierEnvoi(this@CaptureActivity, paquet, projet.projetId, plotId)
+                    null
+                } catch (e: Exception) {
+                    getString(R.string.paquet_erreur, e.message ?: e.javaClass.simpleName)
                 }
-                val r = calcul.calculer(p, projet.cibles(plotId), projet.houppiers(plotId), projet.mnt(plotId), prec)
-                if (r.detections.isNotEmpty()) {
-                    CalculEmbarque.ecrire(projet, plotId, r.detections)
-                    exporterJson(r.detections)
-                    ServicePartageQfield.demarrer(this@CaptureActivity)
+                val calcule = try {
+                    val prec = projet.ouvrir().use { db -> GeoPackage.lirePoints(SqliteAndroid(db), "detections", plotId) }.map { l ->
+                        groma.core.Detection(l["uuid"] as String, plotId, l["x"] as Double, l["y"] as Double, l["num_provisoire"] as String,
+                            0.0, 0.0, (l["dbh_cm"] as Number).toDouble(), null, "aucune", null, "provisoire", "embarque", null)
+                    }
+                    val r = calcul.calculer(p, projet.cibles(plotId), projet.houppiers(plotId), projet.mnt(plotId), prec)
+                    if (r.detections.isNotEmpty()) {
+                        CalculEmbarque.ecrire(projet, plotId, r.detections)
+                        exporterJson(r.detections)
+                        ServicePartageQfield.demarrer(this@CaptureActivity)
+                    }
+                    listOfNotNull("${r.detections.size} arbres provisoires.", r.message).joinToString("\n")
+                } catch (e: Exception) {
+                    getString(R.string.calcul_erreur, e.message ?: e.javaClass.simpleName)
                 }
-                val sortie = File(getExternalFilesDir("paquets"), CleProjet.chemin(projet.projetId, plotId, ".groma.zip"))
-                sortie.parentFile!!.mkdirs()
-                val paquet = enregistreur.terminer(manifeste(p), sortie)
-                Preferences.planifierEnvoi(this@CaptureActivity, paquet, projet.projetId, plotId)
-                listOfNotNull("${r.detections.size} arbres provisoires.", r.message).joinToString("\n")
+                listOfNotNull(ecrit, calcule).joinToString("\n")
             }
             AlertDialog.Builder(this@CaptureActivity)
                 .setTitle(if (verdict.suffisante) R.string.verdict_ok else R.string.verdict_refaire)
@@ -287,24 +299,15 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         return out
     }
 
+    // Mission 033: each plane buffer fetched once (ARCore returns a new buffer on every getBuffer()).
     private fun luminance(img: Image): ByteArray {
         val p = img.planes[0]
-        val out = ByteArray(img.width * img.height)
-        for (r in 0 until img.height) { p.buffer.position(r * p.rowStride); p.buffer.get(out, r * img.width, img.width) }
-        return out
+        return ImageYuv.luminance(p.buffer, img.width, img.height, p.rowStride, p.pixelStride)
     }
 
-    private fun versNv21(img: Image): ByteArray {
-        val l = img.width; val h = img.height
-        val out = ByteArray(l * h * 3 / 2)
-        luminance(img).copyInto(out)
+    private fun versNv21(img: Image, lum: ByteArray): ByteArray {
         val u = img.planes[1]; val v = img.planes[2]
-        var o = l * h
-        for (r in 0 until h / 2) for (c in 0 until l / 2) {
-            out[o++] = v.buffer.get(r * v.rowStride + c * v.pixelStride)
-            out[o++] = u.buffer.get(r * u.rowStride + c * u.pixelStride)
-        }
-        return out
+        return ImageYuv.nv21(lum, img.width, img.height, u.buffer, u.rowStride, u.pixelStride, v.buffer, v.rowStride, v.pixelStride)
     }
 
     companion object {

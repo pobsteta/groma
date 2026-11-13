@@ -48,6 +48,13 @@ class CalculEmbarque(private val voxelM: Double = 0.02) {
         val c0 = cibles["C0"] ?: return Resultat(emptyList(), "Repère central C0 non vu : impossible de placer les arbres.")
         val autres = cibles.filterKeys { it != "C0" }.mapValues { Pair(it.value[0], it.value[1]) }
         if (autres.isEmpty()) return Resultat(emptyList(), "Aucune cible C1-C3 vue : orientation impossible.")
+        // Mission 033: a target seen but never placed (no azimuth, no distance) cannot orient the plot.
+        val placees = mesures.map { it.idCible }.toSet()
+        if (autres.keys.none { it in placees }) {
+            return Resultat(emptyList(), "Cibles vues (${autres.keys.sorted().joinToString(", ")}) sans azimut ni distance saisis " +
+                "(cibles placées : ${placees.sorted().joinToString(", ").ifEmpty { "aucune" }}) : place-les dans la vue Placette, " +
+                "le paquet est gardé et sera calculé sur le serveur.")
+        }
         val geo = Georeferencement.georeferencer(Pair(c0[0], c0[1]), autres, mesures, Pair(p.centreX, p.centreY),
             p.uniteAzimut, p.declinaisonDeg, p.convergenceDeg)
 
