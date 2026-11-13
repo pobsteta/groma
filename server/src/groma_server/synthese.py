@@ -219,7 +219,8 @@ def generer_paquet(
         plot_id="P001",
         date="2026-10-12T10:00:00Z",
         appareil={"modele": "synthetique"},
-        placette=ParametresPlacette(declinaison_deg=sc.declinaison_deg, convergence_deg=sc.convergence_deg),
+        # The synthetic scene is a 20 m plot (trees up to 20 m), whatever the default radius.
+        placette=ParametresPlacette(rayon_m=20.0, declinaison_deg=sc.declinaison_deg, convergence_deg=sc.convergence_deg),
         centre=Centre(x=p.centre[0], y=p.centre[1], qualite_gnss="fix", precision_h_m=0.02),
         cibles_mesurees=cibles_mes,
         images=images,

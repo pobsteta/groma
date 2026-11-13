@@ -27,6 +27,7 @@ class ControleQualite(
     val netteteMin: Double = 60.0,
     val vitesseMaxMs: Double = 1.2,
 ) {
+
     private val vus = HashSet<Int>()
     private val compteCibles = HashMap<String, Int>()
     private var precedent: EchantillonPrise? = null
@@ -100,6 +101,12 @@ class ControleQualite(
     }
 
     companion object {
+        /**
+         * Mission 035: coverage over the plot's own radius (15 m since 2026-11-13, like the ONF
+         * LiDAR calibration plots): three rings at 35, 70 and 100 % of [rayonM] (7, 14, 20 m for 20 m).
+         */
+        fun pourRayon(rayonM: Double) = ControleQualite(rayonM = rayonM, anneauxM = doubleArrayOf(rayonM * 0.35, rayonM * 0.7, rayonM))
+
         /** Variance of the Laplacian on a grayscale image (sharpness score). */
         fun nettete(gris: ByteArray, largeur: Int, hauteur: Int, pas: Int = 2): Double {
             var somme = 0.0; var somme2 = 0.0; var n = 0

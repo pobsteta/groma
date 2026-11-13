@@ -19,7 +19,7 @@ from .numerotation import ArbreANumeroter, ParametresNumerotation, numeroter, of
 class ParametresPlacette:
     plot_id: str
     centre: tuple[float, float]  # measured centre, Lambert-93
-    rayon_m: float = 20.0
+    rayon_m: float = 15.0
     seuil_diam_cm: float = 7.5
     unite_azimut: str = "deg"
     declinaison_deg: float = 0.0
@@ -34,7 +34,7 @@ class ParametresPlacette:
         return cls(
             plot_id=ligne["plot_id"],
             centre=(float(centre[0]), float(centre[1])),
-            rayon_m=float(ligne.get("rayon_m") or 20.0),
+            rayon_m=float(ligne.get("rayon_m") or 15.0),
             seuil_diam_cm=float(ligne.get("seuil_diam_cm") or 7.5),
             unite_azimut=ligne.get("unite_azimut") or "deg",
             declinaison_deg=float(ligne.get("declinaison_deg") or 0.0),
