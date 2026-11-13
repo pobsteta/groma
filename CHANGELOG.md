@@ -1,5 +1,18 @@
 # Changelog
 
+## [2026.11.7](https://github.com/pobsteta/groma/compare/v2026.11.6...v2026.11.7) (2026-11-13)
+
+
+### Nouveautés
+
+* **app:** bouton boussole sur la carte, nord en haut ou cap en haut (mission 034) ([#107](https://github.com/pobsteta/groma/issues/107)) ([4af49c9](https://github.com/pobsteta/groma/commit/4af49c9f08fd7b12e0539e12e7210715e3a42e54))
+* **schema:** placettes de 15 m de rayon par défaut (mission 035) ([#109](https://github.com/pobsteta/groma/issues/109)) ([ac93cb4](https://github.com/pobsteta/groma/commit/ac93cb43475c8644047ccc81ebc9e0497242287b))
+
+
+### Corrections
+
+* **app:** images de capture illisibles, première ligne du capteur répétée (mission 033) ([#106](https://github.com/pobsteta/groma/issues/106)) ([468f689](https://github.com/pobsteta/groma/commit/468f68904faf41b59fdc9bea3b1f162f4ff1c0f0))
+
 ## [2026.11.6](https://github.com/pobsteta/groma/compare/v2026.11.5...v2026.11.6) (2026-11-13)
 
 
