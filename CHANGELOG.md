@@ -1,5 +1,12 @@
 # Changelog
 
+## [2026.11.8](https://github.com/pobsteta/groma/compare/v2026.11.7...v2026.11.8) (2026-11-13)
+
+
+### Corrections
+
+* **outillage:** le hook de tests lance :app:testFumeeUnitTest ([#110](https://github.com/pobsteta/groma/issues/110)) ([7f04512](https://github.com/pobsteta/groma/commit/7f045127fc16acb09ae454719e7d3df3cdfccf9d))
+
 ## [2026.11.7](https://github.com/pobsteta/groma/compare/v2026.11.6...v2026.11.7) (2026-11-13)
 
 
