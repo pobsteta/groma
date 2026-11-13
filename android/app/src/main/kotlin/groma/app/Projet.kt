@@ -67,7 +67,7 @@ class Projet(val dossier: File) {
 
     /**
      * Appends a centre measured on the map (brief carte RTK, § 5.4), never
-     * rewriting an earlier one, and moves the plot's targets to it (mission 031,
+     * rewriting an earlier one, and moves the plot's targets and trees added by hand to it (missions 031, 032,
      * same orientation as [placerCible]). Returns its distance to the planned
      * point (m) and the targets moved.
      */
@@ -79,7 +79,7 @@ class Projet(val dossier: File) {
             val ecart = p?.let { c.ecartPrevuM(it["x"] as Double, it["y"] as Double) }?.let { Math.round(it * 1000) / 1000.0 }
             val (x, y) = c.lambert93
             val r = GeoPackage.releverC0(s, plotId, x, y, c.qualite, Math.round(c.precisionM * 1000) / 1000.0, ecart, o, reception = c)
-            C0Enregistre(ecart, r.ciblesRecalees)
+            C0Enregistre(ecart, r.ciblesRecalees, r.arbresRecales)
         }
     }
 
@@ -184,5 +184,5 @@ data class CentreCibles(val x: Double, val y: Double, val mesure: Boolean, val q
     /** Distance of the latest centre to the planned point (m), and the planned point itself (WGS 84, mission 030). */
     val ecartM: Double? = null, val prevu: Position? = null)
 
-/** A C0 survey saved by [Projet.ajouterCentre]: distance to the planned point (m) and targets moved to it. */
-data class C0Enregistre(val ecartM: Double?, val ciblesRecalees: List<String>)
+/** A C0 survey saved by [Projet.ajouterCentre]: distance to the planned point (m), targets and trees added by hand moved to it. */
+data class C0Enregistre(val ecartM: Double?, val ciblesRecalees: List<String>, val arbresRecales: List<String> = emptyList())

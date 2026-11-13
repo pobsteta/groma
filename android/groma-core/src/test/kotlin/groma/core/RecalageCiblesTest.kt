@@ -15,6 +15,10 @@ import kotlin.test.assertNull
  * - in grades, 100 gr = 90°: same point;
  * - azimuth, distance, diameter and source of each target unchanged; a target without
  *   distance, the other plots and the centres already surveyed untouched.
+ * Mission 032, trees added by hand, first C0 (925000, 6700000), new C0 (925003, 6700004):
+ * - declination 0, convergence 0: magnetic 90° / 10 m -> (925013, 6700004);
+ * - declination 2°, convergence 2°: magnetic 90° = geographic 92° (stored) = grid 90°: same point;
+ * - the 18 trees of the video (P001) never move, nor any attribute of the tree added.
  */
 class RecalageCiblesTest {
     private fun exemple(bloc: (SqliteJdbc) -> Unit) {
@@ -95,5 +99,32 @@ class RecalageCiblesTest {
         val r = GeoPackage.releverC0(db, "P002", 925003.0, 6700004.0, "telephone", 3.0, null, OrientationPlacette("deg", 0.0, 0.0))
         assertEquals(emptyList(), r.ciblesRecalees)
         assertEquals("telephone", GeoPackage.dernierCentreParPlacette(db, "P002").single()["qualite_gnss"])
+    }
+
+    private fun arbre(db: SqliteJdbc, uuid: String) =
+        GeoPackage.lirePoints(db, "arbres").single { it["uuid"] == uuid }
+
+    @Test
+    fun arbresAjoutesSuivent() = exemple { db ->
+        for ((decl, conv) in listOf(0.0 to 0.0, 2.0 to 2.0)) {
+            db.executer("UPDATE placettes SET unite_azimut = 'deg', declinaison_deg = ?, convergence_deg = ? WHERE plot_id = 'P002'", listOf(decl, conv))
+            GeoPackage.ajouterCentreMesure(db, "P002", 925000.0, 6700000.0, "fix", 0.02, null)
+            val uuid = GeoPackage.ajouterArbre(db, "P002", 90.0, 10.0, 37.5, "hetre", "vivant", "B")
+            val avant = arbre(db, uuid)
+            val r = GeoPackage.releverC0(db, "P002", 925003.0, 6700004.0, "fix", 0.02, null, OrientationPlacette("deg", decl, conv))
+            assertEquals(true, avant["tree_id"] in r.arbresRecales)
+            val apres = arbre(db, uuid)
+            assertEquals(925013.0, apres["x"] as Double, 1e-6)
+            assertEquals(6700004.0, apres["y"] as Double, 1e-6)
+            assertEquals(avant - "x" - "y", apres - "x" - "y")
+        }
+    }
+
+    @Test
+    fun arbresDeLaVideoImmobiles() = exemple { db ->
+        val avant = GeoPackage.lirePoints(db, "arbres", "P001")
+        val r = GeoPackage.releverC0(db, "P001", 925103.0, 6700104.0, "fix", 0.02, null, OrientationPlacette("deg", 2.4, 2.163577))
+        assertEquals(emptyList(), r.arbresRecales)
+        assertEquals(avant, GeoPackage.lirePoints(db, "arbres", "P001"))
     }
 }

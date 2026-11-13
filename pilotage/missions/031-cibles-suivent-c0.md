@@ -27,7 +27,7 @@ depuis l'ancien C0 (décision de Pascal du 2026-11-13 : « fais suivre les cible
 - `Projet.ajouterCentre` renvoie `C0Enregistre(ecartM, ciblesRecalees)` ; le message de fin de relevé
   ajoute « Cibles C1, C2 recalées sur le nouveau C0 (azimut et distance inchangés). » ; la
   confirmation de remplacement d'un C0 annonce que les cibles suivront.
-- Les arbres ajoutés à la main (`methode = 'terrain'`) **ne suivent pas** : hors du périmètre demandé.
+- Les arbres ajoutés à la main (`methode = 'terrain'`) suivent aussi depuis la mission 032.
 
 ## Essais
 

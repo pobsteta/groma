@@ -186,9 +186,10 @@ class ReleveC0(
                     val qualite = ctx.getString(if (c.qualite == "fix") R.string.centre_qualite_fix else R.string.centre_qualite_float)
                     ctx.getString(R.string.centre_enregistre, qualite, metres(c.precisionM), ecart?.let(::metres) ?: "?", c.nbFixes)
                 }
-                // Mission 031: the targets follow the new C0.
+                // Missions 031, 032: the targets and the trees added by hand follow the new C0.
                 val cibles = if (r.ciblesRecalees.isEmpty()) "" else "\n" + ctx.getString(R.string.centre_cibles_recalees, r.ciblesRecalees.joinToString(", "))
-                EtapeCentre.Message(plotId, texte + cibles)
+                val arbres = if (r.arbresRecales.isEmpty()) "" else "\n" + ctx.getString(R.string.centre_arbres_recales, r.arbresRecales.joinToString(", "))
+                EtapeCentre.Message(plotId, texte + cibles + arbres)
             } catch (e: Exception) {
                 EtapeCentre.Message(plotId, ctx.getString(R.string.centre_erreur, e.message ?: e.javaClass.simpleName))
             }
