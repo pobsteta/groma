@@ -226,21 +226,32 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         lifecycleScope.launch {
             val p = withContext(Dispatchers.IO) { projet.parametres(plotId) }
             val message = withContext(Dispatchers.Default) {
-                val prec = projet.ouvrir().use { db -> GeoPackage.lirePoints(SqliteAndroid(db), "detections", plotId) }.map { l ->
-                    groma.core.Detection(l["uuid"] as String, plotId, l["x"] as Double, l["y"] as Double, l["num_provisoire"] as String,
-                        0.0, 0.0, (l["dbh_cm"] as Number).toDouble(), null, "aucune", null, "provisoire", "embarque", null)
+                // Mission 033: the package is written FIRST, so a failed on-phone computation never loses a capture.
+                val ecrit = try {
+                    val sortie = File(getExternalFilesDir("paquets"), CleProjet.chemin(projet.projetId, plotId, ".groma.zip"))
+                    sortie.parentFile!!.mkdirs()
+                    val paquet = enregistreur.terminer(manifeste(p), sortie)
+                    Preferences.planifierEnvoi(this@CaptureActivity, paquet, projet.projetId, plotId)
+                    null
+                } catch (e: Exception) {
+                    getString(R.string.paquet_erreur, e.message ?: e.javaClass.simpleName)
                 }
-                val r = calcul.calculer(p, projet.cibles(plotId), projet.houppiers(plotId), projet.mnt(plotId), prec)
-                if (r.detections.isNotEmpty()) {
-                    CalculEmbarque.ecrire(projet, plotId, r.detections)
-                    exporterJson(r.detections)
-                    ServicePartageQfield.demarrer(this@CaptureActivity)
+                val calcule = try {
+                    val prec = projet.ouvrir().use { db -> GeoPackage.lirePoints(SqliteAndroid(db), "detections", plotId) }.map { l ->
+                        groma.core.Detection(l["uuid"] as String, plotId, l["x"] as Double, l["y"] as Double, l["num_provisoire"] as String,
+                            0.0, 0.0, (l["dbh_cm"] as Number).toDouble(), null, "aucune", null, "provisoire", "embarque", null)
+                    }
+                    val r = calcul.calculer(p, projet.cibles(plotId), projet.houppiers(plotId), projet.mnt(plotId), prec)
+                    if (r.detections.isNotEmpty()) {
+                        CalculEmbarque.ecrire(projet, plotId, r.detections)
+                        exporterJson(r.detections)
+                        ServicePartageQfield.demarrer(this@CaptureActivity)
+                    }
+                    listOfNotNull("${r.detections.size} arbres provisoires.", r.message).joinToString("\n")
+                } catch (e: Exception) {
+                    getString(R.string.calcul_erreur, e.message ?: e.javaClass.simpleName)
                 }
-                val sortie = File(getExternalFilesDir("paquets"), CleProjet.chemin(projet.projetId, plotId, ".groma.zip"))
-                sortie.parentFile!!.mkdirs()
-                val paquet = enregistreur.terminer(manifeste(p), sortie)
-                Preferences.planifierEnvoi(this@CaptureActivity, paquet, projet.projetId, plotId)
-                listOfNotNull("${r.detections.size} arbres provisoires.", r.message).joinToString("\n")
+                listOfNotNull(ecrit, calcule).joinToString("\n")
             }
             AlertDialog.Builder(this@CaptureActivity)
                 .setTitle(if (verdict.suffisante) R.string.verdict_ok else R.string.verdict_refaire)

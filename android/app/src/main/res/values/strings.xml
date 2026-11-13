@@ -16,6 +16,8 @@
     <string name="jeton_afficher">Afficher</string>
     <string name="jeton_masquer">Masquer</string>
     <string name="jeton_coller">Coller</string>
+    <string name="paquet_erreur">Le paquet n’a pas pu être écrit : %1$s</string>
+    <string name="calcul_erreur">Calcul sur le téléphone impossible (%1$s). Le paquet est gardé et sera calculé sur le serveur.</string>
     <string name="cibles_vues">Cibles vues : %1$s</string>
     <string name="couverture">Couverture : %1$d %%</string>
     <string name="camera_requise">La caméra est nécessaire pour filmer la placette.</string>
