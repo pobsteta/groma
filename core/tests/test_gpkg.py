@@ -56,7 +56,7 @@ def test_couches_et_colonnes(gpkg):
     assert couches["projet"] is None  # non-spatial table
     p = gpd.read_file(gpkg, layer="placettes")
     assert list(p.columns[:-1]) == noms_colonnes("placettes")
-    assert p.loc[0, "wgt"] == 12.5 and p.loc[0, "rayon_m"] == 20 and p.loc[0, "unite_azimut"] == "deg"
+    assert p.loc[0, "wgt"] == 12.5 and p.loc[0, "rayon_m"] == 15 and p.loc[0, "unite_azimut"] == "deg"
     assert p.loc[0, "convergence_deg"] == pytest.approx(0.725608 * (p.to_crs(4326).geometry.x[0] - 3), abs=1e-4)
     a = gpd.read_file(gpkg, layer="arbres")
     assert list(a.columns[:-1]) == noms_colonnes("arbres")

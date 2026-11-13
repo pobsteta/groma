@@ -62,4 +62,17 @@ class ControleQualiteTest {
         assertEquals(0.0, ControleQualite.nettete(uni, l, l), 1e-9)
         assertTrue(ControleQualite.nettete(damier, l, l, pas = 1) > 1000)
     }
+
+    /** Mission 035: a 15 m plot is fully covered by a walk at 3, 8 and 13 m; at 20 m the rings stay 7, 14, 20 m. */
+    @Test
+    fun placetteDe15m() {
+        val q15 = ControleQualite.pourRayon(15.0)
+        q15.fixerCentre(0.0, 0.0)
+        tour(q15, listOf(3.0, 8.0, 13.0), cibles = true)
+        assertEquals(100.0, q15.couverturePct(), 1e-9)
+        val q20 = ControleQualite.pourRayon(20.0)
+        val ancien = ControleQualite()
+        for (q in listOf(q20, ancien)) { q.fixerCentre(0.0, 0.0); tour(q, listOf(2.0, 5.0), cibles = true) }
+        assertEquals(ancien.couverturePct(), q20.couverturePct(), 1e-9)
+    }
 }

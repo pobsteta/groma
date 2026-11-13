@@ -54,7 +54,7 @@ class Projet(val dossier: File) {
         val c = GeoPackage.dernierCentreParPlacette(s, plotId).firstOrNull() ?: p
         ParametresPlacette(
             plotId, c["x"] as Double, c["y"] as Double,
-            (p["rayon_m"] as? Number)?.toDouble() ?: 20.0,
+            (p["rayon_m"] as? Number)?.toDouble() ?: 15.0,
             (p["seuil_diam_cm"] as? Number)?.toDouble() ?: 7.5,
             p["unite_azimut"] as? String ?: "deg",
             // Declination left empty in the GeoPackage: WMM2025 at the planned point, today (never written back).
