@@ -6,6 +6,6 @@ Fonctions pures partagées par le serveur et décrites pour le portage Kotlin
 
 import logging
 
-__version__ = "2026.11.5"  # x-release-please-version
+__version__ = "2026.11.6"  # x-release-please-version
 
 logging.getLogger(__name__).addHandler(logging.NullHandler())
