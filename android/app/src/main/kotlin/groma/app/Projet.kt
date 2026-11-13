@@ -16,6 +16,7 @@ import groma.core.DonneesCarte
 import groma.core.GeoPackage
 import groma.core.GeoTiff
 import groma.core.Grille
+import groma.core.OrientationPlacette
 import groma.core.Houppier
 import groma.core.InfosProjet
 import groma.core.ParametresPlacette
@@ -66,15 +67,20 @@ class Projet(val dossier: File) {
 
     /**
      * Appends a centre measured on the map (brief carte RTK, § 5.4), never
-     * rewriting an earlier one. Returns its distance to the planned point (m).
+     * rewriting an earlier one, and moves the plot's targets to it (mission 031,
+     * same orientation as [placerCible]). Returns its distance to the planned
+     * point (m) and the targets moved.
      */
-    fun ajouterCentre(plotId: String, c: CentreMesure): Double? = ouvrir().use { db ->
-        val s = SqliteAndroid(db)
-        val p = GeoPackage.lirePoints(s, "placettes", plotId).singleOrNull()
-        val ecart = p?.let { c.ecartPrevuM(it["x"] as Double, it["y"] as Double) }?.let { Math.round(it * 1000) / 1000.0 }
-        val (x, y) = c.lambert93
-        GeoPackage.ajouterCentreMesure(s, plotId, x, y, c.qualite, Math.round(c.precisionM * 1000) / 1000.0, ecart, reception = c)
-        ecart
+    fun ajouterCentre(plotId: String, c: CentreMesure): C0Enregistre {
+        val o = parametres(plotId).let { OrientationPlacette(it.uniteAzimut, it.declinaisonDeg, it.convergenceDeg) }
+        return ouvrir().use { db ->
+            val s = SqliteAndroid(db)
+            val p = GeoPackage.lirePoints(s, "placettes", plotId).singleOrNull()
+            val ecart = p?.let { c.ecartPrevuM(it["x"] as Double, it["y"] as Double) }?.let { Math.round(it * 1000) / 1000.0 }
+            val (x, y) = c.lambert93
+            val r = GeoPackage.releverC0(s, plotId, x, y, c.qualite, Math.round(c.precisionM * 1000) / 1000.0, ecart, o, reception = c)
+            C0Enregistre(ecart, r.ciblesRecalees)
+        }
     }
 
     fun cibles(plotId: String): List<CibleMesuree> = ouvrir().use { db ->
@@ -177,3 +183,6 @@ class Projet(val dossier: File) {
 data class CentreCibles(val x: Double, val y: Double, val mesure: Boolean, val qualite: String? = null, val precisionM: Double? = null, val reception: String? = null, val dateMesure: String? = null,
     /** Distance of the latest centre to the planned point (m), and the planned point itself (WGS 84, mission 030). */
     val ecartM: Double? = null, val prevu: Position? = null)
+
+/** A C0 survey saved by [Projet.ajouterCentre]: distance to the planned point (m) and targets moved to it. */
+data class C0Enregistre(val ecartM: Double?, val ciblesRecalees: List<String>)

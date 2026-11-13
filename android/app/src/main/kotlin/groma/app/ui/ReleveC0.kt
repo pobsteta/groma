@@ -75,6 +75,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.nemeton.terrain.carte.ZoneTuiles
+import groma.app.C0Enregistre
 import groma.app.R
 import groma.app.carte.Boussole
 import groma.app.carte.CoucheGuidage
@@ -137,7 +138,7 @@ class ReleveC0(
     private val ctx: Context,
     private val scope: CoroutineScope,
     private val ancien: (String) -> AncienC0?,
-    private val enregistrer: suspend (String, CentreMesure) -> Double?,
+    private val enregistrer: suspend (String, CentreMesure) -> C0Enregistre,
 ) {
     var etape by mutableStateOf<EtapeCentre?>(null)
 
@@ -177,13 +178,17 @@ class ReleveC0(
         if (c == null) { etape = EtapeCentre.Message(plotId, ctx.getString(R.string.centre_aucun)); return }
         scope.launch {
             etape = try {
-                val ecart = enregistrer(plotId, c)
-                if (c.qualite == "telephone") {
-                    EtapeCentre.Message(plotId, ctx.getString(R.string.centre_enregistre_telephone, metres(c.precisionM), ecart?.let(::metres) ?: "?", c.nbFixes))
+                val r = enregistrer(plotId, c)
+                val ecart = r.ecartM
+                val texte = if (c.qualite == "telephone") {
+                    ctx.getString(R.string.centre_enregistre_telephone, metres(c.precisionM), ecart?.let(::metres) ?: "?", c.nbFixes)
                 } else {
                     val qualite = ctx.getString(if (c.qualite == "fix") R.string.centre_qualite_fix else R.string.centre_qualite_float)
-                    EtapeCentre.Message(plotId, ctx.getString(R.string.centre_enregistre, qualite, metres(c.precisionM), ecart?.let(::metres) ?: "?", c.nbFixes))
+                    ctx.getString(R.string.centre_enregistre, qualite, metres(c.precisionM), ecart?.let(::metres) ?: "?", c.nbFixes)
                 }
+                // Mission 031: the targets follow the new C0.
+                val cibles = if (r.ciblesRecalees.isEmpty()) "" else "\n" + ctx.getString(R.string.centre_cibles_recalees, r.ciblesRecalees.joinToString(", "))
+                EtapeCentre.Message(plotId, texte + cibles)
             } catch (e: Exception) {
                 EtapeCentre.Message(plotId, ctx.getString(R.string.centre_erreur, e.message ?: e.javaClass.simpleName))
             }
@@ -192,7 +197,7 @@ class ReleveC0(
 }
 
 @Composable
-fun rememberReleveC0(ancien: (String) -> AncienC0?, enregistrer: suspend (String, CentreMesure) -> Double?): ReleveC0 {
+fun rememberReleveC0(ancien: (String) -> AncienC0?, enregistrer: suspend (String, CentreMesure) -> C0Enregistre): ReleveC0 {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     // The lambdas are read at call time: the latest data and writer are always used.

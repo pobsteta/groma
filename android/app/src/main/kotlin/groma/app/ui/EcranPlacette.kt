@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import groma.app.BoussoleMagnetique
 import groma.app.EtalonnageBoussole
 import groma.app.LectureBoussoleMagnetique
+import groma.app.C0Enregistre
 import groma.app.R
 import groma.core.ArbrePlacette
 import groma.core.CiblePlacee
@@ -90,7 +91,7 @@ fun EcranPlacette(
     /** Planned point of the plot (WGS 84), for the 30 m warning of « Relever C0 ». */
     centrePrevu: Position? = null,
     /** Writes a centre surveyed here (mission 030) and returns its distance to the planned point; the view is then reloaded. */
-    onEnregistrerCentre: suspend (plotId: String, centre: CentreMesure) -> Double? = { _, _ -> null },
+    onEnregistrerCentre: suspend (plotId: String, centre: CentreMesure) -> C0Enregistre = { _, _ -> C0Enregistre(null, emptyList()) },
     initiales: List<CiblePlacee>,
     centre: Pair<Double, Double>,
     arbresInitiaux: List<ArbrePlacette>,

@@ -142,7 +142,7 @@ Téléchargements/groma/%2$s/qfield</string>
     <string name="centre_telephone">Le relevé de C0 demande le récepteur RTK : la position du téléphone n’est pas assez précise. Paramètres → Récepteur RTK.</string>
     <string name="centre_sans_rtk">Pas de correction RTK (%1$s). Attendre le fix RTK avant de relever C0.</string>
     <string name="centre_sans_position">Pas encore de position.</string>
-    <string name="centre_deja">%1$s a déjà un C0 relevé, à %2$s m du point prévu. Le nouveau sera ajouté et c’est lui qui comptera ; l’ancien est conservé.</string>
+    <string name="centre_deja">%1$s a déjà un C0 relevé, à %2$s m du point prévu. Le nouveau sera ajouté et c’est lui qui comptera ; l’ancien est conservé. Les cibles déjà placées suivront le nouveau C0.</string>
     <string name="centre_mesurer_quand_meme">Relever à nouveau</string>
     <string name="centre_en_cours">Canne immobile, bulle calée. Relevé en cours : %1$d s sur %2$d.</string>
     <string name="centre_fixes">%1$d positions retenues, précision actuelle %2$s</string>
@@ -159,6 +159,7 @@ Téléchargements/groma/%2$s/qfield</string>
     <string name="centre_fixes_telephone">%1$d positions retenues sur %2$d au moins, précision annoncée %3$s</string>
     <string name="centre_telephone_insuffisant">Moins de %1$d positions utilisables (précision annoncée de %2$d m au plus) pendant le relevé : rien n’a été enregistré. Dégager le ciel, patienter, puis recommencer.</string>
     <string name="centre_telephone_recommencer">Recommencer</string>
+    <string name="centre_cibles_recalees">Cibles %1$s recalées sur le nouveau C0 (azimut et distance inchangés).</string>
     <string name="centre_enregistre_telephone">C0 relevé avec le GNSS du téléphone : précision %1$s m, à %2$s m du point prévu (moyenne de %3$d positions). À remplacer par un relevé RTK si possible.</string>
     <string name="carte_centre_telephone">C0 relevé au téléphone (précision %1$s m) : à remplacer par un relevé RTK si possible</string>
     <string name="cibles_centre_telephone">C0 relevé avec le GNSS du téléphone (précision %1$s m) : toute la placette est décalée d’autant. À remplacer par un relevé RTK si possible.</string>

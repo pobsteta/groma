@@ -75,6 +75,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.nemeton.terrain.carte.ZoneTuiles
+import groma.app.C0Enregistre
 import groma.app.R
 import groma.app.carte.Boussole
 import groma.app.carte.CoucheGuidage
@@ -126,7 +127,7 @@ import org.osmdroid.views.overlay.TilesOverlay
  * fix badge and follow mode (§ 5.1, § 6). « Y aller »: distance and azimuth
  * to a plot, line on the map and arrow relative to the phone (§ 5.3);
  * on arrival, « Relever C0 » averages the RTK fixes and hands the
- * centre to [onEnregistrerCentre], which returns its distance to the planned point (§ 5.4).
+ * centre to [onEnregistrerCentre], which returns its distance to the planned point (§ 5.4) and the targets moved to it.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -137,7 +138,7 @@ fun EcranCarte(
     onRetour: () -> Unit,
     onOuvrirPlacette: (String) -> Unit,
     onOuvrirCibles: (String) -> Unit,
-    onEnregistrerCentre: suspend (String, CentreMesure) -> Double?,
+    onEnregistrerCentre: suspend (String, CentreMesure) -> C0Enregistre,
 ) {
     val ctx = LocalContext.current
     val prefs = remember { ctx.getSharedPreferences("groma", Context.MODE_PRIVATE) }
