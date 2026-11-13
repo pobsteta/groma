@@ -17,6 +17,7 @@ import com.google.ar.core.Frame
 import com.google.ar.core.Session
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.NotYetAvailableException
+import groma.core.ImageYuv
 import groma.core.CleProjet
 import groma.core.ControleQualite
 import groma.core.EchantillonPrise
@@ -123,7 +124,7 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
 
         var gris: ByteArray? = null; var nv21: ByteArray? = null; var lI = 0; var hI = 0
         try {
-            frame.acquireCameraImage().use { img -> lI = img.width; hI = img.height; gris = luminance(img); nv21 = versNv21(img) }
+            frame.acquireCameraImage().use { img -> lI = img.width; hI = img.height; val y = luminance(img); gris = y; nv21 = versNv21(img, y) }
         } catch (e: NotYetAvailableException) { }
 
         val vues = HashSet<String>()
@@ -287,24 +288,15 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         return out
     }
 
+    // Mission 033: each plane buffer fetched once (ARCore returns a new buffer on every getBuffer()).
     private fun luminance(img: Image): ByteArray {
         val p = img.planes[0]
-        val out = ByteArray(img.width * img.height)
-        for (r in 0 until img.height) { p.buffer.position(r * p.rowStride); p.buffer.get(out, r * img.width, img.width) }
-        return out
+        return ImageYuv.luminance(p.buffer, img.width, img.height, p.rowStride, p.pixelStride)
     }
 
-    private fun versNv21(img: Image): ByteArray {
-        val l = img.width; val h = img.height
-        val out = ByteArray(l * h * 3 / 2)
-        luminance(img).copyInto(out)
+    private fun versNv21(img: Image, lum: ByteArray): ByteArray {
         val u = img.planes[1]; val v = img.planes[2]
-        var o = l * h
-        for (r in 0 until h / 2) for (c in 0 until l / 2) {
-            out[o++] = v.buffer.get(r * v.rowStride + c * v.pixelStride)
-            out[o++] = u.buffer.get(r * u.rowStride + c * u.pixelStride)
-        }
-        return out
+        return ImageYuv.nv21(lum, img.width, img.height, u.buffer, u.rowStride, u.pixelStride, v.buffer, v.rowStride, v.pixelStride)
     }
 
     companion object {
