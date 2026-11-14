@@ -124,8 +124,10 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
                 }
             }
         }
-        session.resume(); vue.onResume()
+        session.resume()
+        // Started before the GL thread resumes, so session.update() never runs concurrently with startRecording().
         demarrerFilm()
+        vue.onResume()
     }
     override fun onPause() { super.onPause(); vue.onPause(); session.pause() }
     override fun onDestroy() {
