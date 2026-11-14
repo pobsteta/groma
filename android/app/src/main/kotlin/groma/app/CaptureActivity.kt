@@ -7,20 +7,28 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.google.ar.core.Config
+import android.net.Uri
+import android.os.StatFs
 import com.google.ar.core.Frame
+import com.google.ar.core.PlaybackStatus
+import com.google.ar.core.RecordingConfig
+import com.google.ar.core.RecordingStatus
 import com.google.ar.core.Session
+import com.google.ar.core.Track
 import com.google.ar.core.TrackingState
 import com.google.ar.core.exceptions.NotYetAvailableException
 import groma.core.ImageYuv
 import groma.core.CleProjet
 import groma.core.ControleQualite
 import groma.core.EchantillonPrise
+import groma.core.FilmCapture
 import groma.core.GeoPackage
 import groma.core.Rayon
 import kotlinx.coroutines.Dispatchers
@@ -59,6 +67,17 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
     private var dernierCle: FloatArray? = null
     private var tDernierCle = 0.0
     private val ciblesVues = HashMap<String, Int>()
+
+    // Mission 036. Replay: only in the smoke build, from the film given as the intent data.
+    private var filmRejeu: Uri? = null
+    private val rejeu get() = filmRejeu != null
+    private var rejeuEngage = false
+    private var rejeuTermine = false
+    // Recording: one attempt per capture; the file is never part of the package.
+    private var filmTente = false
+    private var filmEnCours: File? = null
+    private var identiteAEcrire = false
+    private var messageFilm: String? = null
     private val aruco by lazy { ArucoDetector(Objdetect.getPredefinedDictionary(Objdetect.DICT_4X4_50)) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,6 +86,7 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         appliquerPleinEcran(window, Preferences.reglages(this).pleinEcran)
         OpenCVLoader.initLocal()
         projet = Projet(File(intent.getStringExtra(EXTRA_PROJET)!!))
+        filmRejeu = intent.data?.takeIf { FilmCapture.rejeuAutorise(packageName) }
         plotId = intent.getStringExtra(EXTRA_PLOT)!!
         // Mission 035: coverage checked over the plot's radius, not a fixed 20 m.
         cq = ControleQualite.pourRayon(runCatching { projet.parametres(plotId).rayonM }.getOrDefault(15.0))
@@ -93,9 +113,84 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         findViewById<Button>(R.id.terminer).setOnClickListener { terminer() }
     }
 
-    override fun onResume() { super.onResume(); session.resume(); vue.onResume() }
+    override fun onResume() {
+        super.onResume()
+        // The dataset must be set while the session is paused, before resume(); once per capture.
+        filmRejeu?.let { uri ->
+            if (!rejeuEngage) {
+                try { session.setPlaybackDatasetUri(uri); rejeuEngage = true } catch (e: Exception) {
+                    Toast.makeText(this, getString(R.string.rejeu_erreur, e.message ?: e.javaClass.simpleName), Toast.LENGTH_LONG).show()
+                    finish(); return
+                }
+            }
+        }
+        session.resume(); vue.onResume()
+        demarrerFilm()
+    }
     override fun onPause() { super.onPause(); vue.onPause(); session.pause() }
-    override fun onDestroy() { super.onDestroy(); session.close() }
+    override fun onDestroy() {
+        super.onDestroy()
+        arreterFilm()
+        session.close()
+    }
+
+    /**
+     * Mission 036: starts the ARCore recording when the setting is on. Never blocks the capture: any failure
+     * (space, ARCore) becomes a message and the package is written as usual.
+     */
+    private fun demarrerFilm() {
+        if (filmTente) return
+        filmTente = true
+        try {
+            val dossier = File(getExternalFilesDir("paquets"), projet.projetId).apply { mkdirs() }
+            val libre = StatFs(dossier.path).availableBytes
+            when (val d = FilmCapture.decision(Preferences.reglages(this).enregistrerFilm, rejeu, libre)) {
+                FilmCapture.Decision.Aucun -> return
+                is FilmCapture.Decision.PlaceInsuffisante -> {
+                    messageFilm = getString(R.string.film_place_insuffisante, d.libreOctets shr 20, d.requisOctets shr 20)
+                    Toast.makeText(this, messageFilm, Toast.LENGTH_LONG).show()
+                    return
+                }
+                FilmCapture.Decision.Enregistrer -> Unit
+            }
+            val horodatage = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss"))
+            val fichier = File(dossier, FilmCapture.nomFilm(plotId, dossier.list().orEmpty().toSet(), horodatage))
+            val piste = Track(session).setId(FilmCapture.PISTE_IDENTITE).setMimeType(FilmCapture.TYPE_MIME_IDENTITE)
+            session.startRecording(RecordingConfig(session).setMp4DatasetFilePath(fichier.path).addTrack(piste))
+            filmEnCours = fichier
+            identiteAEcrire = true
+        } catch (e: Exception) {
+            filmEnCours = null
+            messageFilm = getString(R.string.film_erreur, e.message ?: e.javaClass.simpleName)
+            Toast.makeText(this, messageFilm, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    /** Identity of the film, written once as the first sample of the custom track (Frame.recordTrackData, so after update()). */
+    private fun ecrireIdentite(frame: Frame) {
+        identiteAEcrire = false
+        try {
+            val p = projet.parametres(plotId)
+            val json = FilmCapture.Identite(projet.projetId, plotId, packageManager.getPackageInfo(packageName, 0).versionName.orEmpty(),
+                java.time.Instant.now().toString(), p.rayonM, p.seuilDiamCm).json().toByteArray(Charsets.UTF_8)
+            frame.recordTrackData(FilmCapture.PISTE_IDENTITE, ByteBuffer.allocateDirect(json.size).put(json).apply { flip() })
+        } catch (e: Exception) {
+            android.util.Log.w("groma", "film identity not recorded", e)
+        }
+    }
+
+    /** Stops the recording (if any) and returns the message about the film for the end-of-capture dialog. */
+    private fun arreterFilm(): String? {
+        val f = filmEnCours ?: return messageFilm
+        filmEnCours = null
+        return try {
+            val coupe = session.recordingStatus != RecordingStatus.OK
+            session.stopRecording()
+            if (coupe) getString(R.string.film_interrompu) else getString(R.string.film_enregistre, f.name)
+        } catch (e: Exception) {
+            getString(R.string.film_erreur, e.message ?: e.javaClass.simpleName)
+        }
+    }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         fond.creer()
@@ -112,6 +207,12 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         val frame = session.update()
         fond.dessiner(frame)
         traiter(frame)
+        if (identiteAEcrire) ecrireIdentite(frame)
+        // End of a replayed film: same as pressing "Terminer".
+        if (rejeu && !rejeuTermine && session.playbackStatus == PlaybackStatus.FINISHED) {
+            rejeuTermine = true
+            runOnUiThread { terminer() }
+        }
     }
 
     private fun traiter(frame: Frame) {
@@ -225,20 +326,28 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
 
     private fun terminer() {
         val verdict = cq.verdict()
+        // Mission 036: the film is closed first; whatever happens to it, the package below is written.
+        val messageDuFilm = arreterFilm()
         lifecycleScope.launch {
             val p = withContext(Dispatchers.IO) { projet.parametres(plotId) }
             val message = withContext(Dispatchers.Default) {
                 // Mission 033: the package is written FIRST, so a failed on-phone computation never loses a capture.
                 val ecrit = try {
-                    val sortie = File(getExternalFilesDir("paquets"), CleProjet.chemin(projet.projetId, plotId, ".groma.zip"))
+                    val sortie = if (rejeu) {
+                        // Replay: a distinct name, an existing package is never overwritten; not uploaded.
+                        val dossier = File(getExternalFilesDir("paquets"), projet.projetId).apply { mkdirs() }
+                        val horodatage = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss"))
+                        File(dossier, FilmCapture.nomPaquetRejeu(plotId, dossier.list().orEmpty().toSet(), horodatage))
+                    } else File(getExternalFilesDir("paquets"), CleProjet.chemin(projet.projetId, plotId, ".groma.zip"))
                     sortie.parentFile!!.mkdirs()
                     val paquet = enregistreur.terminer(manifeste(p), sortie)
-                    Preferences.planifierEnvoi(this@CaptureActivity, paquet, projet.projetId, plotId)
-                    null
+                    if (rejeu) getString(R.string.rejeu_paquet, paquet.name)
+                    else { Preferences.planifierEnvoi(this@CaptureActivity, paquet, projet.projetId, plotId); null }
                 } catch (e: Exception) {
                     getString(R.string.paquet_erreur, e.message ?: e.javaClass.simpleName)
                 }
-                val calcule = try {
+                // A replay leaves the project (detections, QField endpoint) untouched: only the package is produced.
+                val calcule = if (rejeu) null else try {
                     val prec = projet.ouvrir().use { db -> GeoPackage.lirePoints(SqliteAndroid(db), "detections", plotId) }.map { l ->
                         groma.core.Detection(l["uuid"] as String, plotId, l["x"] as Double, l["y"] as Double, l["num_provisoire"] as String,
                             0.0, 0.0, (l["dbh_cm"] as Number).toDouble(), null, "aucune", null, "provisoire", "embarque", null)
@@ -253,7 +362,7 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
                 } catch (e: Exception) {
                     getString(R.string.calcul_erreur, e.message ?: e.javaClass.simpleName)
                 }
-                listOfNotNull(ecrit, calcule).joinToString("\n")
+                listOfNotNull(ecrit, calcule, messageDuFilm).joinToString("\n")
             }
             AlertDialog.Builder(this@CaptureActivity)
                 .setTitle(if (verdict.suffisante) R.string.verdict_ok else R.string.verdict_refaire)
@@ -270,6 +379,7 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         })
         return JSONObject()
             .put("date", java.time.Instant.now().toString())
+            .put("source", FilmCapture.source(rejeu))
             .put("appareil", JSONObject().put("modele", android.os.Build.MODEL))
             .put("placette", JSONObject().put("rayon_m", p.rayonM).put("seuil_diam_cm", p.seuilDiamCm).put("unite_azimut", p.uniteAzimut)
                 .put("declinaison_deg", p.declinaisonDeg).put("convergence_deg", p.convergenceDeg))

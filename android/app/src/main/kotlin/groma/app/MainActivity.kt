@@ -35,6 +35,7 @@ import groma.app.gnss.SourcePosition
 import groma.app.ui.EcranCarte
 import groma.app.ui.EcranPlacette
 import groma.core.ArbrePlacette
+import groma.core.FilmCapture
 import groma.core.CiblePlacee
 import groma.core.ParametresPlacette
 import groma.core.Position
@@ -71,6 +72,16 @@ class MainActivity : AppCompatActivity() {
     private var rafraichir by mutableIntStateOf(0)
     private var projetOuvert by mutableStateOf<Projet?>(null)
     private var plotEnAttente: String? = null
+    // Mission 036 (smoke build only): the plot and the film chosen for a replay.
+    private var plotRejeu: String? = null
+    private var filmRejeu: Uri? = null
+
+    private val choisirFilm = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        val plot = plotRejeu.also { plotRejeu = null }
+        if (uri == null || plot == null || !FilmCapture.rejeuAutorise(packageName)) return@registerForActivityResult
+        filmRejeu = uri
+        demanderPlacette(plot)
+    }
 
     private val choisirRacine = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri == null) return@registerForActivityResult
@@ -87,7 +98,7 @@ class MainActivity : AppCompatActivity() {
     private val demanderCamera = registerForActivityResult(ActivityResultContracts.RequestPermission()) { accorde ->
         val plot = plotEnAttente.also { plotEnAttente = null } ?: return@registerForActivityResult
         if (accorde) ouvrirPlacette(plot)
-        else Toast.makeText(this, R.string.camera_requise, Toast.LENGTH_LONG).show()
+        else { filmRejeu = null; Toast.makeText(this, R.string.camera_requise, Toast.LENGTH_LONG).show() }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -191,6 +202,7 @@ class MainActivity : AppCompatActivity() {
                                             .also { rafraichir++; ServicePartageQfield.demarrer(this@MainActivity) }
                                     },
                                     onFilmer = { demanderPlacette(plot) },
+                                    onRejouer = if (FilmCapture.rejeuAutorise(packageName)) ({ plotRejeu = plot; choisirFilm.launch(arrayOf("video/mp4", "application/octet-stream")) }) else null,
                                     onRetour = { ciblesPlot = null },
                                     dossierProjet = ouvert.dossier,
                                     onNettoyerPhotos = { chemins -> lifecycleScope.launch(Dispatchers.IO) { runCatching { ouvert.supprimerPhotos(chemins) } } },
@@ -405,9 +417,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun ouvrirPlacette(plot: String) {
         val pr = projetOuvert ?: return
+        val film = filmRejeu.also { filmRejeu = null }
         startActivity(Intent(this, CaptureActivity::class.java)
             .putExtra(CaptureActivity.EXTRA_PROJET, pr.dossier.path)
-            .putExtra(CaptureActivity.EXTRA_PLOT, plot))
+            .putExtra(CaptureActivity.EXTRA_PLOT, plot)
+            .apply { if (film != null) { data = film; addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION) } })
     }
 
     companion object {
@@ -442,12 +456,13 @@ object Preferences {
 
     fun reglages(ctx: Context): Reglages = prefs(ctx).let {
         Reglages(it.getString("serveur", "").orEmpty(), it.getString("jeton", "").orEmpty(), it.getBoolean("4g", false),
-            choixThemeDepuis(it.getString("theme", null)), it.getBoolean("plein_ecran", false))
+            choixThemeDepuis(it.getString("theme", null)), it.getBoolean("plein_ecran", false),
+            it.getBoolean("film_capture", false))
     }
 
     fun memoriserReglages(ctx: Context, r: Reglages) =
         prefs(ctx).edit().putString("serveur", r.serveur).putString("jeton", r.jeton).putBoolean("4g", r.envoi4g)
-            .putString("theme", r.theme.name).putBoolean("plein_ecran", r.pleinEcran).apply()
+            .putString("theme", r.theme.name).putBoolean("plein_ecran", r.pleinEcran).putBoolean("film_capture", r.enregistrerFilm).apply()
 
     fun planifierEnvoi(ctx: Context, paquet: File, projetId: String, plotId: String) {
         val p = prefs(ctx)

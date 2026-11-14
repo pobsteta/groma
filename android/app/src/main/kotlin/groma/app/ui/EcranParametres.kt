@@ -49,7 +49,8 @@ import kotlinx.coroutines.launch
 
 /** Upload settings, saved as they are typed. */
 data class Reglages(val serveur: String, val jeton: String, val envoi4g: Boolean,
-    val theme: ChoixTheme = ChoixTheme.SYSTEME, val pleinEcran: Boolean = false)
+    val theme: ChoixTheme = ChoixTheme.SYSTEME, val pleinEcran: Boolean = false,
+    val enregistrerFilm: Boolean = false)
 
 /** Settings screen, reached from the ⋮ menu (same layout as Marculus). */
 @Composable
@@ -118,6 +119,13 @@ fun EcranParametres(reglages: Reglages, onChange: (Reglages) -> Unit, onRetour: 
                     Text(stringResource(R.string.param_plein_desc), style = MaterialTheme.typography.bodySmall)
                 }
                 Switch(modifier = Modifier.margeBouton(WindowInsetsSides.End), checked = reglages.pleinEcran, onCheckedChange = { onChange(reglages.copy(pleinEcran = it)) })
+            }
+            Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.param_film_titre), style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.param_film_desc), style = MaterialTheme.typography.bodySmall)
+                }
+                Switch(modifier = Modifier.margeBouton(WindowInsetsSides.End), checked = reglages.enregistrerFilm, onCheckedChange = { onChange(reglages.copy(enregistrerFilm = it)) })
             }
             ChoixThemeReglage(reglages.theme) { onChange(reglages.copy(theme = it)) }
             SectionRtk()

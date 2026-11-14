@@ -678,6 +678,42 @@ téléphone, signalé par le badge (« Position du téléphone, précision 4 m �
 que Groma tient le récepteur, QField n'y a pas accès, et inversement.
 Libérer le récepteur dans Groma avant de passer à QField.
 
+## Film rejouable de la capture (mission 036)
+
+Les paquets ne gardent que des images fixes. Si une capture est inutilisable (bug, mauvaise lumière), un **film
+ARCore** (vidéo de la caméra et capteurs, au format MP4) permet de recalculer la placette sans y retourner.
+
+**Enregistrer.** Paramètres → **Enregistrer le film de la capture** (décoché par défaut ; lu au lancement de
+chaque capture). Coché, Groma enregistre le film pendant la capture et l'arrête à **Terminer**.
+
+* Le film est `Pxxx.groma.mp4` dans le dossier des paquets du projet, **à côté de** `Pxxx.groma.zip`
+  (`Android/data/fr.nemeton.groma/files/paquets/<projet>/`). Il est **hors du zip** : jamais envoyé au
+  serveur, il reste sur le téléphone. Une nouvelle capture de la même placette n'écrase rien : le film
+  s'appelle alors `Pxxx-AAAAMMJJTHHMMSS.groma.mp4`.
+* Le film porte une piste d'identité (projet, placette, version de l'appli, date, rayon et seuil de la
+  placette) : on sait ce que c'est sans le paquet.
+* **Place** : Groma vérifie avant de commencer qu'il reste au moins 1 Go libre (valeur provisoire). Sinon, ou si
+  l'enregistrement échoue, un message le dit et **le paquet est écrit normalement** : le film ne bloque jamais la
+  capture. La taille réelle d'un film par minute reste à mesurer sur le S23.
+* Récupérer un film sur le PC : câble USB, transfert de fichiers, dossier ci-dessus ; ou
+  `adb pull /sdcard/Android/data/fr.nemeton.groma/files/paquets/<projet>/P065.groma.mp4`.
+  Supprimer les films dont on n'a plus besoin pour libérer la place.
+
+**Rejouer (au bureau seulement).** Uniquement dans la **version d'essai** `fr.nemeton.groma.fumee` (voir
+« Essai de fumée »), jamais dans l'application de terrain. Elle s'installe à côté de l'application de terrain
+(émulateur ou S23 branché). L'application d'essai ne lit pas les dossiers de l'application de terrain : copier le
+film dans un dossier accessible (Téléchargements, par exemple), ouvrir le projet dans l'application d'essai
+(le même projet doit y être présent), la placette, puis **Rejouer un film (version d'essai)** et choisir le
+`.groma.mp4`.
+
+* Le film est traité comme une capture en direct ; à la fin du film, le paquet est écrit
+  (`Pxxx.rejeu.groma.zip`, suffixe horodaté s'il existe déjà), avec `source = rejeu` dans le manifeste (`terrain`
+  pour une capture en direct). Il n'écrase jamais un paquet du terrain.
+* Un rejeu ne touche pas au projet (pas de calcul embarqué, pas d'arbres provisoires) et n'est pas envoyé au
+  serveur : on récupère le zip par câble pour le comparer au paquet d'origine.
+* La relecture sur l'émulateur n'est pas documentée par Google (l'émulateur ne documente que sa scène virtuelle) :
+  voir la fiche de la mission pour l'état de l'essai.
+
 ## Essai de fumée de l'APK (émulateur ou téléphone)
 
 Un jeu de tests instrumentés (`android/app/src/androidTest/`) écrit puis relit un projet d'exemple avec le SQLite

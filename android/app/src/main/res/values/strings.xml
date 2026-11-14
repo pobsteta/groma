@@ -45,6 +45,15 @@
     <string name="param_envoi_desc">Les prises de vue restent sur le téléphone tant qu\'aucun serveur n\'est renseigné. L\'envoi part en Wi-Fi, ou en 4G si tu l\'autorises.</string>
     <string name="param_plein_titre">Plein écran</string>
     <string name="param_plein_desc">Masque les barres de statut et de navigation.</string>
+    <string name="param_film_titre">Enregistrer le film de la capture</string>
+    <string name="param_film_desc">Garde sur le téléphone un film de chaque capture (dossier paquets, à côté du paquet) pour pouvoir la rejouer au bureau. Il n\'est jamais envoyé au serveur et prend de la place.</string>
+    <string name="film_place_insuffisante">Film non enregistré : pas assez de place sur le téléphone (%1$d Mo libres, %2$d Mo nécessaires). Le paquet sera écrit normalement.</string>
+    <string name="film_erreur">Film non enregistré : %1$s. Le paquet est écrit normalement.</string>
+    <string name="film_interrompu">Le film s\'est arrêté en cours de route (place ou erreur d\'écriture) ; le paquet est écrit normalement.</string>
+    <string name="film_enregistre">Film enregistré : %1$s</string>
+    <string name="rejouer_film">Rejouer un film (version d\'essai)</string>
+    <string name="rejeu_erreur">Film illisible : %1$s</string>
+    <string name="rejeu_paquet">Paquet de rejeu écrit : %1$s</string>
     <string name="param_4g_desc">Les paquets peuvent peser plusieurs centaines de Mo.</string>
     <string name="apropos_titre">Groma %1$s</string>
     <string name="apropos_build">Version %1$s (build %2$d)</string>

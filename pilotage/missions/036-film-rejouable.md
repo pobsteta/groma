@@ -59,3 +59,39 @@ peuvent pas être rejoués ? »).
   le S23 et vérifier que le paquet produit a des images valides (lignes différentes, cibles détectées).
   Sinon, le dire dans la fiche et faire l'essai sur le S23.
 - Essai de Pascal : filmer une placette, rejouer le film au bureau, comparer les deux paquets.
+
+## Réalisé
+
+- Réglage « Enregistrer le film de la capture » (`Reglages.enregistrerFilm`, préférence `film_capture`, décoché par défaut).
+- `groma.core.FilmCapture` (JVM, testé) : décision enregistrer / pas / place insuffisante, nommage sans écrasement
+  du film (`Pxxx.groma.mp4`, puis `Pxxx-<horodatage>.groma.mp4`, puis `-2`…) et du paquet de rejeu
+  (`Pxxx.rejeu.groma.zip`), contenu JSON de la piste d'identité, `source` du manifeste, garde « version d'essai ».
+- `CaptureActivity` : `startRecording` après `resume` (`RecordingConfig.setMp4DatasetFilePath`, piste
+  personnalisée d'identité, un échantillon écrit à la première image), arrêt à « Terminer » ou à la destruction.
+  Place libre vérifiée avant (`StatFs`, seuil provisoire 1 Gio). Tout échec : message, jamais d'exception vers la
+  capture ; `terminer()` écrit le paquet avant le calcul embarqué (ordre de la mission 033 inchangé).
+- Rejeu : bouton « Rejouer un film (version d'essai) » sur la fiche placette, seulement si l'identifiant de
+  l'appli finit par `.fumee` (contrôlé dans `MainActivity` et dans `CaptureActivity`) ; `setPlaybackDatasetUri` avant
+  `resume`, fin de film = « Terminer » automatique. Le paquet de rejeu porte `source = rejeu`, un nom distinct,
+  n'est pas planifié à l'envoi ; le calcul embarqué est sauté (le projet n'est pas touché).
+- `source` est écrit aussi pour les captures directes (`terrain`). Le modèle pydantic du serveur ignore les champs
+  inconnus : aucun changement serveur (à déclarer dans le modèle si le serveur doit s'en servir : hors fiche).
+- `docs/terrain.md` : section « Film rejouable de la capture ».
+
+## Relecture ARCore sur l'émulateur : ce qu'on sait
+
+- L'API existe dans `com.google.ar:core:1.57.0` (vérifié dans le jar : `Session.startRecording/stopRecording/
+  getRecordingStatus`, `setPlaybackDatasetUri`, `getPlaybackStatus` avec `FINISHED`, `Track`,
+  `Frame.recordTrackData`, `Frame.getUpdatedTrackData`).
+- La documentation Google « Recording and Playback » ne dit rien de l'émulateur ; la page « Run AR Apps in Android
+  Emulator » ne décrit que la scène virtuelle (x86, API 27+). **Non vérifié** : la relecture d'un MP4 sur
+  l'émulateur n'a pas été essayée (interdit de toucher à l'émulateur dans cette mission). À essayer par Pascal.
+- La taille réelle d'un film par minute n'est pas connue : le seuil de 1 Gio est une estimation.
+
+## Essais
+
+- JVM : `FilmCaptureTest` (décision case décochée / place / rejeu, nommage sans écrasement, paquet de rejeu
+  distinct, `source`, garde `.fumee`, piste d'identité) ; `gradle :groma-core:test :app:testFumeeUnitTest` verts,
+  `:app:assembleFumee` compile.
+- Non essayé sur appareil (rien d'installé) : enregistrement sur le S23, taille d'un film, rejeu (émulateur et S23),
+  comparaison des deux paquets. À faire par Pascal.
