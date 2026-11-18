@@ -106,7 +106,7 @@ class ServiceGnssRtk : Service() {
 
     /** One connection to the receiver (and the caster), until either closes. */
     private suspend fun relier(transport: Transport, config: ConfigRtk) = kotlinx.coroutines.coroutineScope {
-        val lecteur = LecteurNmea()
+        val lecteur = LecteurNmea(horlogeMonotoneMs = { android.os.SystemClock.elapsedRealtime() })
         val ntrip = if (config.ntrip && config.pointMontage.isNotBlank()) {
             ClientNtrip(config.casterHote, config.casterPort, config.pointMontage, config.utilisateur, config.motDePasse)
         } else null
