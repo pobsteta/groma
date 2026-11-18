@@ -5,8 +5,8 @@ package groma.core
  * author), adapted to Groma: pure Kotlin, no I/O.
  */
 
-/** Position in WGS 84 degrees. */
-data class Position(val latitude: Double, val longitude: Double)
+/** Position in WGS 84 degrees (shared with terrain-gnss, mission 020). */
+typealias Position = fr.nemeton.terrain.geo.Position
 
 /**
  * Fix quality from the GGA quality indicator. RTK_FIXE = ambiguities solved
