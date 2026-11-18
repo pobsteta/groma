@@ -29,10 +29,9 @@ sourceSets.main {
 dependencies {
     // Shared map code (Emprise, ZoneTuiles, Geoplateforme layers; JitPack). `api`: Emprise is part of DonneesCarte.
     api("com.github.pobsteta.terrain:terrain-carte:v0.7.1")
-    // Parity tests only (EquivalenceTerrainBibliothequesTest): Groma keeps its own NMEA / NTRIP / GeoPackage code.
-    testImplementation("com.github.pobsteta.terrain:terrain-gnss:v0.7.1")
-    testImplementation("com.github.pobsteta.terrain:terrain-gpkg:v0.7.1")
-    testImplementation("com.github.pobsteta.terrain:terrain-journal:v0.7.1")
+    // Shared GNSS geodesy (Position, Projections, Geodesie) and GeoPackage format layer (FormatGpkg, BaseSqlite); mission 020. `api`: Position and BaseSqlite are public.
+    api("com.github.pobsteta.terrain:terrain-gnss:v0.7.1")
+    api("com.github.pobsteta.terrain:terrain-gpkg:v0.7.1")
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

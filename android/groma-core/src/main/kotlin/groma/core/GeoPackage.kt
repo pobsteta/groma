@@ -1,24 +1,9 @@
 package groma.core
 
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
+import fr.nemeton.terrain.gpkg.FormatGpkg
+import fr.nemeton.terrain.gpkg.Geometrie
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-
-/**
- * Write protocol of the Groma app on inventaire_video.gpkg (decision 3), line
- * for line the same as groma/gpkg.py `ecrire_detections`:
- * plain SQLite (no ST_* function), one short BEGIN IMMEDIATE transaction with
- * a busy timeout, writes ONLY in `detections`; the GeoPackage triggers create
- * or update the `arbres` rows without touching the field attributes.
- */
-interface BaseSqlite {
-    fun executer(sql: String, args: List<Any?> = emptyList())
-    fun requete(sql: String, args: List<Any?> = emptyList()): List<Map<String, Any?>>
-
-    /** BEGIN IMMEDIATE ... COMMIT, ROLLBACK on error. */
-    fun <T> transactionImmediate(bloc: () -> T): T
-}
 
 /** Azimuth unit, magnetic declination and grid convergence of a plot, to place a point from C0. */
 data class OrientationPlacette(val unite: String, val declinaisonDeg: Double, val convergenceDeg: Double)
@@ -35,76 +20,27 @@ object GeoPackage {
         "houppier_id", "etat_detection", "methode", "score", "date_detection",
     )
 
-    fun encoderPoint(x: Double, y: Double, srsId: Int = SRS_ID): ByteArray {
-        val b = ByteBuffer.allocate(8 + 21).order(ByteOrder.LITTLE_ENDIAN)
-        b.put('G'.code.toByte()).put('P'.code.toByte()).put(0).put(0x01)
-        b.putInt(srsId)
-        b.put(1).putInt(1).putDouble(x).putDouble(y)
-        return b.array()
-    }
+    /** GeoPackage point blob: format layer of terrain-gpkg (byte-identical to the former Groma code). */
+    fun encoderPoint(x: Double, y: Double, srsId: Int = SRS_ID): ByteArray = FormatGpkg.encoder(Geometrie.Point(x, y), srsId)
 
     fun decoderPoint(blob: ByteArray): Pair<Double, Double> {
-        require(blob[0] == 'G'.code.toByte() && blob[1] == 'P'.code.toByte()) { "Géométrie GeoPackage invalide." }
-        val drapeaux = blob[3].toInt()
-        val enveloppe = intArrayOf(0, 32, 48, 48, 64)[(drapeaux shr 1) and 0x07]
-        val debut = 8 + enveloppe
-        val wkb = ByteBuffer.wrap(blob, debut, blob.size - debut)
-        wkb.order(if (blob[debut].toInt() == 1) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN)
-        wkb.get()
-        require(wkb.getInt() % 1000 == 1) { "Seuls les points sont pris en charge." }
-        return Pair(wkb.getDouble(), wkb.getDouble())
+        val p = FormatGpkg.decoder(blob) as? Geometrie.Point ?: throw IllegalArgumentException("Seuls les points sont pris en charge.")
+        return Pair(p.x, p.y)
     }
 
     /** Exterior ring of a GeoPackage POLYGON / MULTIPOLYGON (first polygon), for the crowns. */
-    fun decoderAnneau(blob: ByteArray): List<Pair<Double, Double>> {
-        require(blob[0] == 'G'.code.toByte() && blob[1] == 'P'.code.toByte()) { "Géométrie GeoPackage invalide." }
-        val enveloppe = intArrayOf(0, 32, 48, 48, 64)[(blob[3].toInt() shr 1) and 0x07]
-        var debut = 8 + enveloppe
-        fun tampon(d: Int) = ByteBuffer.wrap(blob, d, blob.size - d).order(if (blob[d].toInt() == 1) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN)
-        var b = tampon(debut)
-        b.get()
-        var type = b.getInt() % 1000
-        if (type == 6) { // multipolygon: skip to the first polygon
-            b.getInt()
-            debut += 9
-            b = tampon(debut); b.get(); type = b.getInt() % 1000
-        }
-        require(type == 3) { "Polygone attendu." }
-        require(b.getInt() >= 1)
-        val n = b.getInt()
-        return List(n) { Pair(b.getDouble(), b.getDouble()) }
-    }
+    fun decoderAnneau(blob: ByteArray): List<Pair<Double, Double>> =
+        decoderPolygones(blob).first().also { require(it.isNotEmpty()) { "Polygone attendu." } }.first()
 
     /**
      * Every polygon of a GeoPackage POLYGON / MULTIPOLYGON, each as its rings
      * (exterior first), for the parcels. Z and M values are skipped.
      */
     fun decoderPolygones(blob: ByteArray): List<List<List<Pair<Double, Double>>>> {
-        require(blob.size >= 8 && blob[0] == 'G'.code.toByte() && blob[1] == 'P'.code.toByte()) { "Géométrie GeoPackage invalide." }
-        val enveloppe = intArrayOf(0, 32, 48, 48, 64)[(blob[3].toInt() shr 1) and 0x07]
-        val b = ByteBuffer.wrap(blob)
-        b.position(8 + enveloppe)
-        // Reads one WKB header (byte order, type) at the current position: returns (type, coordinates per point).
-        fun entete(): Pair<Int, Int> {
-            b.order(if (b.get().toInt() == 1) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN)
-            val t = b.getInt()
-            return Pair(t % 1000, intArrayOf(2, 3, 3, 4)[t / 1000])
-        }
-        fun polygone(dims: Int) = List(b.getInt()) {
-            List(b.getInt()) {
-                val p = Pair(b.getDouble(), b.getDouble())
-                repeat(dims - 2) { b.getDouble() }
-                p
-            }
-        }
-        val (type, dims) = entete()
-        return when (type) {
-            3 -> listOf(polygone(dims))
-            6 -> List(b.getInt()) {
-                val (t, d) = entete()
-                require(t == 3) { "Polygone attendu dans le multipolygone." }
-                polygone(d)
-            }
+        fun polygone(p: Geometrie.Polygone) = p.anneaux.map { r -> r.map { Pair(it.x, it.y) } }
+        return when (val g = FormatGpkg.decoder(blob)) {
+            is Geometrie.Polygone -> listOf(polygone(g))
+            is Geometrie.Collection -> g.parties.map { (it as? Geometrie.Polygone ?: throw IllegalArgumentException("Polygone attendu dans le multipolygone.")).let(::polygone) }
             else -> throw IllegalArgumentException("Polygone attendu.")
         }
     }

@@ -11,17 +11,15 @@ import fr.nemeton.terrain.gnss.NmeaDecoupeur as TerrainDecoupeur
 import fr.nemeton.terrain.gnss.NmeaParser
 import fr.nemeton.terrain.gnss.Ntrip as TerrainNtrip
 import fr.nemeton.terrain.gnss.StatutNtrip as TerrainStatut
-import fr.nemeton.terrain.gpkg.FormatGpkg
-import fr.nemeton.terrain.gpkg.Geometrie
-import fr.nemeton.terrain.journal.Fusion
 
 /**
  * Mission 020 (brief bibliotheques-terrain): terrain-gnss, terrain-gpkg and terrain-journal at v0.7.1
- * against what Groma does today. Groma keeps its own NMEA / NTRIP / GeoPackage code: terrain v0.7.1
+ * against what Groma does today. Position, Projections, Geodesie, BaseSqlite and the GeoPackage format layer
+ * now come from terrain (Terrain.kt); Groma keeps its own NMEA / NTRIP / GeoPackage business code: terrain v0.7.1
  * lacks the UTC instant of the fix, the monotonic stamp, `LecteurNmea` and the TELEPHONE / RECEPTEUR
  * origin (missions 019, 025), and its QualiteFix names differ (RTK_FLOAT, INVALIDE). These tests pin
  * the parts that ARE identical, so the day terrain catches up the swap is a deletion, not a rewrite;
- * a red test here means one of the two codes drifted. Test-only dependency (docs/dependances.md).
+ * a red test here means one of the two codes drifted.
  */
 class EquivalenceTerrainBibliothequesTest {
     private val ggas = listOf(
@@ -99,36 +97,45 @@ class EquivalenceTerrainBibliothequesTest {
             Triple("SOURCETABLE 200 OK", StatutNtrip.TABLE_SOURCES, TerrainStatut.SOURCETABLE),
             Triple("HTTP/1.1 404", StatutNtrip.INCONNU, TerrainStatut.INCONNU),
         )
+        val correspondance = mapOf(
+            StatutNtrip.OK to TerrainStatut.OK, StatutNtrip.NON_AUTORISE to TerrainStatut.NON_AUTORISE,
+            StatutNtrip.TABLE_SOURCES to TerrainStatut.SOURCETABLE, StatutNtrip.INCONNU to TerrainStatut.INCONNU,
+        )
+        assertEquals(StatutNtrip.entries.toSet(), correspondance.keys) // every Groma status has a terrain twin
+        assertEquals(TerrainStatut.entries.toSet(), correspondance.values.toSet())
         for ((ligne, groma, terrain) in statuts) {
+            assertEquals(terrain, correspondance.getValue(Ntrip.statut(ligne)), ligne)
             assertEquals(groma, Ntrip.statut(ligne), ligne)
             assertEquals(terrain, TerrainNtrip.statutReponse(ligne), ligne)
         }
     }
 
     @Test
-    fun pointGeopackageIdentiqueOctetParOctet() {
-        for ((x, y) in listOf(850_000.5 to 6_700_000.25, 0.0 to 0.0, -1.5 to 12.75)) {
-            val groma = GeoPackage.encoderPoint(x, y, 2154)
-            val terrain = FormatGpkg.encoder(Geometrie.Point(x, y), 2154)
-            assertContentEquals(groma, terrain)
-            val (gx, gy) = GeoPackage.decoderPoint(terrain)
-            val relu = FormatGpkg.decoder(groma) as Geometrie.Point
-            assertEquals(gx, relu.x)
-            assertEquals(gy, relu.y)
-            assertEquals(2154, FormatGpkg.srsId(groma))
+    fun pointGeopackageOctetsEcritsAlaMain() {
+        // Hand-written expected blob: "GP", version 0, flags 0x01 (little endian, no envelope), srs 2154, WKB point.
+        val attendu = byteArrayOf(0x47, 0x50, 0, 1, 0x6A, 0x08, 0, 0, 1, 1, 0, 0, 0) +
+            java.nio.ByteBuffer.allocate(16).order(java.nio.ByteOrder.LITTLE_ENDIAN).putDouble(850_000.5).putDouble(6_700_000.25).array()
+        assertContentEquals(attendu, GeoPackage.encoderPoint(850_000.5, 6_700_000.25, 2154))
+        assertEquals(850_000.5 to 6_700_000.25, GeoPackage.decoderPoint(attendu))
+    }
+
+    @Test
+    fun azimutGeodesieCoherentAvecAzimutDeGroma() {
+        val de = Position(47.0, 5.0)
+        for (vers in listOf(Position(47.001, 5.001), Position(46.999, 5.0), Position(47.0, 4.999), Position(46.998, 4.998), Position(47.0, 5.0))) {
+            val (e, n) = Geodesie.decalage(de, vers)
+            assertEquals(Azimut.azimut(e, n), Geodesie.azimutDeg(de, vers), 1e-9)
+            assertEquals(Math.hypot(e, n), Geodesie.distanceM(de, vers), 1e-9)
         }
     }
 
     @Test
-    fun fusionDerniereEcritureGagne() {
-        // terrain-journal replaces nothing in Groma (no multi-device merge): the rule is pinned for later.
-        data class Saisie(val uuid: String, val modifie: Long, val note: String)
-        val locales = listOf(Saisie("a", 10, "locale"), Saisie("b", 20, "locale"))
-        val entrantes = listOf(Saisie("a", 10, "distante"), Saisie("b", 30, "distante"), Saisie("c", 5, "distante"))
-        val union = Fusion.union(locales, entrantes, { it.uuid }, { it.modifie }).associateBy { it.uuid }
-        assertEquals("locale", union.getValue("a").note) // equal stamp: local kept
-        assertEquals("distante", union.getValue("b").note) // strictly newer wins
-        assertEquals("distante", union.getValue("c").note) // unknown added, nothing deleted
-        assertEquals(3, union.size)
+    fun lambertAllerRetourEtCentreDeProjection() {
+        val (x, y) = Projections.versLambert93(3.0, 46.5)
+        assertEquals(700_000.0, x, 1e-6)
+        assertEquals(6_600_000.0, y, 1e-6)
+        val (lon, lat) = Projections.versWgs84(x, y)
+        assertEquals(3.0, lon, 1e-9)
+        assertEquals(46.5, lat, 1e-9)
     }
 }
