@@ -67,4 +67,8 @@ data class FixGnss(
     val vitesseMs: Double? = null,
     val satellites: List<SatelliteVu> = emptyList(),
     val origine: OrigineFix = OrigineFix.RECEPTEUR,
+    /** Full UTC instant of the fix (epoch ms): GGA time of day on the RMC day; null without a valid RMC (status A). */
+    val heureUtcMs: Long? = null,
+    /** Monotonic clock reading (ms) when the fix was received; null when no monotonic clock was given. */
+    val recuMonotoneMs: Long? = null,
 )

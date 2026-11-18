@@ -358,14 +358,14 @@ fun EcranCarte(
                     containerColor = if (capEnHaut) MaterialTheme.colorScheme.primary else FloatingActionButtonDefaults.containerColor,
                 ) {
                     Text(
-                        "N", fontSize = 18.sp, fontWeight = FontWeight.Bold,
+                        "N", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
                         modifier = Modifier.rotate(rotationCarte).semantics {
                             contentDescription = ctx.getString(if (capEnHaut) R.string.carte_cap_en_haut else R.string.carte_nord_en_haut)
                         },
                     )
                 }
-                SmallFloatingActionButton(onClick = { mapView.controller.zoomIn() }) { Text("+", fontSize = 22.sp) }
-                SmallFloatingActionButton(onClick = { mapView.controller.zoomOut() }) { Text("−", fontSize = 22.sp) }
+                SmallFloatingActionButton(onClick = { mapView.controller.zoomIn() }) { Text("+", style = MaterialTheme.typography.titleLarge) }
+                SmallFloatingActionButton(onClick = { mapView.controller.zoomOut() }) { Text("−", style = MaterialTheme.typography.titleLarge) }
                 SmallFloatingActionButton(onClick = { donnees?.let { cadrer(mapView, it, anime = true) } }) {
                     Icon(Icons.Filled.Home, contentDescription = stringResource(R.string.carte_cadrer))
                 }
@@ -394,7 +394,7 @@ fun EcranCarte(
                 avancement(infoTuiles)?.let { (faites, total) ->
                     Text(
                         stringResource(R.string.hl_badge, if (total > 0) (faites * 100 / total).toInt() else 0),
-                        fontSize = 11.sp, color = Color.White,
+                        style = MaterialTheme.typography.labelSmall, color = Color.White,
                         modifier = Modifier.padding(top = 4.dp).background(Color(0xCC37474F), RoundedCornerShape(10.dp))
                             .padding(horizontal = 8.dp, vertical = 2.dp),
                     )
@@ -402,7 +402,7 @@ fun EcranCarte(
             }
             Text(
                 fond.attribution + if (cadastre && fond == Fond.OSM) " · cadastre © IGN" else "",
-                fontSize = 10.sp,
+                style = MaterialTheme.typography.labelSmall,
                 color = Color(0xFF212121),
                 modifier = Modifier.align(Alignment.BottomStart).then(basCarte).padding(6.dp)
                     .background(Color(0xCCFFFFFF), RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp),

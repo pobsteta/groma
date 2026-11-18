@@ -91,7 +91,7 @@ internal val FormesGroma: Shapes = Shapes(
 
 /** Applies the four terrain-style values on top of [base] (keeps font family and other defaults). */
 private fun versTextStyle(base: TextStyle, s: StyleTexte): TextStyle = base.copy(
-    fontSize = s.tailleSp.sp,
+    fontSize = s.tailleSp.sp, // reason kept: this is where the shared styles (TypoGroma) are defined, not a hard-coded text size
     lineHeight = s.interligneSp.sp,
     fontWeight = FontWeight(s.graisse),
     letterSpacing = s.interlettrageSp.sp,

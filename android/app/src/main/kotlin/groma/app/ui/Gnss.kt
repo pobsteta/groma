@@ -61,7 +61,7 @@ fun BadgeFix(fix: FixGnss?, etat: EtatRtk, modifier: Modifier = Modifier, onClic
         else -> libelleFix(fix) to couleurQualite(fix.qualite)
     }
     Text(
-        texte, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Medium,
+        texte, color = Color.White, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Medium,
         modifier = modifier.clip(RoundedCornerShape(50)).clickable(onClick = onClick).background(couleur).padding(horizontal = 12.dp, vertical = 5.dp),
     )
 }
