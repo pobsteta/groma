@@ -97,7 +97,7 @@ import groma.app.gnss.ServiceGnssRtk
 import groma.app.gnss.SourcePosition
 import groma.core.DonneesCarte
 import groma.core.EtatCentre
-import groma.core.FixGnss
+import fr.nemeton.terrain.gnss.FixGnss
 import groma.core.Guidage
 import groma.core.OrientationCarte
 import androidx.compose.ui.semantics.contentDescription
@@ -109,7 +109,7 @@ import androidx.work.WorkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import groma.core.OrigineFix
+import fr.nemeton.terrain.gnss.OrigineFix
 import groma.core.PlacetteCarte
 import groma.core.Position
 import kotlinx.coroutines.delay
@@ -523,7 +523,7 @@ private fun BandeauGuidage(
                     }
                 }
                 fix?.precisionHorizontaleM?.takeIf { it >= 1.0 }?.let { m ->
-                    val texte = if (fix.origine == OrigineFix.TELEPHONE) R.string.carte_precision_telephone else R.string.carte_precision
+                    val texte = if (fix.origine == OrigineFix.INTERNE) R.string.carte_precision_telephone else R.string.carte_precision
                     Text(stringResource(texte, nombreCarte(Math.round(m * 10) / 10.0)), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (guide != null && !guide.arrive && relatif == null) {

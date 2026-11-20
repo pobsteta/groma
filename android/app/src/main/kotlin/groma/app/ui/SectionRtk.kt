@@ -46,8 +46,8 @@ import groma.app.gnss.ClientNtrip
 import groma.app.gnss.ConfigRtk
 import groma.app.gnss.ServiceGnssRtk
 import groma.app.gnss.TransportRtk
-import groma.core.PointMontage
-import groma.core.StatutNtrip
+import fr.nemeton.terrain.gnss.EntreeSourcetable
+import fr.nemeton.terrain.gnss.StatutNtrip
 import kotlinx.coroutines.launch
 
 /**
@@ -64,7 +64,7 @@ fun SectionRtk() {
     val fix by ServiceGnssRtk.fix.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     var choixAppareil by remember { mutableStateOf(false) }
-    var points by remember { mutableStateOf<List<PointMontage>>(emptyList()) }
+    var points by remember { mutableStateOf<List<EntreeSourcetable>>(emptyList()) }
     var menuPoints by remember { mutableStateOf(false) }
     var chargement by remember { mutableStateOf(false) }
     var etatGnss by remember { mutableStateOf(false) }
@@ -122,8 +122,8 @@ fun SectionRtk() {
                     if (points.isEmpty()) DropdownMenuItem(text = { Text(stringResource(R.string.rtk_aucun_point)) }, onClick = { menuPoints = false })
                     points.forEach { p ->
                         DropdownMenuItem(
-                            text = { Text("${p.nom} · ${p.identifiant} · ${p.format}") },
-                            onClick = { maj(rtk.copy(pointMontage = p.nom)); menuPoints = false },
+                            text = { Text("${p.mountpoint} · ${p.identifiant} · ${p.format}") },
+                            onClick = { maj(rtk.copy(pointMontage = p.mountpoint)); menuPoints = false },
                         )
                     }
                 }
@@ -162,7 +162,7 @@ fun SectionRtk() {
             etat.ntripErreur != null -> stringResource(R.string.rtk_diag_erreur, etat.ntripErreur ?: "")
             etat.ntripStatut == StatutNtrip.OK -> stringResource(R.string.rtk_ntrip_ok)
             etat.ntripStatut == StatutNtrip.NON_AUTORISE -> stringResource(R.string.rtk_ntrip_401)
-            etat.ntripStatut == StatutNtrip.TABLE_SOURCES -> stringResource(R.string.rtk_ntrip_table)
+            etat.ntripStatut == StatutNtrip.SOURCETABLE -> stringResource(R.string.rtk_ntrip_table)
             etat.ntripStatut == StatutNtrip.INCONNU -> stringResource(R.string.rtk_ntrip_inconnu)
             else -> stringResource(R.string.rtk_ntrip_connexion)
         }

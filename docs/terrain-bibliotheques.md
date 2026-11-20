@@ -1,6 +1,6 @@
 # Bibliothèques `terrain` : ce que Groma adopte (mission 020)
 
-Brief : `2026-10-17-bibliotheques-terrain.md` (v0.5.0 annoncée, v0.7.1 épinglée ici). `terrain` étant un autre
+Brief : `2026-10-17-bibliotheques-terrain.md` (v0.5.0 annoncée, v2026.11.1 épinglée ici depuis la mission 035). `terrain` étant un autre
 dépôt, il n'est pas modifié d'ici. `terrain-style` et `terrain-carte` : missions 010-013.
 
 ## Adopté (mission 020)
@@ -22,7 +22,7 @@ Le **métier** du GeoPackage (détections, centres, cibles, arbres, `retirerInde
 
 | Module | Raison |
 |---|---|
-| `terrain-gnss` NMEA / NTRIP | v0.7.1 n'a pas `heureUtcMs`, `recuMonotoneMs`, l'instant RMC ni `LecteurNmea` (mission 019) ; noms différents (`QualiteFix`, `OrigineFix`, `parseGga`…) : les renommer est une question réservée à Pascal. Brief envoyé à `terrain` : `vers-terrain/2026-11-18-groma-fix-horodate-et-lecteur-nmea.md`. En attendant, `EquivalenceTerrainBibliothequesTest` épingle les parties identiques (GGA, somme de contrôle, découpeur, NTRIP). |
+| ~~`terrain-gnss` NMEA / NTRIP~~ | **adopté à la mission 035** (terrain v2026.11.1 : heure UTC du fix, `LecteurNmea`) ; noms de terrain dans le code, GeoPackage inchangé (`QualiteGnssSchema`), textes et User-Agent « Groma » gardés (`GnssGroma.kt`). `EquivalenceTerrainBibliothequesTest` retiré avec la copie. |
 | `terrain-journal` | aucun usage chez Groma (pas de fusion multi-appareils) |
 
 Aucune rupture de contrat public : les noms `groma.core` sont inchangés (alias).

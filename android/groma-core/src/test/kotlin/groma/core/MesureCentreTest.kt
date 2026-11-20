@@ -1,5 +1,8 @@
 package groma.core
 
+import fr.nemeton.terrain.gnss.FixGnss
+import fr.nemeton.terrain.gnss.OrigineFix
+import fr.nemeton.terrain.gnss.QualiteFix
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.sql.DriverManager
@@ -11,17 +14,17 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class MesureCentreTest {
-    private fun fix(lat: Double, lon: Double, qualite: QualiteFix = QualiteFix.RTK_FIXE, precision: Double? = 0.02, origine: OrigineFix = OrigineFix.RECEPTEUR) =
+    private fun fix(lat: Double, lon: Double, qualite: QualiteFix = QualiteFix.RTK_FIXE, precision: Double? = 0.02, origine: OrigineFix = OrigineFix.EXTERNE) =
         FixGnss(Position(lat, lon), qualite, 20, 0.6, 300.0, 1.0, precision, origine = origine)
 
     @Test
     fun autorisation_selon_le_fix() {
         assertEquals(MesureCentre.Autorisation.SANS_POSITION, MesureCentre.autorisation(null))
         assertEquals(MesureCentre.Autorisation.OUI, MesureCentre.autorisation(fix(47.0, 5.0)))
-        assertEquals(MesureCentre.Autorisation.CONFIRMER_FLOTTANT, MesureCentre.autorisation(fix(47.0, 5.0, QualiteFix.RTK_FLOTTANT, 0.4)))
+        assertEquals(MesureCentre.Autorisation.CONFIRMER_FLOTTANT, MesureCentre.autorisation(fix(47.0, 5.0, QualiteFix.RTK_FLOAT, 0.4)))
         assertEquals(MesureCentre.Autorisation.SANS_RTK, MesureCentre.autorisation(fix(47.0, 5.0, QualiteFix.DGPS, 0.8)))
         // The phone's GNSS, even when it claims 3 cm, is refused.
-        assertEquals(MesureCentre.Autorisation.TELEPHONE, MesureCentre.autorisation(fix(47.0, 5.0, QualiteFix.RTK_FIXE, 0.03, OrigineFix.TELEPHONE)))
+        assertEquals(MesureCentre.Autorisation.TELEPHONE, MesureCentre.autorisation(fix(47.0, 5.0, QualiteFix.RTK_FIXE, 0.03, OrigineFix.INTERNE)))
     }
 
     @Test
@@ -29,8 +32,8 @@ class MesureCentreTest {
         val m = MesureCentre(accepterFlottant = false)
         assertTrue(m.ajouter(fix(47.0, 5.0)))
         assertTrue(m.ajouter(fix(47.00002, 5.0)))
-        assertFalse(m.ajouter(fix(47.1, 5.0, QualiteFix.RTK_FLOTTANT, 0.4)))
-        assertFalse(m.ajouter(fix(47.1, 5.0, origine = OrigineFix.TELEPHONE)))
+        assertFalse(m.ajouter(fix(47.1, 5.0, QualiteFix.RTK_FLOAT, 0.4)))
+        assertFalse(m.ajouter(fix(47.1, 5.0, origine = OrigineFix.INTERNE)))
         val c = m.resultat()!!
         assertEquals(2, c.nbFixes)
         assertEquals(47.00001, c.latitude, 1e-9)
@@ -43,7 +46,7 @@ class MesureCentreTest {
     fun precision_annoncee_si_les_fix_sont_groupes() {
         val m = MesureCentre(accepterFlottant = true)
         m.ajouter(fix(47.0, 5.0, precision = 0.02))
-        m.ajouter(fix(47.0, 5.0, QualiteFix.RTK_FLOTTANT, precision = 0.4))
+        m.ajouter(fix(47.0, 5.0, QualiteFix.RTK_FLOAT, precision = 0.4))
         val c = m.resultat()!!
         assertEquals("float", c.qualite)
         // RMS of 0.02 and 0.4.

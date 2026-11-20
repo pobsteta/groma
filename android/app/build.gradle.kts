@@ -84,8 +84,8 @@ dependencies {
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.activity:activity-compose:1.13.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
-    implementation("com.github.pobsteta.terrain:terrain-style:v0.7.1") // shared Marculus style: colours, shapes, typography (JitPack)
-    implementation("com.github.pobsteta.terrain:terrain-carte:v0.7.1") // shared map code: tile zone, Géoplateforme WMTS layers (JitPack)
+    implementation("com.github.pobsteta.terrain:terrain-style:v2026.11.1") // shared Marculus style: colours, shapes, typography (JitPack)
+    implementation("com.github.pobsteta.terrain:terrain-carte:v2026.11.1") // shared map code: tile zone, Géoplateforme WMTS layers (JitPack)
     testImplementation(kotlin("test-junit"))
     // Smoke test on a device (mission 026): Apache-2.0, test APK only.
     androidTestImplementation("androidx.test.ext:junit:1.3.0")

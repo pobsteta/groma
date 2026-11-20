@@ -16,11 +16,12 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import groma.app.R
-import groma.core.FixGnss
-import groma.core.LecteurNmea
-import groma.core.Ntrip
+import fr.nemeton.terrain.gnss.FixGnss
+import fr.nemeton.terrain.gnss.LecteurNmea
+import groma.core.LibellesGnss
+import fr.nemeton.terrain.gnss.Ntrip
 import groma.core.Position
-import groma.core.StatutNtrip
+import fr.nemeton.terrain.gnss.StatutNtrip
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -243,4 +244,4 @@ class ServiceGnssRtk : Service() {
 
 /** "RTK fixe · 0,02 m", as in the notification and the badge. */
 fun libelleFix(f: FixGnss): String =
-    f.qualite.libelle + (f.precisionHorizontaleM?.let { " · " + String.format(Locale.FRANCE, "%.2f m", it) } ?: "")
+    LibellesGnss.qualite(f.qualite) + (f.precisionHorizontaleM?.let { " · " + String.format(Locale.FRANCE, "%.2f m", it) } ?: "")

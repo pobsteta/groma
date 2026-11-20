@@ -12,7 +12,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import groma.core.FixGnss
+import fr.nemeton.terrain.gnss.FixGnss
 import groma.core.PlacetteCarte
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView

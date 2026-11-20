@@ -31,10 +31,11 @@ import androidx.compose.ui.unit.sp
 import groma.app.R
 import groma.app.gnss.EtatRtk
 import groma.app.gnss.libelleFix
-import groma.core.FixGnss
-import groma.core.OrigineFix
-import groma.core.QualiteFix
-import groma.core.SatelliteVu
+import fr.nemeton.terrain.gnss.FixGnss
+import fr.nemeton.terrain.gnss.OrigineFix
+import groma.core.LibellesGnss
+import fr.nemeton.terrain.gnss.QualiteFix
+import fr.nemeton.terrain.gnss.SatelliteGsv
 import java.util.Locale
 import kotlin.math.cos
 import kotlin.math.sin
@@ -42,7 +43,7 @@ import kotlin.math.sin
 /** Badge colour by fix quality (green RTK fixed → red no position), as in Marculus. */
 fun couleurQualite(q: QualiteFix): Color = when (q) {
     QualiteFix.RTK_FIXE -> Color(0xFF2E7D32)
-    QualiteFix.RTK_FLOTTANT -> Color(0xFF9E9D24)
+    QualiteFix.RTK_FLOAT -> Color(0xFF9E9D24)
     QualiteFix.DGPS -> Color(0xFF1565C0)
     QualiteFix.AUTONOME, QualiteFix.PPS -> Color(0xFF616161)
     else -> Color(0xFFB71C1C)
@@ -57,7 +58,7 @@ fun BadgeFix(fix: FixGnss?, etat: EtatRtk, modifier: Modifier = Modifier, onClic
     val (texte, couleur) = when {
         fix == null && etat.enMarche -> stringResource(R.string.rtk_connexion) to Color(0xFF616161)
         fix == null -> stringResource(R.string.gnss_sans_position) to Color(0xFFB71C1C)
-        fix.origine == OrigineFix.TELEPHONE -> stringResource(R.string.gnss_telephone, precision(fix.precisionHorizontaleM)) to Color(0xFF616161)
+        fix.origine == OrigineFix.INTERNE -> stringResource(R.string.gnss_telephone, precision(fix.precisionHorizontaleM)) to Color(0xFF616161)
         else -> libelleFix(fix) to couleurQualite(fix.qualite)
     }
     Text(
@@ -77,7 +78,7 @@ fun DialogueEtatGnss(fix: FixGnss?, etat: EtatRtk, onFermer: () -> Unit) {
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 Ligne(stringResource(R.string.gnss_source), stringResource(
                     when {
-                        fix?.origine == OrigineFix.TELEPHONE -> R.string.gnss_source_telephone
+                        fix?.origine == OrigineFix.INTERNE -> R.string.gnss_source_telephone
                         etat.enMarche -> R.string.gnss_source_recepteur
                         else -> R.string.gnss_source_aucune
                     },
@@ -86,7 +87,7 @@ fun DialogueEtatGnss(fix: FixGnss?, etat: EtatRtk, onFermer: () -> Unit) {
                     Text(stringResource(R.string.gnss_aucun_fix), modifier = Modifier.padding(top = 8.dp))
                     etat.erreur?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
                 } else {
-                    Ligne(stringResource(R.string.gnss_fix), fix.qualite.libelle)
+                    Ligne(stringResource(R.string.gnss_fix), LibellesGnss.qualite(fix.qualite))
                     Ligne(stringResource(R.string.gnss_precision), fix.precisionHorizontaleM?.let(::precision))
                     Ligne(stringResource(R.string.gnss_latitude), fmt(fix.position.latitude, 7))
                     Ligne(stringResource(R.string.gnss_longitude), fmt(fix.position.longitude, 7))
@@ -124,7 +125,7 @@ private fun couleurSnr(snr: Int?): Color = when {
 
 /** Polar plot of the satellites in view: elevation from the centre (90°), north up, colour by signal. */
 @Composable
-private fun Skyplot(satellites: List<SatelliteVu>, modifier: Modifier) {
+private fun Skyplot(satellites: List<SatelliteGsv>, modifier: Modifier) {
     val grille = MaterialTheme.colorScheme.outline
     val texte = MaterialTheme.colorScheme.onSurface
     Canvas(modifier.aspectRatio(1f)) {

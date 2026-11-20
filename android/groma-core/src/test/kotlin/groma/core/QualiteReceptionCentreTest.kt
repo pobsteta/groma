@@ -1,5 +1,8 @@
 package groma.core
 
+import fr.nemeton.terrain.gnss.FixGnss
+import fr.nemeton.terrain.gnss.OrigineFix
+import fr.nemeton.terrain.gnss.QualiteFix
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.sql.DriverManager
@@ -18,10 +21,10 @@ import kotlin.test.assertTrue
  */
 class QualiteReceptionCentreTest {
     private fun rtk(lat: Double, sat: Int, hdop: Double?, age: Double?) =
-        FixGnss(Position(lat, 5.0), QualiteFix.RTK_FIXE, sat, hdop, 300.0, age, 0.02, origine = OrigineFix.RECEPTEUR)
+        FixGnss(Position(lat, 5.0), QualiteFix.RTK_FIXE, sat, hdop, 300.0, age, 0.02, origine = OrigineFix.EXTERNE)
 
     private fun tel(lat: Double, sat: Int) =
-        FixGnss(Position(lat, 5.0), QualiteFix.AUTONOME, sat, null, 300.0, null, 3.0, origine = OrigineFix.TELEPHONE)
+        FixGnss(Position(lat, 5.0), QualiteFix.AUTONOME, sat, null, 300.0, null, 3.0, origine = OrigineFix.INTERNE)
 
     private fun horloge(vararg ms: Long): () -> Long {
         val it = ms.iterator()
