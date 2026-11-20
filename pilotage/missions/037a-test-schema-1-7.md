@@ -6,7 +6,14 @@
 d'acceptation du schéma 1.7.0 (dalles MNT à plat dans `rasters/`, `cvat.tif`, houppiers avec
 `x_sommet`/`y_sommet`, `verifier_projet`), pour que 037 ne s'évalue pas elle-même.
 
-**Redite par l'agent :** _à compléter par l'agent avant d'agir._
+**Redite par l'agent :** « J'écris, sans lire le code de 037, les tests d'acceptation du schéma 1.7.0
+(dalles MNT à plat dans `rasters/`, `cvat.tif`, houppiers avec `x_sommet`/`y_sommet`, `verifier_projet`),
+pour que 037 ne s'évalue pas elle-même. » (rendu du 2026-11-20, recopié par l'orchestrateur : la fiche
+n'était pas dans le worktree du testeur.)
+
+**Écart de périmètre déclaré :** la fixture `fixtures/schema_1_6_0/` (copie de l'exemple 1.6.0 de `main`
+et son README) n'était pas dans « Peut » ; elle sert le test « un GeoPackage 1.6.0 se relit » demandé par
+la rubrique « Tests ». Gardée, signalée par le relecteur le 2026-11-20.
 
 ## Les trois questions (règle de staffing)
 

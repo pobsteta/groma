@@ -190,6 +190,14 @@ Fait :
   changeaient ;
 - test de 037a faux, non modifié : `test_gpkg_16_ecriture_protocole_telephone_toujours_possible` écrit
   `etat_traitement = "en_cours"`, valeur absente du domaine (`a_faire`, `provisoire`, `envoye`,
-  `definitif`) ; `mettre_a_jour_etat` la refuse à bon droit. À corriger par le testeur (`"provisoire"`) ;
+  `definitif`) ; `mettre_a_jour_etat` la refuse à bon droit. **Corrigé par le testeur** en `"provisoire"`
+  (aller-retour 1/3, commit c522253) ;
 - une interpolation bilinéaire à moins d'un demi-pixel d'un bord de dalle a besoin de la dalle voisine
   (P001 est pile sur le coin 925 km / 6 700 km) : à traiter par 039.
+
+## Relecture (2026-11-20)
+
+`relecteur` : **prêt pour Pascal** (74 tests ciblés verts, tests de 037a intacts sauf « en_cours » →
+« provisoire », règle 3 et lecture des projets 1.6.0 respectées). Points ouverts : `verifier_projet` ignore
+sans écart un fichier `mnt_*` mal nommé (par exemple trois chiffres) — à trancher par Pascal ; CI à voir
+sur la PR.
