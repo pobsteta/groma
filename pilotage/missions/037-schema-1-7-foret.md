@@ -138,3 +138,25 @@ _Rempli par Pascal seul, avant de lire le travail de l'agent._
 
 Le premier projet livré par nemeton en 1.7.0 passe `verifier_projet`
 sans retouche, et la placette déplacée de Marsannay a ses dalles.
+
+## Précisions de l'orchestrateur (2026-11-20, après le rendu de 037a)
+
+Arrêtées pour que les tests de 037a et le code de 037 parlent de la même chose :
+
+- `groma.dalles.nom_dalle(x_km: int, y_km: int) -> str` : `"rasters/mnt_0849_6689.tif"` ; refuse un
+  kilomètre négatif (`ValueError`).
+- `dalle_du_point(x: float, y: float) -> tuple[int, int]` : `(x_km, y_km)` du coin sud-ouest ; un
+  point pile sur un bord à 1 000 m appartient à la dalle au nord-est.
+- `dalles_du_rectangle(xmin, ymin, xmax, ymax) -> list[tuple[int, int]]` : intervalle semi-ouvert,
+  un bord max pile sur 1 000 m n'ajoute pas la dalle suivante ; triée par x puis y.
+- `verifier_projet(dossier: Path | str) -> list[str]` : `dossier` contient `rasters/` ; un écart par
+  défaut, en français, nommant le fichier ; un raster illisible est un écart (« illisible »).
+- Schéma : l'index des houppiers est déclaré dans la couche par
+  `"index": [{"nom": "houppiers_sommet", "colonnes": ["x_sommet", "y_sommet"]}]` ; le CVAT porte
+  `"resolution_m": 2`.
+- Les tests de 037a peuvent être resserrés par 037 sur ces points (clé d'index, résolution du CVAT)
+  sans en relâcher aucun ; tout autre changement de test passe par l'orchestrateur.
+- **Environnement :** le `.venv` installe `groma` en mode éditable depuis le checkout principal ;
+  dans un worktree, lancer pytest avec `PYTHONPATH=$PWD/core/src:$PWD/server/src`. La machine est
+  saturée le 2026-11-20 (un `creer_gpkg` prend 70 s) : lancer les tests ciblés, la suite complète
+  tournera en CI.
