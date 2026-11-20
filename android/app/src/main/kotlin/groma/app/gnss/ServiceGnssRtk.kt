@@ -18,6 +18,7 @@ import androidx.core.content.ContextCompat
 import groma.app.R
 import fr.nemeton.terrain.gnss.FixGnss
 import fr.nemeton.terrain.gnss.LecteurNmea
+import groma.core.LibellesGnss
 import fr.nemeton.terrain.gnss.Ntrip
 import groma.core.Position
 import fr.nemeton.terrain.gnss.StatutNtrip
@@ -243,4 +244,4 @@ class ServiceGnssRtk : Service() {
 
 /** "RTK fixe · 0,02 m", as in the notification and the badge. */
 fun libelleFix(f: FixGnss): String =
-    f.qualite.libelle + (f.precisionHorizontaleM?.let { " · " + String.format(Locale.FRANCE, "%.2f m", it) } ?: "")
+    LibellesGnss.qualite(f.qualite) + (f.precisionHorizontaleM?.let { " · " + String.format(Locale.FRANCE, "%.2f m", it) } ?: "")

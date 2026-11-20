@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import fr.nemeton.terrain.gnss.Ntrip
+import groma.core.NtripGroma
 import fr.nemeton.terrain.gnss.EntreeSourcetable
 import fr.nemeton.terrain.gnss.StatutNtrip
 import kotlinx.coroutines.Dispatchers
@@ -154,7 +155,7 @@ class ClientNtrip(
         try {
             socket.connect(InetSocketAddress(hote, port), 8000)
             val out = socket.getOutputStream()
-            out.write(Ntrip.requete(pointMontage, hote, port, utilisateur, motDePasse).toByteArray(Charsets.US_ASCII))
+            out.write(NtripGroma.requete(pointMontage, hote, port, utilisateur, motDePasse).toByteArray(Charsets.US_ASCII))
             out.flush()
             val entree = socket.getInputStream()
             // "ICY 200 OK" (NTRIP 1) or "HTTP/1.1 200 OK" (NTRIP 2, followed by headers).
@@ -201,7 +202,7 @@ class ClientNtrip(
             try {
                 socket.connect(InetSocketAddress(hote, port), 5000)
                 socket.soTimeout = 8000
-                socket.getOutputStream().apply { write(Ntrip.requete("", hote, port, "", "").toByteArray(Charsets.US_ASCII)); flush() }
+                socket.getOutputStream().apply { write(NtripGroma.requete("", hote, port, "", "").toByteArray(Charsets.US_ASCII)); flush() }
                 val recu = ByteArrayOutputStream()
                 val tampon = ByteArray(TAILLE_TAMPON)
                 val entree = socket.getInputStream()

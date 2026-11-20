@@ -33,6 +33,7 @@ import groma.app.gnss.EtatRtk
 import groma.app.gnss.libelleFix
 import fr.nemeton.terrain.gnss.FixGnss
 import fr.nemeton.terrain.gnss.OrigineFix
+import groma.core.LibellesGnss
 import fr.nemeton.terrain.gnss.QualiteFix
 import fr.nemeton.terrain.gnss.SatelliteGsv
 import java.util.Locale
@@ -86,7 +87,7 @@ fun DialogueEtatGnss(fix: FixGnss?, etat: EtatRtk, onFermer: () -> Unit) {
                     Text(stringResource(R.string.gnss_aucun_fix), modifier = Modifier.padding(top = 8.dp))
                     etat.erreur?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
                 } else {
-                    Ligne(stringResource(R.string.gnss_fix), fix.qualite.libelle)
+                    Ligne(stringResource(R.string.gnss_fix), LibellesGnss.qualite(fix.qualite))
                     Ligne(stringResource(R.string.gnss_precision), fix.precisionHorizontaleM?.let(::precision))
                     Ligne(stringResource(R.string.gnss_latitude), fmt(fix.position.latitude, 7))
                     Ligne(stringResource(R.string.gnss_longitude), fmt(fix.position.longitude, 7))

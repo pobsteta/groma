@@ -74,4 +74,17 @@ class QualiteGnssSchemaTest {
             assertEquals(valeurs.toSet(), lus.toSet())
         }
     }
+
+    @Test
+    fun projet_ancien_de_l_essai_de_fumee_relu_a_l_identique() {
+        val src = Fixtures.racine.resolve("android/app/src/androidTest/assets/projet_ancien.gpkg").toPath()
+        val tmp = Files.createTempFile("projet_ancien", ".gpkg")
+        Files.copy(src, tmp, StandardCopyOption.REPLACE_EXISTING)
+        DriverManager.getConnection("jdbc:sqlite:$tmp").use {
+            val db = SqliteJdbc(it)
+            assertEquals(listOf("fix", "fix"), GeoPackage.lirePoints(db, "centres_mesures").map { r -> r["qualite_gnss"] })
+            assertEquals(listOf("fix", "fix"), DonneesCarte.lire(db).centres.map { c -> c.qualite })
+            assertEquals(QualiteFix.RTK_FIXE, QualiteGnssSchema.qualiteDepuisSchema("fix"))
+        }
+    }
 }
