@@ -41,3 +41,9 @@
 | [014](missions/014-couleurs-etat-theme.md) plan des couleurs d'état au thème | `afficheur` | sonnet | **tenir** | oui · **non** · oui | 6 (proposé) |
 | [015](missions/015-test-vue-cibles.md) tests de la vue « Cibles » | `testeur` | sonnet | appuyer | oui · oui · oui | 7 (validé le 2026-11-11) |
 | [016](missions/016-vue-cibles.md) vue « Cibles » dans Groma | `dev` | sonnet | appuyer | oui · oui · oui (après 015) | 7 (validé le 2026-11-11) |
+| [037a](missions/037a-test-schema-1-7.md) tests d'acceptation du schéma 1.7.0 | `testeur` | sonnet | donner | oui · oui · oui | 8 (validé le 2026-11-20) |
+| [037](missions/037-schema-1-7-foret.md) schéma 1.7.0 : CVAT, dalles MNT, houppiers de la forêt | `dev` | opus | **prendre** | oui · oui · oui (après 037a) | 8 (validé le 2026-11-20) |
+| [038](missions/038-transport-dalles-cvat.md) dalles et `cvat.tif` jusqu'au téléphone (test du transport) | `dev` | sonnet | donner | oui · oui · oui (après 037) | planifié |
+| [039](missions/039-paquet-lidar-centre-releve.md) paquet avec MNT et houppiers autour du centre relevé (+ 039a `testeur`, fiche au lancement) | `dev` | opus | donner, plan d'abord | oui · **non** · oui | planifié |
+| [040](missions/040-carte-cvat-houppiers.md) couches CVAT, contours et sommets des houppiers | `afficheur` | sonnet | donner | oui · oui · oui (après 038) | planifié |
+| [041](missions/041-bouton-c0-avant-c1.md) « Relever C0 » à gauche de C1 (sans testeur, exception validée) | `dev` | sonnet | donner | oui · oui · oui | 8 (validé le 2026-11-20) |
