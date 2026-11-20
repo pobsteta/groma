@@ -1,5 +1,13 @@
 # Changelog
 
+## [2026.11.10](https://github.com/pobsteta/groma/compare/v2026.11.9...v2026.11.10) (2026-11-20)
+
+
+### Nouveautés
+
+* **app:** « Relever C0 » à gauche de C1 dans la vue Placette (mission 041) ([#119](https://github.com/pobsteta/groma/issues/119)) ([19b3223](https://github.com/pobsteta/groma/commit/19b322389133ab6a54bbfa46fbdb0c5e268e1bcd))
+* **app:** film rejouable de la capture, enregistrement ARCore et rejeu en version d'essai (mission 036) ([#117](https://github.com/pobsteta/groma/issues/117)) ([5cbda7c](https://github.com/pobsteta/groma/commit/5cbda7cc854a62c4c1809b3a1b1fea1dc8c3a7da))
+
 ## [2026.11.9](https://github.com/pobsteta/groma/compare/v2026.11.8...v2026.11.9) (2026-11-20)
 
 
