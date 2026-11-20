@@ -1,5 +1,13 @@
 # Changelog
 
+## [2026.11.9](https://github.com/pobsteta/groma/compare/v2026.11.8...v2026.11.9) (2026-11-20)
+
+
+### Nouveautés
+
+* **core:** heure UTC du fix GNSS et tailles de texte communes (mission 019) ([#113](https://github.com/pobsteta/groma/issues/113)) ([8859705](https://github.com/pobsteta/groma/commit/8859705668f9213bbd067f854d3b2c7a025df562))
+* **core:** Position, Projections, Geodesie et format GeoPackage repris de terrain-gnss/gpkg v0.7.1 (brief 2026-10-17-bibliotheques-terrain, mission 020) ([#115](https://github.com/pobsteta/groma/issues/115)) ([4cff183](https://github.com/pobsteta/groma/commit/4cff1839e712063773a09e5d1e38b9cdf18cdadf))
+
 ## [2026.11.8](https://github.com/pobsteta/groma/compare/v2026.11.7...v2026.11.8) (2026-11-16)
 
 
