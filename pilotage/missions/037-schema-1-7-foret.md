@@ -74,7 +74,8 @@ _Rempli par Pascal seul, avant de lire le travail de l'agent._
 ## Harnais
 
 - **Peut (périmètre) :** `core/src/groma/donnees/`, `core/src/groma/gpkg.py`,
-  `core/src/groma/dalles.py` (nouveau), `core/tests/`,
+  `core/src/groma/dalles.py` (nouveau), `core/tests/`, `exemples/creer_exemple.py` (ajouté le 2026-11-20,
+  plan validé par Pascal),
   `exemples/inventaire_video/`, `docs/`, `PLAN.md`, `pilotage/journal.md` (ajout seul),
   cette fiche (rubrique « Redite » et compte rendu).
 - **Câblé (ne peut pas) :** pas de commit sur `main` ; pas de « terminé » sans tests verts
@@ -160,3 +161,11 @@ Arrêtées pour que les tests de 037a et le code de 037 parlent de la même chos
   dans un worktree, lancer pytest avec `PYTHONPATH=$PWD/core/src:$PWD/server/src`. La machine est
   saturée le 2026-11-20 (un `creer_gpkg` prend 70 s) : lancer les tests ciblés, la suite complète
   tournera en CI.
+
+## Plan validé (Pascal, 2026-11-20)
+
+Plan du dev rendu le 2026-11-20 (journal), validé par Pascal avec : `exemples/creer_exemple.py` dans le
+périmètre ; **quatre** dalles pour l'exemple (son emprise croise x = 925 km et y = 6 700 km) ; `z0` de
+P002 remonté pour que les plans de sol de P001 et P002 coïncident (données synthétiques). Hors
+périmètre, notés : apex du serveur encore au centroïde (brancher `x_sommet` plus tard) ; unicité de
+`houppier_id` sur la forêt non garantie par le brief.
