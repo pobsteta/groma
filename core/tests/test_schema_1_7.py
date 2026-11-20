@@ -236,8 +236,8 @@ def test_gpkg_16_relu_sans_erreur(gpkg_16):
 
 
 def test_gpkg_16_ecriture_protocole_telephone_toujours_possible(gpkg_16):
-    gpkg.mettre_a_jour_etat(gpkg_16, "P001", "en_cours")
-    assert [p["etat_traitement"] for p in lire_points(gpkg_16, "placettes", "P001")] == ["en_cours"]
+    gpkg.mettre_a_jour_etat(gpkg_16, "P001", "provisoire")
+    assert [p["etat_traitement"] for p in lire_points(gpkg_16, "placettes", "P001")] == ["provisoire"]
 
 
 # ---- committed example -------------------------------------------------------
