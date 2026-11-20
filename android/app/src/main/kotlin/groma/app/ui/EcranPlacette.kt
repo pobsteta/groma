@@ -3,6 +3,7 @@ package groma.app.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -223,7 +224,6 @@ fun EcranPlacette(
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.weight(1f),
                 )
-                OutlinedButton(onClick = { fermerClavier(); releve.demanderDepuisFiche(plotId, centrePrevu) }) { Text(stringResource(R.string.relever_c0)) }
             }
             if (!centreMesure) {
                 Text(stringResource(R.string.cibles_centre_prevu), color = MaterialTheme.colorScheme.error)
@@ -239,10 +239,15 @@ fun EcranPlacette(
             }
             Plan(rayonM, unite, declinaisonDeg, convergenceDeg, cibles, choisie, arbres, centre, fiche, apercu) { fiche = it.uuid }
 
-            if (ajout) {
-                Text(stringResource(R.string.arbre_ajout_aide), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            } else {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Mission 041: « Relever C0 » sits left of C1, where the targets are entered (same flow as mission 030).
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = { fermerClavier(); releve.demanderDepuisFiche(plotId, centrePrevu) },
+                    contentPadding = PaddingValues(horizontal = 12.dp),
+                ) { Text(stringResource(R.string.relever_c0), maxLines = 1) }
+                if (ajout) {
+                    Text(stringResource(R.string.arbre_ajout_aide), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                } else {
                     PlacementCible.IDENTIFIANTS.forEach { id ->
                         FilterChip(
                             selected = choisie == id,

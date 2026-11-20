@@ -273,7 +273,7 @@ en bas de la carte :
 (flottant, téléphone, remplacement d'un centre RTK) : le bandeau « Arrivé »
 (à moins de 5 m), le bouton **Relever C0** de la fiche de la
 placette sur la carte, **sans condition de distance**, et le bouton **Relever C0**
-de la vue « Placette », à droite de la ligne d'état de C0. À plus de 30 m du point
+de la vue « Placette », à gauche de C1 dans la rangée des cibles. À plus de 30 m du point
 prévu, Groma avertit (« Tu es à 42 m du point prévu : C0 sera relevé
 là où tu es. Continuer ? ») mais ne refuse jamais. Dans la vue « Placette », la
 position est écoutée pendant le relevé, et à la fin la ligne d'état, le plan et
