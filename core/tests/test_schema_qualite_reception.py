@@ -1,4 +1,4 @@
-"""Mission 027: reception quality columns of ``centres_mesures`` (schema 1.6.0, still unpublished)."""
+"""Mission 027: reception quality columns of ``centres_mesures`` (schema 1.6.0 and later)."""
 import pytest
 
 gpd = pytest.importorskip("geopandas")
@@ -22,7 +22,7 @@ def _placettes():
 
 def test_colonnes_dans_le_schema():
     s = charger_schema()
-    assert s["version"] == "1.6.0"
+    assert tuple(int(n) for n in s["version"].split(".")) >= (1, 6, 0)
     centres = next(c for c in s["couches"] if c["nom"] == "centres_mesures")
     types = {c["nom"]: c["type"] for c in centres["colonnes"]}
     for nom, t in COLONNES.items():

@@ -1,6 +1,6 @@
 {
   "nom": "inventaire_video",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "crs": 2154,
   "description": "Schéma du GeoPackage inventaire_video.gpkg produit par nemeton (sous-onglet Terrain > Inventaire vidéo) et complété sur le terrain par QField (saisie) et Groma (détections). Source unique : Python (groma), Kotlin (application Groma) et brief nemeton.",
   "domaines": {
@@ -139,12 +139,15 @@
       "geometrie": "POLYGON",
       "index_spatial": true,
       "lecture_seule": true,
-      "remarque": "Sortie de nemeton::segment_houppiers() autour de chaque placette.",
+      "remarque": "Sortie de nemeton::segment_houppiers() sur toute l'emprise de la forêt (schéma 1.7.0 ; autour de chaque placette avant). plot_id renseigné quand le houppier touche une placette prévue, sinon NULL. x_sommet, y_sommet : sommet localisé par segment_houppiers() (celui qui a servi à faire croître le houppier ; pour « watershed » et « lsms », le pixel du MNH où se trouve h_max), affiché sur la carte ; absents des projets préparés avant le schéma 1.7.0. Index B-tree houppiers_sommet sur (x_sommet, y_sommet) : le téléphone n'a pas le module R*Tree et filtre par BETWEEN sur ces colonnes.",
+      "index": [{"nom": "houppiers_sommet", "colonnes": ["x_sommet", "y_sommet"]}],
       "colonnes": [
         {"nom": "plot_id", "type": "TEXT"},
         {"nom": "houppier_id", "type": "INTEGER", "requis": true},
         {"nom": "h_max", "type": "REAL"},
-        {"nom": "surface_m2", "type": "REAL"}
+        {"nom": "surface_m2", "type": "REAL"},
+        {"nom": "x_sommet", "type": "REAL", "requis": true, "remarque": "Sommet du houppier, X Lambert-93 (m). Schéma 1.7.0."},
+        {"nom": "y_sommet", "type": "REAL", "requis": true, "remarque": "Sommet du houppier, Y Lambert-93 (m). Schéma 1.7.0."}
       ]
     },
     {
@@ -207,6 +210,18 @@
     "chemins": {
       "mnt": "rasters/{plot_id}_mnt.tif",
       "mnh": "rasters/{plot_id}_mnh.tif"
+    },
+    "dalles": {
+      "mnt": "rasters/mnt_{x}_{y}.tif",
+      "cote_m": 1000,
+      "marge_foret_m": 50,
+      "remarque": "Schéma 1.7.0. Dalles MNT de cote_m × cote_m sur toute l'emprise de la forêt : union des ugf augmentée de marge_foret_m ; faute d'ugf, union des parcelles ; faute de parcelles, placettes plus marge_m. {x} et {y} : coin sud-ouest de la dalle en kilomètres Lambert-93, quatre chiffres complétés par des zéros (rasters/mnt_0849_6689.tif couvre 849 000-850 000 m en X et 6 689 000-6 690 000 m en Y). Directement sous rasters/, sans sous-dossier : le téléphone n'extrait du .qgz que rasters/<nom>.tif. Alignées sur le kilomètre, au pas resolution_m (2 000 × 2 000 pixels), au format de rasters.format ; seules les dalles qui touchent l'emprise sont écrites, pixels hors de l'emprise à nodata. Pas de dalles MNH : les rasters par placette (chemins) restent écrits comme avant. Absentes des projets préparés avant le schéma 1.7.0 : Groma se replie sur les rasters par placette."
+    },
+    "cvat": {
+      "chemin": "rasters/cvat.tif",
+      "format": "GeoTIFF Byte, une bande, EPSG:2154, compression DEFLATE, 0 = nodata (hors de l'emprise LiDAR)",
+      "resolution_m": 2,
+      "remarque": "Schéma 1.7.0. Relief CVAT de nemetonshiny (cvat_res_m) découpé sur l'emprise de la forêt, un seul fichier : valeurs 1 à 255 = relief [0, 1] de vat_combined() mis à l'échelle, 1 + round(v * 254). Pas de symbologie : Groma l'affiche en niveaux de gris semi-transparents sur le fond de carte. Absent quand nemeton n'a pas reçu cvat_path, et dans les projets préparés avant le schéma 1.7.0."
     }
   },
   "declencheurs": "core/src/groma/donnees/declencheurs.sql"

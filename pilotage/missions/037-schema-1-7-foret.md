@@ -12,7 +12,7 @@ dossier de projet en Python, parce
 qu'une placette déplacée sur le terrain (P067 filmée à 152 m de son centre prévu, le
 2026-11-20) n'avait plus ni MNT ni houppiers et que les missions 038 à 040 lisent ce format.
 
-**Redite par l'agent :** _à compléter par l'agent avant d'agir — s'il n'y arrive pas, il s'arrête._
+**Redite par l'agent :** passer le schéma à 1.7.0 (dalles MNT de 1 km à plat dans `rasters/`, sans MNH, `rasters/cvat.tif`, houppiers de toute la forêt avec `x_sommet`/`y_sommet` et index B-tree), écrit par `creer_gpkg` et contrôlé par `groma.dalles`, pour qu'une placette déplacée garde MNT et houppiers et que 038 à 040 et nemeton lisent un seul format vérifiable.
 
 ## Les trois questions (règle de staffing)
 
@@ -169,3 +169,27 @@ périmètre ; **quatre** dalles pour l'exemple (son emprise croise x = 925 km et
 P002 remonté pour que les plans de sol de P001 et P002 coïncident (données synthétiques). Hors
 périmètre, notés : apex du serveur encore au centroïde (brancher `x_sommet` plus tard) ; unicité de
 `houppier_id` sur la forêt non garantie par le brief.
+
+## Compte rendu du dev (2026-11-20)
+
+Fait :
+- schéma 1.7.0 (`rasters.dalles`, `rasters.cvat`, `houppiers.x_sommet`/`y_sommet` requis, clé `index`) ;
+- `groma.dalles` : `nom_dalle`, `dalle_du_point`, `dalles_du_rectangle`, `verifier_projet` ;
+- `creer_gpkg` : index du schéma créés, houppiers sans sommets refusés avant toute écriture ;
+- exemple régénéré : quatre dalles, `cvat.tif`, houppiers hors placette, `z0` de P002 remonté à 438,9 m ;
+- `docs/architecture.md`, `PLAN.md` (7ac).
+
+Écarts et constats :
+- les dalles de l'exemple arrondissent l'altitude au 1/128 m (moins de 4 mm d'écart avec les rasters par
+  placette) : sans cela, DEFLATE sans prédicteur donne 2,26 Mo, au-dessus de la limite de 2 Mo ; avec,
+  1,66 Mo (dalles et CVAT). Données synthétiques seulement ;
+- `rayon_m` de l'exemple fixé à 20 m dans `creer_exemple.py` : depuis la mission 035, le script relancé
+  prenait le défaut de 15 m, ce qui retirait la moitié des arbres et cassait les tests Kotlin qui lisent
+  l'exemple (projets déjà préparés inchangés). Avec ce réglage, l'exemple garde ses 18 arbres ;
+- `exemples/resultats/P001_definitif.gpkg` remis par `git checkout` : seuls les `uuid` (tirés au hasard)
+  changeaient ;
+- test de 037a faux, non modifié : `test_gpkg_16_ecriture_protocole_telephone_toujours_possible` écrit
+  `etat_traitement = "en_cours"`, valeur absente du domaine (`a_faire`, `provisoire`, `envoye`,
+  `definitif`) ; `mettre_a_jour_etat` la refuse à bon droit. À corriger par le testeur (`"provisoire"`) ;
+- une interpolation bilinéaire à moins d'un demi-pixel d'un bord de dalle a besoin de la dalle voisine
+  (P001 est pile sur le coin 925 km / 6 700 km) : à traiter par 039.

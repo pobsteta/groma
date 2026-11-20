@@ -172,6 +172,26 @@ def _ecrire_projet(chemin: Path, ligne: dict | None) -> None:
     pyogrio.write_dataframe(df, chemin, layer="projet", driver="GPKG", layer_options={"FID": "fid"})
 
 
+def sql_index() -> list[str]:
+    """``CREATE INDEX`` statements of the B-tree indexes declared by the layers (key ``index``)."""
+    out = []
+    for c in charger_schema()["couches"]:
+        for i in c.get("index", []):
+            out.append(f"CREATE INDEX IF NOT EXISTS {i['nom']} ON {c['nom']} ({', '.join(i['colonnes'])})")
+    return out
+
+
+def _verifier_sommets(houppiers) -> None:
+    """Crowns of a schema 1.7.0 project carry their apex (``x_sommet``, ``y_sommet``, required)."""
+    requis = [c["nom"] for c in couche("houppiers")["colonnes"] if c.get("requis")]
+    manquantes = [n for n in requis if n not in houppiers.columns]
+    if manquantes:
+        raise ValueError(f"Houppiers : colonne(s) {', '.join(manquantes)} manquante(s) (requises depuis le schéma 1.7.0).")
+    vides = [n for n in requis if houppiers[n].isna().any()]
+    if vides:
+        raise ValueError(f"Houppiers : valeur(s) vide(s) dans {', '.join(vides)} (requises depuis le schéma 1.7.0).")
+
+
 def creer_gpkg(
     chemin: str | Path,
     placettes,
@@ -196,6 +216,11 @@ def creer_gpkg(
     ``parcelles``: cadastral parcels (GeoDataFrame with the ``parcelles``
     columns, any CRS), shown on the phone map; empty layer without it.
     ``ugf``: forest management units, likewise (``ugf`` columns).
+
+    ``houppiers``: crowns of the whole forest (schema 1.7.0), ``plot_id`` NULL
+    or absent outside the planned plots; ``houppier_id``, ``x_sommet`` and
+    ``y_sommet`` (apex, Lambert-93) required, else ``ValueError``. The B-tree
+    indexes declared in the schema are created even when a layer is empty.
     """
     chemin = Path(chemin)
     if chemin.exists():
@@ -208,6 +233,8 @@ def creer_gpkg(
         p["convergence_deg"] = [round(convergence_lambert93_deg(v), 6) for v in lon]
     # Validated before anything is written.
     ligne = ligne_projet(p, projet) if projet is not None else None
+    if houppiers is not None and len(houppiers):
+        _verifier_sommets(houppiers)
     _ecrire(_completer(p, "placettes"), chemin, "placettes")
     _ecrire(_completer(centres_mesures, "centres_mesures") if centres_mesures is not None else _gdf_vide("centres_mesures"), chemin, "centres_mesures")
     _ecrire(_completer(cibles, "cibles") if cibles is not None else _gdf_vide("cibles"), chemin, "cibles")
@@ -222,6 +249,8 @@ def creer_gpkg(
     _ecrire_projet(chemin, ligne)
     with sqlite3.connect(chemin) as cx:
         cx.executescript(sql_declencheurs())
+        for sql in sql_index():
+            cx.execute(sql)
     log.info("GeoPackage créé : %s", chemin)
     return chemin
 
