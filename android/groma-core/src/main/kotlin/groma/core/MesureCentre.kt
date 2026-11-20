@@ -1,5 +1,8 @@
 package groma.core
 
+import fr.nemeton.terrain.gnss.FixGnss
+import fr.nemeton.terrain.gnss.OrigineFix
+import fr.nemeton.terrain.gnss.QualiteFix
 import kotlin.math.hypot
 import kotlin.math.sqrt
 
@@ -20,7 +23,7 @@ class MesureCentre(
     val nombre: Int get() = fixes.size
 
     /** True once the first accepted fix is a phone fix (origins are never mixed). */
-    private val mesureTelephone: Boolean get() = fixes.firstOrNull()?.origine == OrigineFix.TELEPHONE
+    private val mesureTelephone: Boolean get() = fixes.firstOrNull()?.origine == OrigineFix.INTERNE
 
     /** Enough fixes for a centre: 1 for RTK, [MIN_FIXES_TELEPHONE] for the phone. */
     val suffisant: Boolean get() = if (mesureTelephone) fixes.size >= MIN_FIXES_TELEPHONE else fixes.isNotEmpty()
@@ -29,7 +32,7 @@ class MesureCentre(
     fun ajouter(f: FixGnss): Boolean {
         val premiere = fixes.firstOrNull()
         if (premiere != null && premiere.origine != f.origine) return false
-        val ok = if (f.origine == OrigineFix.TELEPHONE) accepteTelephone(f, accepterTelephone) else accepte(f, accepterFlottant)
+        val ok = if (f.origine == OrigineFix.INTERNE) accepteTelephone(f, accepterTelephone) else accepte(f, accepterFlottant)
         if (!ok) return false
         fixes += f
         instants += horloge()
@@ -47,7 +50,7 @@ class MesureCentre(
         val dispersion = sqrt(fixes.sumOf { Geodesie.distanceM(moyenne, it.position).let { d -> d * d } } / fixes.size)
         val annoncees = fixes.mapNotNull { it.precisionHorizontaleM }
         val annoncee = if (annoncees.isEmpty()) 0.0 else sqrt(annoncees.sumOf { it * it } / annoncees.size)
-        val qualite = if (mesureTelephone) "telephone" else if (fixes.all { it.qualite == QualiteFix.RTK_FIXE }) "fix" else "float"
+        val qualite = QualiteGnssSchema.versSchema(fixes.first().origine, fixes.map { it.qualite })
         // Reception quality (mission 027): unknown stays null, a satellite count of 0 means unknown.
         val satellites = fixes.map { it.nbSatellites }.filter { it > 0 }.sorted()
         val hdops = fixes.mapNotNull { it.hdop }
@@ -69,7 +72,7 @@ class MesureCentre(
 
         /** A phone fix counts, once confirmed, whatever quality it claims, if its announced accuracy is known and <= 10 m. */
         fun accepteTelephone(f: FixGnss, accepterTelephone: Boolean): Boolean =
-            accepterTelephone && f.origine == OrigineFix.TELEPHONE && f.qualite != QualiteFix.AUCUN &&
+            accepterTelephone && f.origine == OrigineFix.INTERNE && f.qualite != QualiteFix.INVALIDE &&
                 f.precisionHorizontaleM.let { it != null && it <= PRECISION_MAX_TELEPHONE_M }
 
         /** Replacing a receiver centre (RTK fixed or float) by a phone one needs an explicit confirmation. */
@@ -77,16 +80,16 @@ class MesureCentre(
             nouvelle == "telephone" && (ancienne == "fix" || ancienne == "float")
 
         fun accepte(f: FixGnss, accepterFlottant: Boolean): Boolean =
-            f.origine == OrigineFix.RECEPTEUR &&
-                (f.qualite == QualiteFix.RTK_FIXE || (accepterFlottant && f.qualite == QualiteFix.RTK_FLOTTANT))
+            f.origine == OrigineFix.EXTERNE &&
+                (f.qualite == QualiteFix.RTK_FIXE || (accepterFlottant && f.qualite == QualiteFix.RTK_FLOAT))
 
         /** What tapping « Mesurer le centre » leads to with the current fix. */
         fun autorisation(f: FixGnss?, telephoneDisponible: Boolean = false): Autorisation = when {
-            f == null || f.qualite == QualiteFix.AUCUN -> Autorisation.SANS_POSITION
-            f.origine == OrigineFix.TELEPHONE ->
+            f == null || f.qualite == QualiteFix.INVALIDE -> Autorisation.SANS_POSITION
+            f.origine == OrigineFix.INTERNE ->
                 if (telephoneDisponible) Autorisation.CONFIRMER_TELEPHONE else Autorisation.TELEPHONE
             f.qualite == QualiteFix.RTK_FIXE -> Autorisation.OUI
-            f.qualite == QualiteFix.RTK_FLOTTANT -> Autorisation.CONFIRMER_FLOTTANT
+            f.qualite == QualiteFix.RTK_FLOAT -> Autorisation.CONFIRMER_FLOTTANT
             else -> Autorisation.SANS_RTK
         }
     }

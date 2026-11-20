@@ -1,5 +1,8 @@
 package groma.core
 
+import fr.nemeton.terrain.gnss.FixGnss
+import fr.nemeton.terrain.gnss.OrigineFix
+import fr.nemeton.terrain.gnss.QualiteFix
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 import java.sql.DriverManager
@@ -36,10 +39,10 @@ import kotlin.test.assertTrue
  */
 class MesureCentreTelephoneTest {
     private fun tel(lat: Double, lon: Double = 5.0, precision: Double? = 3.0, qualite: QualiteFix = QualiteFix.AUTONOME) =
-        FixGnss(Position(lat, lon), qualite, 12, 1.0, 300.0, null, precision, origine = OrigineFix.TELEPHONE)
+        FixGnss(Position(lat, lon), qualite, 12, 1.0, 300.0, null, precision, origine = OrigineFix.INTERNE)
 
     private fun rec(lat: Double, lon: Double = 5.0, qualite: QualiteFix = QualiteFix.RTK_FIXE, precision: Double? = 0.02) =
-        FixGnss(Position(lat, lon), qualite, 20, 0.6, 300.0, 1.0, precision, origine = OrigineFix.RECEPTEUR)
+        FixGnss(Position(lat, lon), qualite, 20, 0.6, 300.0, 1.0, precision, origine = OrigineFix.EXTERNE)
 
     /** [n] phone fixes alternating between lat 47.0 and 47.00002 (2.22 m apart). */
     private fun remplir(m: MesureCentre, n: Int, precision: Double = 3.0) {
@@ -86,7 +89,7 @@ class MesureCentreTelephoneTest {
     fun precision_inconnue_ecartee() {
         val m = MesureCentre(false, accepterTelephone = true)
         assertFalse(m.ajouter(tel(47.0, precision = null)))
-        assertFalse(m.ajouter(tel(47.0, precision = null, qualite = QualiteFix.AUCUN)))
+        assertFalse(m.ajouter(tel(47.0, precision = null, qualite = QualiteFix.INVALIDE)))
         assertEquals(0, m.nombre)
     }
 
@@ -95,7 +98,7 @@ class MesureCentreTelephoneTest {
         val m = MesureCentre(accepterFlottant = false, accepterTelephone = true)
         assertFalse(m.ajouter(rec(47.0, qualite = QualiteFix.DGPS, precision = 0.8)))
         assertFalse(m.ajouter(rec(47.0, qualite = QualiteFix.AUTONOME, precision = 2.0)))
-        assertFalse(m.ajouter(rec(47.0, qualite = QualiteFix.RTK_FLOTTANT, precision = 0.4)))
+        assertFalse(m.ajouter(rec(47.0, qualite = QualiteFix.RTK_FLOAT, precision = 0.4)))
         assertEquals(0, m.nombre)
         // RTK fixed receiver fixes keep their usual rule.
         assertTrue(m.ajouter(rec(47.0)))
@@ -189,9 +192,9 @@ class MesureCentreTelephoneTest {
         )
         // Other cases unchanged by the flag.
         assertEquals(MesureCentre.Autorisation.SANS_POSITION, MesureCentre.autorisation(null, true))
-        assertEquals(MesureCentre.Autorisation.SANS_POSITION, MesureCentre.autorisation(tel(47.0, qualite = QualiteFix.AUCUN), true))
+        assertEquals(MesureCentre.Autorisation.SANS_POSITION, MesureCentre.autorisation(tel(47.0, qualite = QualiteFix.INVALIDE), true))
         assertEquals(MesureCentre.Autorisation.OUI, MesureCentre.autorisation(rec(47.0), true))
-        assertEquals(MesureCentre.Autorisation.CONFIRMER_FLOTTANT, MesureCentre.autorisation(rec(47.0, qualite = QualiteFix.RTK_FLOTTANT, precision = 0.4), true))
+        assertEquals(MesureCentre.Autorisation.CONFIRMER_FLOTTANT, MesureCentre.autorisation(rec(47.0, qualite = QualiteFix.RTK_FLOAT, precision = 0.4), true))
         assertEquals(MesureCentre.Autorisation.SANS_RTK, MesureCentre.autorisation(rec(47.0, qualite = QualiteFix.DGPS, precision = 0.8), true))
     }
 

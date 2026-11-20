@@ -16,11 +16,11 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import groma.app.R
-import groma.core.FixGnss
-import groma.core.LecteurNmea
-import groma.core.Ntrip
+import fr.nemeton.terrain.gnss.FixGnss
+import fr.nemeton.terrain.gnss.LecteurNmea
+import fr.nemeton.terrain.gnss.Ntrip
 import groma.core.Position
-import groma.core.StatutNtrip
+import fr.nemeton.terrain.gnss.StatutNtrip
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

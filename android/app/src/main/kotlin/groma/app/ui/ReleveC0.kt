@@ -97,7 +97,7 @@ import groma.app.gnss.ServiceGnssRtk
 import groma.app.gnss.SourcePosition
 import groma.core.DonneesCarte
 import groma.core.EtatCentre
-import groma.core.FixGnss
+import fr.nemeton.terrain.gnss.FixGnss
 import groma.core.Guidage
 import groma.core.CentreMesure
 import groma.core.MesureCentre
@@ -106,7 +106,7 @@ import androidx.work.WorkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import groma.core.OrigineFix
+import fr.nemeton.terrain.gnss.OrigineFix
 import groma.core.PlacetteCarte
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.drop

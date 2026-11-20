@@ -12,10 +12,10 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import androidx.core.content.ContextCompat
-import groma.core.FixGnss
-import groma.core.OrigineFix
+import fr.nemeton.terrain.gnss.FixGnss
+import fr.nemeton.terrain.gnss.OrigineFix
 import groma.core.Position
-import groma.core.QualiteFix
+import fr.nemeton.terrain.gnss.QualiteFix
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -27,7 +27,7 @@ import kotlinx.coroutines.flow.stateIn
 
 /**
  * The one position of the app (brief § 6): the RTK receiver's fix when it has
- * one, else the phone's own GNSS (flagged by [OrigineFix.TELEPHONE]).
+ * one, else the phone's own GNSS (flagged by [OrigineFix.INTERNE]).
  */
 object SourcePosition {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -99,7 +99,7 @@ object SourcePosition {
         return FixGnss(
             position = Position(l.latitude, l.longitude),
             // The phone is never RTK, whatever its accuracy claims: autonomous at best.
-            qualite = if (precision == null) QualiteFix.AUCUN else QualiteFix.AUTONOME,
+            qualite = if (precision == null) QualiteFix.INVALIDE else QualiteFix.AUTONOME,
             // Count from GnssStatus (usedInFix), not the unreliable "satellites" extra; 0 = unknown.
             nbSatellites = satellitesUtilises,
             hdop = null,
@@ -108,7 +108,7 @@ object SourcePosition {
             precisionHorizontaleM = precision,
             capDeg = if (l.hasBearing()) l.bearing.toDouble() else null,
             vitesseMs = if (l.hasSpeed()) l.speed.toDouble() else null,
-            origine = OrigineFix.TELEPHONE,
+            origine = OrigineFix.INTERNE,
         )
     }
 }

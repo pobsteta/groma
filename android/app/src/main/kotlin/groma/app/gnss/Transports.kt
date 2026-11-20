@@ -3,9 +3,9 @@ package groma.app.gnss
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
-import groma.core.Ntrip
-import groma.core.PointMontage
-import groma.core.StatutNtrip
+import fr.nemeton.terrain.gnss.Ntrip
+import fr.nemeton.terrain.gnss.EntreeSourcetable
+import fr.nemeton.terrain.gnss.StatutNtrip
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -159,7 +159,7 @@ class ClientNtrip(
             val entree = socket.getInputStream()
             // "ICY 200 OK" (NTRIP 1) or "HTTP/1.1 200 OK" (NTRIP 2, followed by headers).
             val ligne = lireLigne(entree)
-            val statut = Ntrip.statut(ligne)
+            val statut = Ntrip.statutReponse(ligne)
             onStatut(statut)
             if (statut != StatutNtrip.OK) return@flow
             if (!ligne.startsWith("ICY")) {
@@ -196,7 +196,7 @@ class ClientNtrip(
 
     companion object {
         /** Mount points of the caster (`GET /` source table); empty on any failure. */
-        suspend fun pointsMontage(hote: String, port: Int): List<PointMontage> = withContext(Dispatchers.IO) {
+        suspend fun pointsMontage(hote: String, port: Int): List<EntreeSourcetable> = withContext(Dispatchers.IO) {
             val socket = Socket()
             try {
                 socket.connect(InetSocketAddress(hote, port), 5000)
@@ -213,7 +213,7 @@ class ClientNtrip(
                         if (recu.size() > 256 * 1024 || recu.toString("US-ASCII").contains("ENDSOURCETABLE")) break
                     }
                 }
-                Ntrip.tableSources(recu.toString("US-ASCII"))
+                Ntrip.parseSourcetable(recu.toString("US-ASCII"))
             } catch (_: Exception) {
                 emptyList()
             } finally {
