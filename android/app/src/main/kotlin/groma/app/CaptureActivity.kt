@@ -54,6 +54,8 @@ import kotlin.math.hypot
  */
 class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
     private lateinit var session: Session
+    /** Set when ARCore could not start: the GL thread then draws nothing (mission 036). */
+    @Volatile private var arIndisponible = false
     private lateinit var vue: GLSurfaceView
     private lateinit var etat: TextView
     private lateinit var alerte: TextView
@@ -103,14 +105,28 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
         vue.setEGLContextClientVersion(2)
         vue.setRenderer(this)
         vue.renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
-        session = Session(this).also {
-            it.configure(Config(it).apply {
-                depthMode = if (it.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) Config.DepthMode.AUTOMATIC else Config.DepthMode.DISABLED
-                focusMode = Config.FocusMode.AUTO
-                updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
-            })
+        // ARCore may refuse to open (e.g. emulator without camera 0, FatalException): say so and go back to the plot,
+        // never crash (mission 036, replay attempt on the API 36.1 emulator).
+        session = try {
+            Session(this).also {
+                it.configure(Config(it).apply {
+                    depthMode = if (it.isDepthModeSupported(Config.DepthMode.AUTOMATIC)) Config.DepthMode.AUTOMATIC else Config.DepthMode.DISABLED
+                    focusMode = Config.FocusMode.AUTO
+                    updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
+                })
+            }
+        } catch (e: Exception) {
+            abandonnerAr(e); return
         }
         findViewById<Button>(R.id.terminer).setOnClickListener { terminer() }
+    }
+
+    /** ARCore unavailable: message, then back to the plot. Nothing is written, no package and no film. */
+    private fun abandonnerAr(e: Exception) {
+        arIndisponible = true
+        android.util.Log.e("groma", "ARCore session unavailable", e)
+        Toast.makeText(this, getString(R.string.ar_indisponible, e.message ?: e.javaClass.simpleName), Toast.LENGTH_LONG).show()
+        finish()
     }
 
     override fun onResume() {
@@ -124,14 +140,19 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
                 }
             }
         }
-        session.resume()
+        try { session.resume() } catch (e: Exception) { abandonnerAr(e); return }
         // Started before the GL thread resumes, so session.update() never runs concurrently with startRecording().
         demarrerFilm()
         vue.onResume()
     }
-    override fun onPause() { super.onPause(); vue.onPause(); session.pause() }
+    override fun onPause() {
+        super.onPause()
+        if (!::session.isInitialized) return
+        vue.onPause(); session.pause()
+    }
     override fun onDestroy() {
         super.onDestroy()
+        if (!::session.isInitialized) return
         arreterFilm()
         session.close()
     }
@@ -195,17 +216,20 @@ class CaptureActivity : AppCompatActivity(), GLSurfaceView.Renderer {
     }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
+        if (arIndisponible || !::session.isInitialized) return
         fond.creer()
         session.setCameraTextureName(fond.texture)
     }
 
     override fun onSurfaceChanged(gl: GL10?, w: Int, h: Int) {
         GLES20.glViewport(0, 0, w, h)
+        if (arIndisponible || !::session.isInitialized) return
         session.setDisplayGeometry(windowManager.defaultDisplay.rotation, w, h)
     }
 
     override fun onDrawFrame(gl: GL10?) {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
+        if (arIndisponible || !::session.isInitialized) return
         val frame = session.update()
         fond.dessiner(frame)
         traiter(frame)

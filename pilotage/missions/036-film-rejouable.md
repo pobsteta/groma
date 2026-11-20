@@ -85,13 +85,41 @@ peuvent pas être rejoués ? »).
   `Frame.recordTrackData`, `Frame.getUpdatedTrackData`).
 - La documentation Google « Recording and Playback » ne dit rien de l'émulateur ; la page « Run AR Apps in Android
   Emulator » ne décrit que la scène virtuelle (x86, API 27+). **Non vérifié** : la relecture d'un MP4 sur
-  l'émulateur n'a pas été essayée (interdit de toucher à l'émulateur dans cette mission). À essayer par Pascal.
-- La taille réelle d'un film par minute n'est pas connue : le seuil de 1 Gio est une estimation.
+  l'émulateur n'a pas été essayée pendant le développement. **Essayée le 2026-11-20 : échec**, voir « Essais ».
+- Taille réelle mesurée le 2026-11-20 : environ 72 Mio par minute (voir « Essais ») ; le seuil de 1 Gio de place
+  libre couvre donc une dizaine de minutes de film.
 
 ## Essais
 
 - JVM : `FilmCaptureTest` (décision case décochée / place / rejeu, nommage sans écrasement, paquet de rejeu
   distinct, `source`, garde `.fumee`, piste d'identité) ; `gradle :groma-core:test :app:testFumeeUnitTest` verts,
   `:app:assembleFumee` compile.
-- Non essayé sur appareil (rien d'installé) : enregistrement sur le S23, taille d'un film, rejeu (émulateur et S23),
-  comparaison des deux paquets. À faire par Pascal.
+- **Essai de Pascal, 2026-11-20, Marsannay (projet `20261015_194200_yzoh`), placette P067, 15 m.**
+  * Enregistrement sur le S23 (build release de la branche) : film `P067.groma.mp4` de 2 min 52 s, 206 Mio
+    (≈ 72 Mio/min), vidéo 640×480 à 30 i/s et 5 pistes de capteurs ARCore. Paquet de 91 Mio, 525 images toutes
+    distinctes (pas de lignes répétées, cf. mission 033), boucle fermée, cibles C1-C3 mesurées.
+  * Chaîne serveur (méthode `profondeur` seule, pas de GPU) sur le paquet du terrain : 26 arbres, verdict « à
+    vérifier ». Fermeture de boucle 7,7 m, échelle 0,91 (non appliquée), C2 jamais détectée, résidu d'orientation
+    4,2° sur C1-C3, diamètres des cibles faux (C1 −4,5 cm, C3 +37,5 cm : mauvais arbre apparié).
+  * **Rejeu sur l'émulateur : échec.** AVD API 36.1 Play Store x86_64, ARCore 1.57 pour émulateur, caméra arrière
+    en scène virtuelle : la seule caméra exposée porte le n° 10, ARCore écrit « No default camera 0 found » et
+    `Session(...)` lève `FatalException` avant tout `setPlaybackDatasetUri` (la relecture ne contourne pas la
+    caméra). Même résultat sans caméra avant. Non essayé : image système API 34/35.
+  * **Défaut trouvé et corrigé** : cette `FatalException` n'était pas rattrapée, l'appli se fermait. Désormais
+    `CaptureActivity` affiche « ARCore n'a pas pu démarrer sur cet appareil (…) » et revient à la placette, en
+    capture comme en rejeu (création et reprise de la session ; le fil de rendu ne touche plus une session
+    absente). Non testable sur la JVM (cycle de vie d'une Activity, pas de Robolectric) ; vérifié par compilation.
+    À revérifier sur l'émulateur.
+  * **Rejeu sur le S23 : réussi.** Version d'essai `fr.nemeton.groma.fumee` installée à côté de l'appli de terrain
+    (aucune donnée de terrain touchée). Paquet `P067.rejeu.groma.zip` de 87 Mio, `source = rejeu`, 530 images toutes
+    distinctes, mêmes instants que le terrain (171 s), suivi ARCore actif sur toutes les images.
+  * Comparaison des trajectoires : à instant égal, le rejeu reste à ≈ 0,6-0,75 m du terrain (4 m au plus). La
+    dérive se reproduit : écart début-fin 7,5 m au rejeu contre 7,7 m au terrain. Le film permet donc d'étudier
+    cette dérive au bureau.
+  * Détections au rejeu : C1 ×13, C2 ×4, C3 ×7, **C0 jamais** (terrain : C1 ×17, C3 ×5, C0 ×3). Sans C0, la chaîne
+    serveur refuse le paquet rejoué (« Repère central C0 non retrouvé »).
+  * Pendant l'essai, la version d'essai a lu le dossier des projets de l'appli de terrain (`Download/Groma`, copie
+    d'octobre, 20 m) au lieu de la copie à 15 m déposée à part : manifeste du rejeu à 20 m, sans cibles mesurées.
+    Images, poses et profondeurs n'en dépendent pas.
+  * Fichiers de l'essai (hors dépôt) : `~/groma-sauvegardes/2026-11-20_P067-film/`.
+- Restent ouverts : la dérive de 7,7 m sur P067 et C0 manquante au rejeu (hors du périmètre de la mission 036).

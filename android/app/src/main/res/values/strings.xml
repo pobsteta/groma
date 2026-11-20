@@ -53,6 +53,7 @@
     <string name="film_enregistre">Film enregistré : %1$s</string>
     <string name="rejouer_film">Rejouer un film (version d\'essai)</string>
     <string name="rejeu_erreur">Film illisible : %1$s</string>
+    <string name="ar_indisponible">ARCore n’a pas pu démarrer sur cet appareil (%1$s). Capture impossible : retour à la placette.</string>
     <string name="rejeu_paquet">Paquet de rejeu écrit : %1$s</string>
     <string name="param_4g_desc">Les paquets peuvent peser plusieurs centaines de Mo.</string>
     <string name="apropos_titre">Groma %1$s</string>

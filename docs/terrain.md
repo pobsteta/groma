@@ -711,8 +711,11 @@ film dans un dossier accessible (Téléchargements, par exemple), ouvrir le proj
   pour une capture en direct). Il n'écrase jamais un paquet du terrain.
 * Un rejeu ne touche pas au projet (pas de calcul embarqué, pas d'arbres provisoires) et n'est pas envoyé au
   serveur : on récupère le zip par câble pour le comparer au paquet d'origine.
-* La relecture sur l'émulateur n'est pas documentée par Google (l'émulateur ne documente que sa scène virtuelle) :
-  voir la fiche de la mission pour l'état de l'essai.
+* **Rejouer sur le S23**, pas sur l'émulateur : sur l'émulateur API 36.1, ARCore ne trouve pas de caméra n° 0 et
+  refuse de démarrer, même pour un film (essai du 2026-11-20) ; Groma l'annonce par un message et revient à la
+  placette. Choisir comme dossier des projets un dossier à part (par exemple `Documents/GromaRejeu/projets`)
+  contenant une copie à jour du projet, pas celui de l'application de terrain, dont la copie peut être ancienne.
+* Taille d'un film : environ 72 Mio par minute (essai du 2026-11-20 sur le S23).
 
 ## Essai de fumée de l'APK (émulateur ou téléphone)
 
