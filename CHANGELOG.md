@@ -1,5 +1,18 @@
 # Changelog
 
+## [2026.11.12](https://github.com/pobsteta/groma/compare/v2026.11.11...v2026.11.12) (2026-11-21)
+
+
+### Nouveautés
+
+* **app:** relief CVAT, contours et sommets des houppiers sur le plan de la placette (mission 042) ([#126](https://github.com/pobsteta/groma/issues/126)) ([8bf8bb4](https://github.com/pobsteta/groma/commit/8bf8bb47914e2bb843ab765ad6645096c03b22ed))
+* **app:** vue Placette épurée, en-tête repliable et pas de « Relever C0 » en mode arbre (mission 041b) ([#124](https://github.com/pobsteta/groma/issues/124)) ([ba691b7](https://github.com/pobsteta/groma/commit/ba691b70e71d9f1c4ca4f12e759cc73fce1c0bfc))
+
+
+### Corrections
+
+* **app:** diamètre mesuré au compas forestier, pas au ruban ([#127](https://github.com/pobsteta/groma/issues/127)) ([cef5872](https://github.com/pobsteta/groma/commit/cef5872808f58c19f993d5f0942e683875bb9054))
+
 ## [2026.11.11](https://github.com/pobsteta/groma/compare/v2026.11.10...v2026.11.11) (2026-11-21)
 
 
