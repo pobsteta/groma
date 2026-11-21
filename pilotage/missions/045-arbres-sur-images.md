@@ -134,3 +134,26 @@ poses en lignes confirmées : la fiche se trompait en disant « en colonnes »).
 
 Ne pas installer sur le téléphone : l'essai au S23 (version `fumee`, accordé par Pascal) est fait par
 l'orchestrateur après la relecture.
+
+## Aller-retour 2/3 (2026-11-21) — essai au S23 par l'orchestrateur
+
+**Relecteur (aller-retour 1) :** prêt pour Pascal (402 tests verts).
+
+**Essai au S23, version `fumee`, P067 (images 1, 181, 267) :** l'écran s'ouvre, le curseur défile sans
+à-coup, avertissement « Orientation douteuse (4,1°) » affiché, case des faux positifs présente (aucun
+faux positif sur P067), aucune erreur dans `logcat`. Défauts à corriger :
+
+1. **Étiquettes illisibles** quand les arbres sont proches : elles se chevauchent (image 267 :
+   « 14 · 12 cm », « 1 · 24 cm », « 12 · 13… » les uns sur les autres). Éviter les chevauchements
+   (décaler verticalement, ou numéro seul quand la place manque et diamètre au toucher, au choix de
+   l'agent, à dire).
+2. **Traits hors de l'image** : sur l'image 181, le trait de l'arbre 8 descend sous l'image, dans
+   la bande noire. Découper le dessin au cadre de l'image.
+3. **Place à l'écran** : en portrait, l'image 4:3 paysage n'occupe qu'un tiers de la hauteur (grandes
+   bandes noires). Utiliser au mieux l'écran (zoom par pincement sur l'image, ou affichage pivoté, ou
+   paysage autorisé pour cet écran : au choix de l'agent, à dire).
+4. **Cibles non marquées** : sur les images 181 et 267, des cibles sont visibles mais aucun carré
+   n'est dessiné. Vérifier si ces images ont des `detections_cibles` dans le manifeste (25 détections
+   sur 525 images) : si oui, c'est un défaut à corriger ; si non, le dire (et c'est attendu).
+
+Garder tout le reste (décisions de Pascal de l'aller-retour 1). Ne pas installer sur le téléphone.
