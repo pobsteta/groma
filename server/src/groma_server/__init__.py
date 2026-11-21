@@ -1,3 +1,3 @@
 """Groma server: definitive processing of the plot capture packages."""
 
-__version__ = "2026.11.12"  # x-release-please-version
+__version__ = "2026.11.13"  # x-release-please-version
