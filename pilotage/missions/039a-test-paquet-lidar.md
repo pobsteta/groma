@@ -31,8 +31,8 @@ Kotlin, `groma-core`, paquet `groma.core` :
   -9999 (NaN de la grille → -9999), EPSG:2154 ; `GeoTiff.lire(ecrire(g))` redonne `g`.
 * `object LidarPaquet` :
   * `const val DEMI_COTE_M = 50.0` ;
-  * `fun decouper(dossierProjet: File, db: SqliteDb, plotId: String, centreX: Double, centreY: Double, rayonM: Double): ResultatLidar`
-    (`SqliteDb` : l'interface d'accès SQLite déjà utilisée par `groma.core`, voir `Houppiers.dansEmprise`) ;
+  * `fun decouper(dossierProjet: File, db: BaseSqlite, plotId: String, centreX: Double, centreY: Double, rayonM: Double): ResultatLidar`
+    (`BaseSqlite` : l’interface d’accès SQLite déjà utilisée par `Houppiers.dansEmprise`) ;
   * `data class ResultatLidar(val fichiers: Map<String, ByteArray>, val manifeste: Map<String, Any?>)` :
     `fichiers` a pour clés les chemins du paquet (`lidar/mnt.tif`, `lidar/mnh.tif`, `lidar/cvat.tif`,
     `lidar/houppiers.geojson`), présents seulement s'ils sont écrits ; `manifeste` est l'objet `lidar`
