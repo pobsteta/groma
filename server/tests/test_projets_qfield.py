@@ -135,3 +135,30 @@ def test_projets_separes(client, tmp_path):
     publier(client, "A", qgz(tmp_path, "A"), projet_nom="Forêt A")
     publier(client, "B", qgz(tmp_path, "B"), projet_nom="Forêt B")
     assert {p["projet_id"]: p["projet_nom"] for p in client.get("/projets", headers=H).json()} == {"A": "Forêt A", "B": "Forêt B"}
+
+
+def test_qgz_de_50_mo_de_dalles_accepte_avec_la_limite_par_defaut(tmp_path):
+    """A 1.7.0 project (MNT tiles + cvat.tif, ~50 MB) passes the default 500 MB limit."""
+    import os
+
+    cfg = Config(dossier_donnees=tmp_path / "donnees", jeton="secret", versions_projet=3, reconstructeurs=("profondeur",))
+    assert cfg.taille_max_projet == 500 * 1024**2
+    c = TestClient(creer_app(cfg))
+    pid = "20261015_194200_yzoh"
+    gpkg = tmp_path / "g.gpkg"
+    with sqlite3.connect(gpkg) as db:
+        db.execute("CREATE TABLE projet (fid INTEGER PRIMARY KEY, projet_id TEXT, projet_nom TEXT)")
+        db.execute("INSERT INTO projet (projet_id, projet_nom) VALUES (?, 'Forêt test')", (pid,))
+    out = tmp_path / "gros.qgz"
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_STORED) as z:
+        z.writestr("inventaire_video.qgs", "<qgis/>")
+        z.write(gpkg, "inventaire_video.gpkg")
+        z.writestr("rasters/mnt_0849_6689.tif", os.urandom(25 * 1024**2))
+        z.writestr("rasters/cvat.tif", os.urandom(25 * 1024**2))
+    archive = out.read_bytes()
+    assert len(archive) > 50 * 1024**2
+    r = publier(c, pid, archive)
+    assert r.status_code == 200, r.text
+    version = r.json()["version"]
+    g = c.get(f"/projets/{pid}/qfield/{version}/inventaire_video.qgz", headers=H)
+    assert g.status_code == 200 and g.content == archive

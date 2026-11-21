@@ -70,6 +70,37 @@ class ProjetServeurTest {
     }
 
     @Test
+    fun `dalles MNT et cvat du projet 1_7_0 extraites, sous-dossier de rasters ignore`() {
+        val (c, ecrits) = extraire(zip(
+            "inventaire_video.qgs" to "<qgis/>".toByteArray(),
+            "inventaire_video.gpkg" to byteArrayOf(1),
+            "rasters/mnt_0849_6689.tif" to byteArrayOf(2),
+            "rasters/cvat.tif" to byteArrayOf(3),
+            "rasters/P001_mnt.tif" to byteArrayOf(4),
+            "rasters/sous/x.tif" to byteArrayOf(5),
+        ))
+        assertEquals(
+            listOf("inventaire_video.gpkg", "rasters/mnt_0849_6689.tif", "rasters/cvat.tif", "rasters/P001_mnt.tif"),
+            ecrits.keys.toList(),
+        )
+        assertEquals(listOf("mnt_0849_6689.tif", "cvat.tif", "P001_mnt.tif"), c.rasters)
+    }
+
+    @Test
+    fun `import ou mise a jour d'un dossier ne copie que des rasters a plat`() {
+        assertTrue(ExtractionQgz.copiable("inventaire_video.gpkg"))
+        assertTrue(ExtractionQgz.copiable("inventaire_video.qgs"))
+        assertTrue(ExtractionQgz.copiable("photos/x.jpg"))
+        assertTrue(ExtractionQgz.copiable("autre/sous/y.txt"))
+        assertTrue(ExtractionQgz.copiable("rasters/mnt_0849_6689.tif"))
+        assertTrue(ExtractionQgz.copiable("rasters/cvat.tif"))
+        assertTrue(ExtractionQgz.copiable("rasters/P001_mnt.tif"))
+        assertFalse(ExtractionQgz.copiable("rasters/sous/x.tif"))
+        assertFalse(ExtractionQgz.copiable("rasters/../x.tif"))
+        assertFalse(ExtractionQgz.copiable("rasters/notes.sh"))
+    }
+
+    @Test
     fun `chemins piégés jamais repris`() {
         val (_, ecrits) = extraire(zip(
             "../../evil/inventaire_video.gpkg" to byteArrayOf(1),
