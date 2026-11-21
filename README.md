@@ -5,9 +5,10 @@
 [![release](https://img.shields.io/github/v/release/pobsteta/groma?include_prereleases&sort=semver)](https://github.com/pobsteta/groma/releases)
 
 Inventaire forestier sur placette circulaire **par vidéo au smartphone**.
-Groma retrouve chaque arbre de la placette, mesure son diamètre à 1,30 m,
-calcule sa position, le numérote selon une règle fixe et livre le résultat
-dans un projet QField, où l'essence est saisie sur le terrain.
+Groma retrouve chaque arbre de la placette, estime son diamètre à 1,30 m,
+calcule sa position, le numérote selon une règle fixe, propose le groupe
+d'essence (à confirmer par l'opérateur) et renvoie le résultat à nemeton.
+Voir [`docs/brief.md`](docs/brief.md).
 
 Le nom vient de la *groma* des arpenteurs romains, plantée en un point
 central pour viser les directions autour, comme le récepteur RTK au centre

@@ -415,7 +415,7 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
 4. « Terminer » : verdict **suffisante / à refaire** avec la raison
    (couverture < 90 %, suivi perdu plus de 5 s, cible vue moins de 3 fois,
    plus de 30 % d'images floues). Puis calcul provisoire, objectif moins de
-   2 minutes : arbres numérotés, diamètres et hauteurs approximatifs. Rouvrir
+   2 minutes : arbres numérotés, diamètres estimés et hauteur du houppier LiDAR quand l'arbre y est rattaché. Rouvrir
    **Placette** : les arbres détectés (hors faux positifs) apparaissent sur le
    plan, en pastilles. Couleur = groupe d'essence comme dans Marculus (chêne
    bleu, hêtre indigo, feuillus gris-bleu, sapin bordeaux, épicéa rouille,
