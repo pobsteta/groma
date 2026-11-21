@@ -1,5 +1,22 @@
 # Changelog
 
+## [2026.11.11](https://github.com/pobsteta/groma/compare/v2026.11.10...v2026.11.11) (2026-11-21)
+
+
+### Nouveautés
+
+* **core:** schéma 1.7.0, dalles MNT, relief CVAT et sommets des houppiers sur toute la forêt (missions 037a et 037) ([#120](https://github.com/pobsteta/groma/issues/120)) ([cbc24f5](https://github.com/pobsteta/groma/commit/cbc24f5790e8faf3ad8ae72d14bbcc23cfd7818a))
+
+
+### Corrections
+
+* **app:** dalles MNT et cvat.tif jusqu'au téléphone, rasters/ à plat à l'import d'un dossier (mission 038) ([#123](https://github.com/pobsteta/groma/issues/123)) ([5afc42b](https://github.com/pobsteta/groma/commit/5afc42b3502e53528ba5eb69fbfd814ed7d8c446))
+
+
+### Documentation
+
+* **pilotage:** clôture du cycle 8, livraison v2026.11.10 ([#122](https://github.com/pobsteta/groma/issues/122)) ([eada37d](https://github.com/pobsteta/groma/commit/eada37d60314a2998d96f730807bfd5d3577f7fa))
+
 ## [2026.11.10](https://github.com/pobsteta/groma/compare/v2026.11.9...v2026.11.10) (2026-11-20)
 
 
