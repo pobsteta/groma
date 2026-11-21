@@ -9,7 +9,9 @@
   restent lisibles, Groma se replie sur les rasters par placette).
 * **Révision** : version corrigée le 2026-11-20, le jour même, qui remplace la
   première : dalles posées à plat dans `rasters/`, pas de dalles MNH, et
-  présence exigée dans le `.qgz`.
+  présence exigée dans le `.qgz`. Complétée le 2026-11-21 (§ 2.3, § 3 et
+  § 6) : conversion du CVAT produit par foretaccess, constatée sur
+  l'exemple réel de Marsannay (mission 044).
 
 ## 1. Contexte
 
@@ -66,6 +68,19 @@ l'emprise actuelle (placettes plus `marge_m`).
   DEFLATE. Valeurs 1 à 255 = relief `[0, 1]` de `vat_combined()` mis à
   l'échelle (`1 + round(v * 254)`), **0 = nodata** (hors de l'emprise
   LiDAR).
+* **Conversion du CVAT de foretaccess.** Le CVAT que nemetonshiny calcule
+  aujourd'hui (`build_cvat_precomputed()`, fichier
+  `*_CVAT_8bit_foretaccess.tif`) est bien en Byte à 2 m, mais avec un autre
+  codage : relief **0 à 254** (`round(v * 254)`) et **255 = nodata**. Il
+  n'est pas lisible tel quel par Groma (0 y serait pris pour « sans
+  donnée », 255 pour du relief). nemeton doit donc le **convertir lui-même**
+  au format ci-dessus en écrivant `cvat.tif` : valeur + 1 pour 0 à 254
+  (soit `1 + round(v * 254)`), 255 → 0, puis 0 hors de l'emprise. Un CVAT
+  déjà au format ci-dessus (nodata 0) est recopié sans changement ; tout
+  autre codage (autre nodata, autre type, autre résolution) est refusé avec
+  une erreur, jamais converti en silence. Groma fait la même conversion
+  dans `exemples/creer_marsannay_p067.py` (`decouper_cvat()`), qui sert de
+  référence.
 * Pas de symbologie : Groma l'affiche en niveaux de gris semi-transparents
   sur le fond de carte.
 
@@ -103,7 +118,9 @@ dans le dossier du projet quand il est copié à la main.
      colonnes nouvelles ;
    * écrire les dalles MNT (§ 2.2) ;
    * nouvel argument `cvat_path = NULL` : si fourni, découper le CVAT sur
-     l'emprise et l'écrire au format du § 2.3 ; sinon pas de `cvat.tif` ;
+     l'emprise et l'écrire au format du § 2.3, en convertissant le codage de
+     foretaccess (0–254, 255 nodata → 1–255, 0 nodata) ; sinon pas de
+     `cvat.tif` ;
    * mettre dalles et `cvat.tif` dans le `.qgz` (§ 2.5) ;
    * recopier le schéma 1.7.0 dans `inst/inventaire_video/`.
 3. Projet QGIS/QField : les dalles et `cvat.tif` repliés et décochés, comme
@@ -130,5 +147,9 @@ Emprise des `ugf` : 4,3 × 3,2 km, 506 ha de forêt. Au plus 20 dalles MNT de
   houppier a `x_sommet`, `y_sommet` à l'intérieur de son polygone.
 * `cvat.tif` est en Byte, avec 0 hors de l'emprise LiDAR, et présent dans le
   `.qgz` quand `cvat_path` est fourni.
+* Avec le `*_CVAT_8bit_foretaccess.tif` de nemetonshiny en `cvat_path`,
+  `cvat.tif` a nodata 0, ses valeurs valent celles de la source + 1, et les
+  pixels à 255 dans la source valent 0 ; un CVAT d'un autre codage est
+  refusé avec une erreur.
 * Sans `cvat_path`, le projet est écrit sans `cvat.tif` et sans erreur.
 * Les rasters par placette sont inchangés.
