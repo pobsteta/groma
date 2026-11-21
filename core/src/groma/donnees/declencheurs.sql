@@ -4,7 +4,7 @@
 -- Règles :
 --   * Groma écrit dans `detections` (mesures de la vidéo) et, pour les seuls
 --     attributs saisis à la main après la capture (essence_arbre, dbh_cm au
---     ruban avec dbh_source = 'mesure', statut, qualite), dans SA copie de
+--     compas avec dbh_source = 'mesure', statut, qualite), dans SA copie de
 --     `arbres` (GeoPackage.modifierArbre, transaction courte : BEGIN
 --     IMMEDIATE + busy_timeout). La copie de QField n'est écrite que par son
 --     plugin, qui ne recopie jamais sur une saisie de QField.
@@ -15,7 +15,7 @@
 --     arbre encore provisoire (ou à vérifier). Les attributs saisis
 --     (essence_arbre, statut, qualite, notes, photos) ne sont jamais écrits
 --     ici ; une hauteur mesurée (h_source = 'mesuree') et un diamètre au
---     ruban (dbh_source = 'mesure') sont conservés.
+--     compas (dbh_source = 'mesure') sont conservés.
 --   * Un faux positif n'est jamais promu en arbre.
 --   * Kotlin (GeoPackage.modifierArbre) recrée ces deux déclencheurs, à
 --     l'identique de ce fichier (copié en ressource), dans un projet

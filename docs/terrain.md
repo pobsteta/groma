@@ -7,7 +7,7 @@
   placette, relié à QField en Bluetooth.
 * Boussole de visée (recommandée pour l'azimut des cibles : le téléphone, lui,
   se laisse tromper par les masses métalliques) et télémètre laser (distance
-  horizontale du centre à la cible) ; ruban de diamètre.
+  horizontale du centre à la cible) ; compas forestier.
 * Cibles ArUco du dictionnaire `4x4_50` : **C0 = identifiant 0** sur la canne
   du RTK, à 1,30 m ; **C1, C2, C3 = identifiants 1, 2, 3** agrafées à 1,30 m
   sur trois arbres, face au centre. Planche prête à imprimer, une cible par
@@ -393,7 +393,7 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    défaut) ou, en option, lire le cap à la boussole du téléphone (« Prendre
    ce cap », source `boussole_telephone` ; ne l'utiliser que si l'étalonnage
    affiché est « bon »), puis la distance horizontale au télémètre et le
-   diamètre au ruban, et toucher **Placer**. La cible apparaît sur le plan.
+   diamètre au compas, et toucher **Placer**. La cible apparaît sur le plan.
    Groma alerte (sans jamais refuser la saisie) si deux cibles sont à moins
    de 60° d'écart, si une cible est à moins de 8 m du centre, ou s'il y a
    moins de trois cibles. Replacer une cible remplace la mesure précédente.
@@ -401,7 +401,7 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    soin. Les cibles sont écrites dans la couche `cibles` du projet de Groma
    (schéma 1.3.0, colonne `source_azimut`) ; la source de chaque azimut part
    aussi au serveur avec le paquet (`cibles_mesurees`). Une distance ou un
-   diamètre de 0 est accepté (diamètre 0 : non mesuré au ruban).
+   diamètre de 0 est accepté (diamètre 0 : non mesuré au compas).
    *Projets déjà générés :* la couche `cibles` reste éditable dans la copie
    de QField, mais Groma ne relit pas cette copie : une cible saisie ou
    modifiée dans QField n'est pas reprise. Les cibles déjà présentes dans le
@@ -422,7 +422,7 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    autres résineux taupe), **grise tant que l'essence n'est pas saisie** ;
    taille croissante avec le diamètre (bornée, 7,5 à 80 cm) ; contour blanc
    fin = diamètre estimé par la vidéo, **contour sombre épais = diamètre
-   mesuré au ruban**. L'étiquette « numéro – diamètre » s'affiche quand la
+   mesuré au compas**. L'étiquette « numéro – diamètre » s'affiche quand la
    place le permet (zoomer pour les voir toutes). Pincer ou « + » / « − »
    pour zoomer, glisser pour déplacer (faire défiler la page en glissant
    hors du plan), « Tout voir » pour revenir.
@@ -430,17 +430,17 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    sur le plan, en **touchant un arbre** : la fiche s'ouvre avec son numéro et
    son diamètre estimé. Essence : taper un code ou un nom (recherche dans la
    BD Forêt v2, accents et casse ignorés) puis choisir dans la liste ; diamètre
-   au ruban en cm ; statut ; qualité. **Enregistrer** écrit et ferme ;
+   au compas en cm ; statut ; qualité. **Enregistrer** écrit et ferme ;
    **Enregistrer et arbre suivant** passe à l'arbre suivant dans l'ordre des
-   numéros, pour enchaîner au ruban. Une valeur refusée est expliquée sous le
-   champ et rien n'est écrit. Ce qui est saisi : l'essence (`essence_arbre`, code BD Forêt v2), le **diamètre au ruban**
+   numéros, pour enchaîner au compas. Une valeur refusée est expliquée sous le
+   champ et rien n'est écrit. Ce qui est saisi : l'essence (`essence_arbre`, code BD Forêt v2), le **diamètre au compas**
    (`dbh_cm`, virgule ou point décimal ; il passe `dbh_source` à `mesure` ;
-   **le ruban se saisit seulement dans Groma**, `dbh_cm` et `dbh_source`
+   **le diamètre au compas se saisit seulement dans Groma**, `dbh_cm` et `dbh_source`
    sont en lecture seule dans QField), le statut et la qualité, une
    **note** et des **photos** (mission 022, voir ci-dessous) ; **dans
    QField**, facultatif, on peut encore saisir les notes et les photos, et
    au besoin l'essence, le statut et la qualité. Les arbres provisoires apparaissent dans la couche
-   `arbres` de QField. Un diamètre au ruban n'est jamais écrasé : ni par
+   `arbres` de QField. Un diamètre au compas n'est jamais écrasé : ni par
    une nouvelle capture, ni par le calcul définitif du serveur (l'alerte
    `ecart_dbh` reste émise s'il diffère de 10 cm **et** de 50 %) ; vider le
    diamètre dans Groma revient à l'estimation de la vidéo. Pour passer ce
@@ -449,17 +449,17 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    QField n'est écrasé**.
 6. **Arbre oublié par la vidéo** (mission 023, schéma 1.5.0) : dans
    **Placette**, « Ajouter un arbre ». Le centre de la placette doit avoir été
-   **mesuré** (sinon le bouton « Saisir le diamètre au ruban » est grisé).
+   **mesuré** (sinon le bouton « Saisir le diamètre au compas » est grisé).
    Saisir l'**azimut** depuis le centre (dans l'unité de la placette, degrés
    ou grades ; boussole de visée tapée, ou boussole du téléphone comme pour
    les cibles) et la **distance horizontale** en mètres : l'emplacement
    s'affiche en **cercle pointillé** sur le plan. « Saisir le diamètre au
-   ruban » ouvre la fiche (mission 025 : le clavier des champs azimut et distance est
+   compas » ouvre la fiche (mission 025 : le clavier des champs azimut et distance est
    fermé à l'ouverture, car il masquait probablement l'essence ; la fiche
    s'ouvre en haut ; l'essai sur le S23 Ultra le confirmera) :
    l'**essence** est le premier champ
    (taper un code ou un nom, choisir dans la liste), puis le **diamètre au
-   ruban, obligatoire** (0 à 1000 cm), le statut et la qualité (facultatifs).
+   compas, obligatoire** (0 à 1000 cm), le statut et la qualité (facultatifs).
    « Créer l'arbre » écrit l'arbre puis **ouvre aussitôt sa fiche complète**,
    la même que celle d'un arbre de la vidéo : **note**, **photos** (« Prendre
    une photo »), arbre suivant. *Choix : on crée d'abord l'arbre (le numéro
@@ -475,7 +475,7 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
    ajouté à la main ; un arbre de la vidéo ne se supprime jamais (le diamètre
    d'un arbre ajouté ne peut pas être vidé non plus). Au calcul définitif,
    un arbre ajouté apparié à une détection (tolérance 0,5 m) garde son
-   ruban et ses saisies ; non apparié, il est **conservé**, `a_verifier`,
+   compas et ses saisies ; non apparié, il est **conservé**, `a_verifier`,
    numéro `V<n>`, et listé dans les arbres non retrouvés. *Projets déjà
    générés :* la valeur `terrain` est une simple valeur de domaine, il n'y a
    rien à migrer (la colonne `dbh_source` est ajoutée comme pour la
@@ -486,7 +486,7 @@ tuiles OSM). Vérifier en mode avion que le fond s'affiche.
 ## Envoi des saisies de terrain au serveur (sans QField)
 
 QField est **facultatif** : tout ce qui est saisi dans Groma (centre mesuré,
-cibles, essence, diamètre au ruban, statut, qualité) part au serveur dans
+cibles, essence, diamètre au compas, statut, qualité) part au serveur dans
 une archive de terrain, `<plot_id>.terrain.zip`, que nemetonshiny peut
 intégrer sans passer par la copie de QField (brief
 `briefs/vers-nemeton/2026-11-11-terrain-sans-qfield.md`). Le plugin et
@@ -545,7 +545,7 @@ Groma n'écrit que dans quatre couches de **sa** copie du GeoPackage, en
 transaction SQLite courte (`BEGIN IMMEDIATE`, attente de verrou de 5 s) :
 `detections`, `centres_mesures` pour un centre mesuré sur sa carte, `cibles`
 et, pour les seuls attributs saisis après la capture (essence, diamètre au
-ruban, statut, qualité), `arbres` (`GeoPackage.modifierArbre`, par `uuid`,
+compas, statut, qualité), `arbres` (`GeoPackage.modifierArbre`, par `uuid`,
 seules les colonnes saisies ; une valeur vide n'efface que son attribut ;
 colonne `dbh_source` ajoutée, et déclencheurs recréés à l'identique de
 `declencheurs.sql`, dans un projet préparé avant le schéma 1.4.0). Un centre n'est jamais
@@ -558,7 +558,7 @@ GeoPackage (`core/src/groma/donnees/declencheurs.sql`) créent la ligne
 `arbres` d'une détection nouvelle et ne mettent à jour que les colonnes de
 mesure d'un arbre encore provisoire. Les attributs saisis (essence,
 statut, qualité, notes, photos) ne sont jamais écrits par les déclencheurs.
-Une hauteur mesurée (`h_source = mesuree`) et un diamètre au ruban
+Une hauteur mesurée (`h_source = mesuree`) et un diamètre au compas
 (`dbh_source = mesure`) sont conservés. Un faux positif n'est jamais promu. Testé en Python
 (`core/tests/test_gpkg.py`) et en Kotlin (`GeoPackageTest`, sur le GeoPackage
 produit par GDAL).
@@ -603,7 +603,7 @@ transport entre les deux bacs à sable. Options, par ordre de préférence :
      reproduite ligne à ligne dans le plugin) : essence et qualité seulement
      si vides dans QField ; statut seulement si vide ou `vivant` dans QField ;
      diamètre et `dbh_source` ensemble, seulement si Groma a un diamètre au
-     ruban et QField une source vide ou `estime`, et jamais dans un projet
+     compas et QField une source vide ou `estime`, et jamais dans un projet
      QField antérieur à 1.4.0 (sans colonne `dbh_source` : un diamètre tapé
      dans QField y reste) (le `dbh_cm` de QField n'est
      jamais vide : il porte l'estimation de la vidéo) ; une édition validée

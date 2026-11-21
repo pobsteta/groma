@@ -33,7 +33,7 @@
    recouvrement, et la comparaison des reconstructions.
 
 La reconstruction retenue est celle qui retrouve le mieux les trois arbres
-cibles (écart au ruban), puis, à égalité, classique > IA > embarqué.
+cibles (écart au compas), puis, à égalité, classique > IA > embarqué.
 
 ## Sortie
 

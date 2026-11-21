@@ -2,7 +2,7 @@
 
 Comparaison des diamètres, positions et hauteurs de chaque méthode
 (embarquée, classique, IA, houppiers) aux mesures manuelles d'une placette
-test (ruban, boussole de visée, décamètre). Objectifs du brief : ≥ 95 %
+test (compas forestier, boussole de visée, décamètre). Objectifs du brief : ≥ 95 %
 des arbres détectés, RMSE du diamètre ≤ 2 cm, erreur de position ≤ 0,5 m.
 
 **État** : script prêt, en attente d'une vraie placette. Les chiffres

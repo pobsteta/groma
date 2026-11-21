@@ -39,7 +39,7 @@ th{{background:#f2f2f2}}.verdict{{color:{couleur};font-weight:700}}
 <p>{r['nombre_arbres']} arbres · reconstruction retenue : {html.escape(r['reconstruction_retenue'])} ({html.escape(r['methode'])}) · traitement {r['duree_traitement_s']} s</p>
 <h2>Alertes</h2><ul>{alertes}</ul>
 <h2>Arbres cibles</h2>
-<table><tr><th>Cible</th><th>N°</th><th>Diamètre ruban (cm)</th><th>Diamètre estimé (cm)</th><th>Écart (cm)</th></tr>{cibles}</table>
+<table><tr><th>Cible</th><th>N°</th><th>Diamètre au compas (cm)</th><th>Diamètre estimé (cm)</th><th>Écart (cm)</th></tr>{cibles}</table>
 <h2>Géoréférencement</h2>
 <p>Rotation {g['rotation_deg']}° · échelle {g['echelle']} ({'appliquée' if g['echelle_appliquee'] else 'non appliquée'}) · résidu d'orientation {g['rmse_azimut_deg']}°</p>
 <table><tr><th>Cible</th><th>Résidu azimut (°)</th><th>Résidu distance (m)</th><th>Résidu position (m)</th></tr>{residus}</table>

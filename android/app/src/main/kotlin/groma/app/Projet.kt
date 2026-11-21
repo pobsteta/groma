@@ -150,7 +150,7 @@ class Projet(val dossier: File) {
      * on a refused value (no measured centre, missing diameter...).
      */
     fun ajouterArbre(plotId: String, azimut: Double, distanceM: Double, saisie: Map<String, String?>): String {
-        val dbh = SaisieArbre.diametre(saisie["dbh_cm"]) ?: throw IllegalArgumentException("Le diamètre au ruban est obligatoire.")
+        val dbh = SaisieArbre.diametre(saisie["dbh_cm"]) ?: throw IllegalArgumentException("Le diamètre au compas est obligatoire.")
         return ouvrir().use {
             GeoPackage.ajouterArbre(SqliteAndroid(it), plotId, azimut, distanceM, dbh, saisie["essence_arbre"], saisie["statut"], saisie["qualite"])
         }
