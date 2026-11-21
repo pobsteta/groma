@@ -101,3 +101,32 @@ _Rempli par Pascal seul._
 
 Sur P067, Pascal fait défiler les images et voit, sur chaque tronc reconnu, son numéro et son
 diamètre ; il repère d'un coup d'œil les arbres manqués et les fausses détections.
+
+## Aller-retour 1/3 (2026-11-21)
+
+**Relecteur :** prêt pour Pascal (398 tests verts, lecture seule et hors fil principal vérifiés,
+poses en lignes confirmées : la fiche se trompait en disant « en colonnes »).
+
+**Décisions de Pascal (2026-11-21) :**
+
+1. **Arbres dessinés** : la table `arbres` (comme le plan), **mais** les arbres ajoutés à la main
+   (`methode = 'terrain'`) dessinés autrement (trait pointillé, provisoire), et une case
+   **« Montrer les faux positifs écartés »** (décochée par défaut) qui ajoute, dans un style
+   distinct (gris, barré ou équivalent), les détections marquées faux positifs.
+2. **Cibles et centre** : ceux du **projet** (dernières cibles mesurées de la placette, dernier C0
+   de `centres_mesures`), qui placent aussi les arbres ; le manifeste du paquet **seulement** si le
+   projet n'a pas de cibles pour la placette (le dire dans un message discret).
+
+**Remarques non bloquantes du relecteur, à traiter :**
+
+3. `PlacementPaquet.calculer` recopie la chaîne de `CalculEmbarque` (3 vues, seuil 3°) : renvoi
+   croisé en commentaire dans les deux, ou fonction commune si c'est simple et sans changer le
+   résultat de `CalculEmbarque`.
+4. `MainActivity` : ne plus lister le dossier des paquets pendant la composition (le faire hors fil
+   principal) et ne plus modifier un état pendant la composition.
+5. Remplacer la sentinelle `"SOL"` de `ArbresSurImages.message` par un type explicite ; retirer la
+   ressource `images_retour` inutilisée.
+6. Compléter la rubrique « Redite par l'agent ».
+
+Ne pas installer sur le téléphone : l'essai au S23 (version `fumee`, accordé par Pascal) est fait par
+l'orchestrateur après la relecture.
