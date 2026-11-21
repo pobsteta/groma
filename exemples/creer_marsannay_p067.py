@@ -247,13 +247,22 @@ def segmenter_houppiers(
 
 # ---- CVAT ----------------------------------------------------------------------
 
+# Nodata of the 8-bit CVAT written by foretaccess for nemetonshiny (relief 0 to 254).
+NODATA_CVAT_FORETACCESS = 255.0
+
 
 def decouper_cvat(source: Path, emprise, destination: Path) -> Path:
     """Clip the CVAT relief to ``emprise`` (``rasters.cvat``): pixels whose centre is
     outside the extent set to nodata (0), source grid kept (no resampling).
 
-    The source must already follow ``rasters.cvat``: Byte, EPSG:2154, nodata 0,
-    pixel of ``resolution_m``; otherwise ``ValueError`` (never silently converted).
+    The source is Byte, EPSG:2154, pixel of ``resolution_m``, with one of two codings:
+
+    * ``rasters.cvat``: nodata 0, relief 1 to 255 (kept as is);
+    * foretaccess (``*_CVAT_8bit_foretaccess.tif`` written by nemetonshiny):
+      nodata 255, relief 0 to 254, i.e. ``round(v * 254)``; recoded to
+      ``rasters.cvat`` as value + 1, nodata 0, which is ``1 + round(v * 254)``.
+
+    Anything else raises ``ValueError`` (never silently converted).
     """
     import rasterio
     import shapely
@@ -272,8 +281,11 @@ def decouper_cvat(source: Path, emprise, destination: Path) -> Path:
             raise ValueError(f"{source} : EPSG:2154 attendu, {src.crs} trouvé.")
         if not (math.isclose(t.a, res) and math.isclose(-t.e, res) and t.b == 0 and t.d == 0):
             raise ValueError(f"{source} : pixel de {t.a} × {-t.e} m, {res} m attendu (rasters.cvat).")
-        if src.nodata is None or src.nodata != NODATA_CVAT:
-            raise ValueError(f"{source} : nodata {src.nodata}, {NODATA_CVAT:g} attendu (rasters.cvat).")
+        if src.nodata is None or src.nodata not in (NODATA_CVAT, NODATA_CVAT_FORETACCESS):
+            raise ValueError(
+                f"{source} : nodata {src.nodata}, {NODATA_CVAT:g} (rasters.cvat) "
+                f"ou {NODATA_CVAT_FORETACCESS:g} (foretaccess) attendu.")
+        foretaccess = src.nodata == NODATA_CVAT_FORETACCESS
         xmin, ymin, xmax, ymax = emprise.bounds
         c0 = max(0, int(math.floor((xmin - t.c) / res)))
         c1 = min(src.width, int(math.ceil((xmax - t.c) / res)))
@@ -282,6 +294,10 @@ def decouper_cvat(source: Path, emprise, destination: Path) -> Path:
         if c1 <= c0 or l1 <= l0:
             raise ValueError(f"{source} : ne recouvre pas l'emprise de la forêt.")
         octets = src.read(1, window=Window(c0, l0, c1 - c0, l1 - l0))
+    if foretaccess:
+        # 0..254 -> 1..255, nodata 255 -> 0 (rasters.cvat).
+        octets = np.where(octets == int(NODATA_CVAT_FORETACCESS), int(NODATA_CVAT),
+                          octets.astype("uint16") + 1).astype("uint8")
     x0, y0 = t.c + c0 * res, t.f - l0 * res
     gx, gy = grille(x0, y0, res, octets.shape[1], octets.shape[0])
     octets = np.where(shapely.contains_xy(emprise, gx, gy), octets, int(NODATA_CVAT)).astype("uint8")
@@ -397,6 +413,27 @@ def polygone_au_centre(gpkg: Path, couche: str, centre, carre):
 
 # ---- main ------------------------------------------------------------------------
 
+# GeoPackage timestamp (ISO 8601 UTC, GeoPackage format) of the example, fixed.
+HORODATAGE_GPKG = "2026-11-21T12:00:00.000Z"
+
+
+def figer_horodatage(gpkg: Path, horodatage: str = HORODATAGE_GPKG) -> None:
+    """Set ``gpkg_contents.last_change`` (stamped by GDAL at write time) to a fixed
+    value and rewrite the file with ``VACUUM INTO``: a fresh file whose header
+    change counter no longer depends on how many transactions GDAL made, so that
+    two runs give the same bytes. Only the example being written is touched."""
+    with sqlite3.connect(gpkg) as cx:
+        cx.execute("UPDATE gpkg_contents SET last_change = ?", (horodatage,))
+    cx.close()
+    neuf = gpkg.with_suffix(".neuf.gpkg")
+    neuf.unlink(missing_ok=True)
+    cx = sqlite3.connect(gpkg)
+    try:
+        cx.execute("VACUUM INTO ?", (str(neuf),))
+    finally:
+        cx.close()
+    neuf.replace(gpkg)
+
 
 def construire(mnt: Path, mnh: Path, gpkg: Path, paquet: Path, sortie: Path = SORTIE,
                cvat: Path | None = None, pas_images: int = PAS_IMAGES) -> Path:
@@ -511,6 +548,7 @@ def construire(mnt: Path, mnh: Path, gpkg: Path, paquet: Path, sortie: Path = SO
             "prepare_par": "exemples/creer_marsannay_p067.py",
         },
     )
+    figer_horodatage(sortie / "inventaire_video.gpkg")
 
     alleger_paquet(paquet, sortie / "paquets" / f"{PLOT_ID}.groma.zip", pas_images)
     log.info("Exemple écrit dans %s : %d houppiers, emprise %s", sortie, len(houppiers), emprise.bounds)
@@ -523,7 +561,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     a.add_argument("--mnh", type=Path, default=MNH_DEFAUT, help=f"MNH LiDAR HD 1 m (défaut : {MNH_DEFAUT})")
     a.add_argument("--gpkg", type=Path, default=GPKG_DEFAUT, help=f"GeoPackage du projet réel (défaut : {GPKG_DEFAUT})")
     a.add_argument("--paquet", type=Path, default=PAQUET_DEFAUT, help=f"paquet de terrain (défaut : {PAQUET_DEFAUT})")
-    a.add_argument("--cvat", type=Path, default=None, help="relief CVAT de nemetonshiny (Byte, 2 m), facultatif")
+    a.add_argument("--cvat", type=Path, default=None, help="relief CVAT de nemetonshiny (Byte, 2 m ; nodata 0, ou 255 codage foretaccess), facultatif")
     a.add_argument("--sortie", type=Path, default=SORTIE, help=f"dossier écrit, parties générées remplacées, README gardé (défaut : {SORTIE})")
     a.add_argument("--pas-images", type=int, default=PAS_IMAGES, help="une image sur N gardée dans le paquet (N >= 10)")
     args = a.parse_args(argv)

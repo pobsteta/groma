@@ -123,7 +123,8 @@ def test_dalle_proche_du_mnt_a_1_m_aux_noeuds_communs():
     difference (bilinear smoothing). Measured on 2026-11-21: median 0.9 cm,
     95th percentile 4.0 cm, max 23 cm on a slope break 90 m east of the C0 (3 % of
     the nodes above 5 cm); inside the plot, max 5.6 cm. The fiche asked < 5 cm at
-    every node: not met at slope breaks, raised to Pascal."""
+    every node, not met at slope breaks; the tolerance below was set by the
+    orchestrator (delegated decision recorded in pilotage/journal.md)."""
     dalle = lire_geotiff(EXEMPLE / "rasters" / "mnt_0849_6689.tif")
     mnt = lire_geotiff(EXEMPLE / "controle" / "mnt_1m.tif")
     gx, gy = mnt.centres()
@@ -170,6 +171,23 @@ def test_paquet_reduit_lisible_et_leger():
 def test_exemple_sous_six_mo():
     taille = sum(p.stat().st_size for p in EXEMPLE.rglob("*") if p.is_file())
     assert taille < 6_000_000
+
+
+def test_horodatage_du_gpkg_fige():
+    with _ro(GPKG) as cx:
+        dates = {r[0] for r in cx.execute("SELECT last_change FROM gpkg_contents")}
+    assert dates == {S.HORODATAGE_GPKG}  # same bytes at each generation
+
+
+def test_figer_horodatage(tmp_path):
+    g = tmp_path / "t.gpkg"
+    with sqlite3.connect(g) as cx:
+        cx.execute("CREATE TABLE gpkg_contents (table_name TEXT, last_change TEXT)")
+        cx.execute("INSERT INTO gpkg_contents VALUES ('a', '2030-01-01T00:00:00.000Z')")
+    cx.close()
+    S.figer_horodatage(g)
+    with _ro(g) as cx:
+        assert cx.execute("SELECT last_change FROM gpkg_contents").fetchall() == [(S.HORODATAGE_GPKG,)]
 
 
 def test_projet_distinct_du_projet_reel():
@@ -259,7 +277,26 @@ def test_cvat_decoupe_sur_l_emprise(tmp_path):
     assert t.c <= 849_590 and t.c + 2 * o.shape[1] >= 849_710
 
 
-@pytest.mark.parametrize("dtype,res,nodata", [("float32", 2.0, 0), ("uint8", 1.0, 0), ("uint8", 2.0, 255)])
+def test_cvat_foretaccess_recode(tmp_path):
+    """--cvat with the foretaccess coding (0..254, nodata 255): recoded to 1..255, nodata 0."""
+    x0, y0 = 849_500.0, 6_689_400.0
+    v = (np.arange(150 * 150).reshape(150, 150) % 255).astype("uint8")  # 0..254
+    v[0, :] = 255  # a row without data
+    src = _tif(tmp_path / "dtm_CVAT_8bit_foretaccess.tif", v, x0, y0, 2.0, "uint8", 255)
+    emprise = box(x0, y0 - 300, x0 + 300, y0)  # whole source
+    (tmp_path / "projet" / "rasters").mkdir(parents=True)
+    dest = S.decouper_cvat(src, emprise, tmp_path / "projet" / "rasters" / "cvat.tif")
+    assert verifier_projet(tmp_path / "projet") == []
+    with rasterio.open(dest) as d:
+        o = d.read(1)
+        assert d.nodata == 0 and o.shape == v.shape
+    assert (o[0, :] == 0).all()
+    np.testing.assert_array_equal(o[1:], v[1:].astype(int) + 1)
+    assert o[1:].min() == 1 and o.max() == 255
+
+
+@pytest.mark.parametrize("dtype,res,nodata", [("float32", 2.0, 0), ("uint8", 1.0, 0), ("uint8", 2.0, 128),
+                                              ("float32", 2.0, 255)])
 def test_cvat_hors_format_refuse(tmp_path, dtype, res, nodata):
     src = _tif(tmp_path / "c.tif", np.ones((50, 50)), 849_600.0, 6_689_300.0, res, dtype, nodata)
     with pytest.raises(ValueError):

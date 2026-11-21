@@ -19,7 +19,7 @@ Coordonnées en Lambert-93 (EPSG:2154), x = est, y = nord, en mètres.
 | MNH LiDAR HD 1 m | `…/lidar_mnh/chm.tif` | idem |
 | Projet réel | `~/groma-sauvegardes/2026-11-20_P067-film/projets/20261015_194200_yzoh/inventaire_video.gpkg` | copie du téléphone du 2026-11-20 |
 | Paquet de terrain | `~/groma-sauvegardes/2026-11-20_P067-film/P067.groma.zip` | 2026-11-20, 15 h 23 (UTC) |
-| Relief CVAT | `--cvat` (nemetonshiny), **pas encore fourni** | à venir |
+| Relief CVAT | `…/cache/accessibility/emprise_250m/mnt_highres_1m_CVAT_8bit_foretaccess.tif` (`--cvat`) | nemetonshiny (`build_cvat_precomputed`), 2026-11-21 |
 
 GeoPackage ouvert en `mode=ro`, rasters et paquet en lecture ; le script refuse un dossier de
 sortie qui contiendrait une source.
@@ -76,14 +76,18 @@ la parcelle réelles sur le carré.
 
 ## Relief CVAT
 
-Absent tant que Pascal ne l'a pas calculé dans nemetonshiny. Ensuite :
+Calculé le 2026-11-21 par nemetonshiny (`build_cvat_precomputed`, foretaccess, MNT LiDAR HD
+réacquis, 2 m, parcelles du projet, zone tampon ramenée à 188 m) et passé tel quel :
 
 ```bash
-python exemples/creer_marsannay_p067.py --cvat chemin/vers/cvat.tif
+python exemples/creer_marsannay_p067.py \
+  --cvat ~/.local/share/nemeton/projects/20261015_194200_yzoh/cache/accessibility/emprise_250m/mnt_highres_1m_CVAT_8bit_foretaccess.tif
 ```
 
-Le CVAT doit déjà suivre `rasters.cvat` (Byte, 2 m, EPSG:2154, nodata 0) ; il est découpé sur
-l'emprise, sans rééchantillonnage, pixels hors emprise à 0.
+Deux codages sont acceptés (Byte, 2 m, EPSG:2154) : celui de `rasters.cvat` (nodata 0, relief 1
+à 255), gardé tel quel, et celui de foretaccess (nodata 255, relief 0 à 254), recodé en valeur + 1,
+nodata 0, soit `1 + round(v * 254)`. Tout autre format est refusé. Le CVAT est découpé sur
+l'emprise, sans rééchantillonnage, pixels hors emprise à 0 ; `rasters/cvat.tif` fait 8 Ko.
 
 ## Reconstruire
 
