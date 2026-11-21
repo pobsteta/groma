@@ -5,11 +5,18 @@ package groma.core
  * Tallest crown when crowns overlap, nothing outside every crown (no nearest
  * fallback), heights outside 1-70 m ignored, measured heights never overwritten.
  */
-data class Houppier(val houppierId: Int, val anneau: List<Pair<Double, Double>>, val hMax: Double?) {
+data class Houppier(
+    val houppierId: Int, val anneau: List<Pair<Double, Double>>, val hMax: Double?,
+    /** Localised top (Lambert-93), schema 1.7.0 only; null for a project prepared before. */
+    val sommet: Pair<Double, Double>? = null,
+) {
     private val xmin = anneau.minOf { it.first }
     private val xmax = anneau.maxOf { it.first }
     private val ymin = anneau.minOf { it.second }
     private val ymax = anneau.maxOf { it.second }
+
+    /** True when the bounding box of the ring touches [e] (edges included). */
+    fun touche(e: Emprise): Boolean = xmax >= e.xmin && xmin <= e.xmax && ymax >= e.ymin && ymin <= e.ymax
 
     /** Inside or on the boundary (same as shapely `covers`). */
     fun couvre(x: Double, y: Double): Boolean {
@@ -55,6 +62,36 @@ object Houppiers {
         return corps.split(",").map { p ->
             val (a, b) = p.trim().split(Regex("\\s+")).map(String::toDouble)
             Pair(a, b)
+        }
+    }
+
+    /**
+     * Crowns that touch [emprise] (mission 042), for the plan. Schema 1.7.0 (`x_sommet`/`y_sommet`
+     * present): the B-tree index is used with BETWEEN on the top, the box widened by [margeSommetM]
+     * so a crown whose top lies just outside is not lost; crowns of every plot, `plot_id` NULL
+     * included (a plot moved by the C0 survey). Schema 1.6.0: no top, the crowns are filtered by
+     * the box of their ring. In both cases only crowns whose ring touches [emprise] are returned.
+     */
+    fun dansEmprise(db: BaseSqlite, emprise: Emprise, margeSommetM: Double = 0.0): List<Houppier> {
+        val colonnes = db.requete("PRAGMA table_info(houppiers)").mapNotNull { it["name"] as? String }.toSet()
+        val avecSommet = "x_sommet" in colonnes && "y_sommet" in colonnes
+        val lignes = if (avecSommet) {
+            db.requete(
+                "SELECT houppier_id, h_max, x_sommet, y_sommet, geom FROM houppiers WHERE x_sommet BETWEEN ? AND ? AND y_sommet BETWEEN ? AND ?",
+                listOf(emprise.xmin - margeSommetM, emprise.xmax + margeSommetM, emprise.ymin - margeSommetM, emprise.ymax + margeSommetM),
+            )
+        } else db.requete("SELECT houppier_id, h_max, geom FROM houppiers")
+        return lignes.mapNotNull { l ->
+            val xs = (l["x_sommet"] as? Number)?.toDouble()
+            val ys = (l["y_sommet"] as? Number)?.toDouble()
+            // An empty or malformed ring drops that crown only, never the whole layer.
+            val h = runCatching {
+                Houppier(
+                    (l["houppier_id"] as Number).toInt(), GeoPackage.decoderAnneau(l["geom"] as ByteArray),
+                    (l["h_max"] as? Number)?.toDouble(), if (xs != null && ys != null) Pair(xs, ys) else null,
+                )
+            }.getOrNull()
+            h?.takeIf { it.touche(emprise) }
         }
     }
 }

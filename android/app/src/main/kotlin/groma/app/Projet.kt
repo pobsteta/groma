@@ -1,6 +1,7 @@
 package groma.app
 
 import android.database.sqlite.SQLiteDatabase
+import android.util.Log
 import groma.core.ArbrePlacette
 import groma.core.Azimut
 import groma.core.CentreMesure
@@ -17,7 +18,11 @@ import groma.core.GeoPackage
 import groma.core.GeoTiff
 import groma.core.Grille
 import groma.core.OrientationPlacette
+import groma.core.CouchesPlan
+import groma.core.Emprise
+import groma.core.GeoTiffOctets
 import groma.core.Houppier
+import groma.core.Houppiers
 import groma.core.InfosProjet
 import groma.core.ParametresPlacette
 import groma.core.PhotosArbre
@@ -173,11 +178,35 @@ class Projet(val dossier: File) {
         }
     }
 
+    /**
+     * Layers of the plan (mission 042) around [centre]: the part of `rasters/cvat.tif` inside [demiM] and
+     * the crowns that touch the same box (every plot, `plot_id` NULL included). Read-only; a layer is
+     * empty when its data is absent (a project prepared before schema 1.7.0 has no cvat.tif, no tops).
+     */
+    fun couchesPlan(centre: Pair<Double, Double>, demiM: Double): CouchesPlan {
+        val emprise = Emprise.autour(centre, demiM.coerceAtMost(DEMI_FENETRE_MAX_M))
+        val relief = runCatching {
+            File(dossier, "rasters/cvat.tif").takeIf { it.exists() }?.let { GeoTiffOctets.fenetre(it, emprise) }
+        }.onFailure { Log.w("groma", "Relief CVAT illisible", it) }.getOrNull()
+        val houppiers = runCatching {
+            SQLiteDatabase.openDatabase(gpkg.path, null, SQLiteDatabase.OPEN_READONLY).use {
+                Houppiers.dansEmprise(SqliteAndroid(it), emprise, MARGE_SOMMET_M)
+            }
+        }.onFailure { Log.w("groma", "Houppiers illisibles", it) }.getOrDefault(emptyList())
+        return CouchesPlan(relief, houppiers)
+    }
+
     fun mnt(plotId: String): Grille? = raster("${plotId}_mnt.tif")
     fun mnh(plotId: String): Grille? = raster("${plotId}_mnh.tif")
 
     private fun raster(nom: String): Grille? = File(dossier, "rasters/$nom").takeIf { it.exists() }?.let { GeoTiff.lire(it.readBytes()) }
 }
+
+/** Half-side cap of the window read for the plan: a tree misplaced by km must not make millions of pixels be read. */
+const val DEMI_FENETRE_MAX_M = 500.0
+
+/** Widening of the box on the crown tops: a crown whose top is just outside the plan can still reach into it. */
+private const val MARGE_SOMMET_M = 15.0
 
 /** Centre used by the cibles view; [mesure] false when only the planned point is known. */
 data class CentreCibles(val x: Double, val y: Double, val mesure: Boolean, val qualite: String? = null, val precisionM: Double? = null, val reception: String? = null, val dateMesure: String? = null,

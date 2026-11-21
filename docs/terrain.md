@@ -210,6 +210,19 @@ repris : un sous-dossier est ignoré. Côté serveur, la limite d'un projet est
 `GROMA_TAILLE_MAX_PROJET` (500 Mio par défaut) ; un `.qgz` de 50 Mio de dalles
 passe (test). Taille réelle du premier projet 1.7.0 : à noter ici à sa livraison.
 
+### Relief, houppiers et sommets sur le plan de la placette
+
+Sous le plan de la vue Placette (cibles et « Ajouter un arbre »), trois
+cases : **Relief** (le `cvat.tif` en gris, à moitié transparent), **Houppiers**
+(contours verts des houppiers LiDAR, y compris ceux des placettes voisines) et
+**Sommets** (un point vert par houppier). Elles sont cochées au départ quand la
+donnée existe et absentes sinon : un projet 1.6.0 (Marsannay) montre les
+contours seulement, sans relief ni sommets. L'état des cases est gardé jusqu'à
+la fermeture de Groma. Le plan se dessine tout de suite ; les couches arrivent
+une seconde après. Lecture seule : rien n'est écrit dans le GeoPackage.
+Usage : en ajoutant un arbre oublié, voir dans quel houppier il tombe et quel
+sommet est le plus proche.
+
 ### Mettre à jour un projet
 
 Quand le plan change dans nemetonshiny (placettes ajoutées, rayon corrigé)

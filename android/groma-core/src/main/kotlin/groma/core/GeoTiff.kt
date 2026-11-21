@@ -90,7 +90,7 @@ object GeoTiff {
         return Grille(largeur, hauteur, x0, y0, echelle[0], valeurs)
     }
 
-    private fun inflate(bloc: ByteArray): ByteArray {
+    internal fun inflate(bloc: ByteArray): ByteArray {
         val inf = Inflater()
         inf.setInput(bloc)
         val sortie = java.io.ByteArrayOutputStream(bloc.size * 4)
