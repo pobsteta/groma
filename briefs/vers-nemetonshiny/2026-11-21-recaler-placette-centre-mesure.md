@@ -7,6 +7,14 @@
   vidéo ».
 * **Type de changement** : `feat:`.
 * **Décision** : Pascal, 2026-11-21 : « c'est le terrain qui fait foi ».
+* **État** : le recalage de P067 (§ 2, points 1 et 2) a été **fait le
+  2026-11-21 par Groma**, avec l'autorisation de Pascal, directement dans
+  `data/samples.gpkg` (seule la géométrie de P067 a changé ; index R*Tree
+  mis à jour par GDAL ; intégrité vérifiée). Copie d'avant :
+  `~/groma-sauvegardes/2026-11-21_samples-avant-recalage-P067/` (avec un
+  `LISEZMOI.md`). Restent pour nemetonshiny : vérifier que l'application
+  relit le plan modifié (elle tournait pendant la modification ; une copie
+  en mémoire ne doit pas réécrire l'ancien point), puis les points 3 et 4.
 
 ## 1. Besoin
 
@@ -35,8 +43,10 @@ le **plus récent** qui compte.
    `visit_order` 67, `stratum`, `strat_*`, `wgt`, `ip`) sont **inchangés** ;
    le parcours garde son ordre et passe désormais par le nouveau point.
 2. **Garder la trace** du point prévu d'origine et de la raison du
-   déplacement (« recalée sur le centre mesuré le 2026-11-20 »), à l'endroit
-   que nemetonshiny juge le plus adapté. Rien n'est perdu.
+   déplacement (« recalée sur le centre mesuré le 2026-11-20 »). Fait pour
+   P067 par la copie de sauvegarde et son `LISEZMOI.md`, sans toucher au
+   schéma de `plots` ; pour l'action générale (point 3), à l'endroit que
+   nemetonshiny juge le plus adapté. Rien n'est perdu.
 3. **De façon générale** (souhaitable, pas indispensable pour P067) : une
    action « Recaler sur le centre mesuré » par placette, qui lit le dernier
    centre de `centres_mesures` dans les résultats récupérés du serveur Groma
