@@ -56,7 +56,7 @@ _Rempli par Pascal seul._
 
 ## Dépend de / rouge attendu jusqu'à
 
-- **Dépend de :** 037 et 038 fusionnées. Aucun fichier commun avec 039.
+- **Dépend de :** 037 et 038 fusionnées, puis 042 (lecture de `cvat.tif` et requête des houppiers à réutiliser, mêmes réglages). Aucun fichier commun avec 039.
 - **CI rouge attendue :** aucune.
 
 ## Tests
