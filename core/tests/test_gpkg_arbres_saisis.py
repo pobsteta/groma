@@ -1,4 +1,4 @@
-"""Mission 017: arbres saisis dans Groma, diamètre au ruban prioritaire (déclencheurs).
+"""Mission 017: arbres saisis dans Groma, diamètre au compas prioritaire (déclencheurs).
 
 Expected API (to be built by mission 018):
   * new column `arbres.dbh_source` (TEXT, domaine `dbh_source` = ["estime", "mesure"], défaut

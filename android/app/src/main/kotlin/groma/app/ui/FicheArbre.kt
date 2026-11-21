@@ -102,17 +102,17 @@ fun FicheArbre(
     ModalBottomSheet(onDismissRequest = { abandon[0]?.invoke(); onFermer() }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         // Each tree starts from its own state.
         androidx.compose.runtime.key(arbre.uuid) {
-            val rubanInitial = if (arbre.dbhMesure) arbre.dbhCm?.let(::nombreAffiche).orEmpty() else ""
+            val compasInitial = if (arbre.dbhMesure) arbre.dbhCm?.let(::nombreAffiche).orEmpty() else ""
             var recherche by rememberSaveable { mutableStateOf(arbre.essence?.let(Essences::affichage).orEmpty()) }
             var essence by rememberSaveable { mutableStateOf(arbre.essence.orEmpty()) }
-            var ruban by rememberSaveable { mutableStateOf(rubanInitial) }
+            var compas by rememberSaveable { mutableStateOf(compasInitial) }
             var statut by rememberSaveable { mutableStateOf(arbre.statut) }
             var qualite by rememberSaveable { mutableStateOf(arbre.qualite.orEmpty()) }
             var erreurEssence by remember { mutableStateOf<String?>(null) }
             var erreurGenerale by remember { mutableStateOf<String?>(null) }
             var enCours by remember { mutableStateOf(false) }
             var confirmerSuppression by remember { mutableStateOf(false) }
-            val rubanObligatoire = creation || arbre.ajoute
+            val compasObligatoire = creation || arbre.ajoute
             val avecTerrain = !creation && dossierProjet != null
             var note by rememberSaveable { mutableStateOf(arbre.notes.orEmpty()) }
             // Survives a re-creation (rotation, process death while the camera is open).
@@ -151,7 +151,7 @@ fun FicheArbre(
             }
 
             val propositions = if (recherche.isNotBlank() && Essences.resoudre(recherche, arbre.essence, essence) == null) Essences.rechercher(recherche, 6) else emptyList()
-            val erreurRuban = SaisieArbre.controler("dbh_cm", ruban) ?: if (rubanObligatoire && ruban.isBlank()) ctx.getString(R.string.fiche_ruban_obligatoire) else null
+            val erreurCompas = SaisieArbre.controler("dbh_cm", compas) ?: if (compasObligatoire && compas.isBlank()) ctx.getString(R.string.fiche_compas_obligatoire) else null
 
             fun resoudreEssence(): String? = Essences.resoudre(recherche, arbre.essence, essence)
 
@@ -159,10 +159,10 @@ fun FicheArbre(
                 erreurGenerale = null
                 val code = resoudreEssence()
                 erreurEssence = if (code == null) ctx.getString(R.string.fiche_essence_a_choisir) else SaisieArbre.controler("essence_arbre", code)
-                if (code == null || erreurEssence != null || erreurRuban != null || (avecTerrain && erreurNote != null)) return
+                if (code == null || erreurEssence != null || erreurCompas != null || (avecTerrain && erreurNote != null)) return
                 val saisie = linkedMapOf<String, String?>()
                 if (creation || code != arbre.essence.orEmpty()) saisie["essence_arbre"] = code
-                if (creation || ruban.trim() != rubanInitial) saisie["dbh_cm"] = ruban.trim()
+                if (creation || compas.trim() != compasInitial) saisie["dbh_cm"] = compas.trim()
                 if (creation || statut != arbre.statut) saisie["statut"] = statut
                 if (creation || qualite != arbre.qualite.orEmpty()) saisie["qualite"] = qualite
                 if (avecTerrain) {
@@ -274,11 +274,11 @@ fun FicheArbre(
                 }
 
                 OutlinedTextField(
-                    value = ruban,
-                    onValueChange = { ruban = it },
-                    label = { Text(stringResource(R.string.fiche_ruban)) },
-                    supportingText = { Text(erreurRuban ?: stringResource(if (rubanObligatoire) R.string.fiche_ruban_obligatoire else R.string.fiche_ruban_aide)) },
-                    isError = erreurRuban != null,
+                    value = compas,
+                    onValueChange = { compas = it },
+                    label = { Text(stringResource(R.string.fiche_compas)) },
+                    supportingText = { Text(erreurCompas ?: stringResource(if (compasObligatoire) R.string.fiche_compas_obligatoire else R.string.fiche_compas_aide)) },
+                    isError = erreurCompas != null,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),

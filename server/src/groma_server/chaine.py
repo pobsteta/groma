@@ -271,7 +271,7 @@ def construire_rapport(paquet, geo, cibles, retenue, resultats, mnt, mnh, houppi
         if c["ecart_dbh_cm"] is None:
             alertes.append(f"Cible {c['id_cible']} : aucun tronc estimé sous la cible.")
         elif abs(c["ecart_dbh_cm"]) > 2.0:
-            alertes.append(f"Cible {c['id_cible']} : écart de diamètre {c['ecart_dbh_cm']:+.1f} cm avec le ruban.")
+            alertes.append(f"Cible {c['id_cible']} : écart de diamètre {c['ecart_dbh_cm']:+.1f} cm avec le compas.")
     if m.centre.qualite_gnss and m.centre.qualite_gnss != "fix":
         alertes.append(f"Centre GNSS en {m.centre.qualite_gnss} (pas de fix RTK) : positions absolues moins sûres.")
     if geo.rmse_azimut_deg > 2.0:

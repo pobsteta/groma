@@ -79,7 +79,7 @@ def apparie():
     return res, _par_uuid(res)
 
 
-def test_arbre_ajoute_apparie_garde_ruban_et_saisies(apparie):
+def test_arbre_ajoute_apparie_garde_compas_et_saisies(apparie):
     _, arbres = apparie
     t = arbres["t1"]
     assert (t["dbh_cm"], t["dbh_source"]) == (38.0, "mesure")
@@ -140,7 +140,7 @@ def test_arbre_ajoute_non_apparie_conserve_a_verifier():
     assert arbres["v1"]["tree_id"] == "1"
 
 
-def test_arbre_ajoute_non_apparie_conserve_meme_sans_aucune_saisie_autre_que_le_ruban():
+def test_arbre_ajoute_non_apparie_conserve_meme_sans_aucune_saisie_autre_que_le_compas():
     res = _executer([_ajoute("t1", "A1", P_AJOUTE2, 45.0)], [])
     t = _par_uuid(res)["t1"]
     assert t["etat_detection"] == "a_verifier" and t["dbh_cm"] == 45.0 and t["dbh_source"] == "mesure"

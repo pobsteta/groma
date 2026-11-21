@@ -222,7 +222,7 @@ object GeoPackage {
             assurerDbhSource(db)
             val terrain = db.requete("SELECT methode FROM arbres WHERE uuid = ?", listOf(uuid)).single()["methode"] == "terrain"
             if (terrain && saisie.containsKey("dbh_cm") && saisie["dbh_cm"]?.trim().isNullOrEmpty()) {
-                throw IllegalArgumentException("Le diamètre au ruban d'un arbre ajouté à la main est obligatoire : il ne peut pas être vidé.")
+                throw IllegalArgumentException("Le diamètre au compas d'un arbre ajouté à la main est obligatoire : il ne peut pas être vidé.")
             }
             val maj = LinkedHashMap<String, Any?>()
             for ((champ, brut) in saisie) {
@@ -280,7 +280,7 @@ object GeoPackage {
         essence: String? = null, statut: String? = null, qualite: String? = null,
     ): String {
         require(dbhCm.isFinite() && dbhCm >= 0.0 && dbhCm <= SaisieArbre.DBH_MAX_CM) {
-            "Le diamètre au ruban est obligatoire, entre 0 et ${SaisieArbre.DBH_MAX_CM.toInt()} cm."
+            "Le diamètre au compas est obligatoire, entre 0 et ${SaisieArbre.DBH_MAX_CM.toInt()} cm."
         }
         for ((champ, v) in listOf("essence_arbre" to essence, "statut" to statut, "qualite" to qualite)) {
             SaisieArbre.controler(champ, v)?.let { throw IllegalArgumentException(it) }

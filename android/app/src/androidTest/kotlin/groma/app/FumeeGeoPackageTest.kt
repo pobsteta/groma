@@ -79,7 +79,7 @@ class FumeeGeoPackageTest {
     }
 
     @Test
-    fun declencheursDetectionsVersArbres_rubanConserve() {
+    fun declencheursDetectionsVersArbres_compasConserve() {
         ouvrir().use { db ->
             // The tape diameter of a tree (dbh_source = mesure) survives a new detection; the other tree follows.
             GeoPackage.modifierArbre(db, arbre14, mapOf("dbh_cm" to "42,5"))

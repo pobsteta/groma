@@ -151,7 +151,7 @@ class AjouterArbreTest {
     }
 
     @Test
-    fun diametreAuRubanObligatoireEtBorne() = exemple { db ->
+    fun diametreAuCompasObligatoireEtBorne() = exemple { db ->
         for (mauvais in listOf(Double.NaN, -0.1, 1000.1, Double.POSITIVE_INFINITY)) {
             assertFailsWith<IllegalArgumentException>("dbh $mauvais") { GeoPackage.ajouterArbre(db, "P001", 90.0, 10.0, mauvais) }
         }
