@@ -31,8 +31,11 @@ from groma.mnt import Raster, lire_geotiff  # noqa: E402
 EXEMPLE = RACINE / "exemples" / "marsannay_p067"
 GPKG = EXEMPLE / "inventaire_video.gpkg"
 PAQUET = EXEMPLE / "paquets" / "P067.groma.zip"
-# Measured C0 of P067 on 2026-11-20 (phone GNSS), Lambert-93 (x, y) in metres.
-C0_X, C0_Y = 849_659.22, 6_689_237.97
+# Planned centre of P067 (plot of the real project), Lambert-93 (x, y) in metres: the
+# example C0. The field survey was moved there (decision of Pascal, 2026-11-21).
+C0_X, C0_Y = 849_508.41, 6_689_219.98
+# Measured C0 of P067 on 2026-11-20 (phone GNSS), 151.9 m east of the planned centre.
+MESURE_X, MESURE_Y = 849_659.22, 6_689_237.97
 RAYON_M = 15.0
 
 
@@ -58,7 +61,7 @@ def test_exemple_conforme_a_verifier_projet():
     assert verifier_projet(EXEMPLE) == []
 
 
-def test_p067_centree_sur_le_c0_mesure():
+def test_p067_et_c0_au_centre_prevu():
     with _ro(GPKG) as cx:
         (pl,) = cx.execute("SELECT geom FROM placettes WHERE plot_id = 'P067'").fetchall()
         (ce,) = cx.execute("SELECT geom FROM centres_mesures WHERE plot_id = 'P067'").fetchall()
@@ -70,19 +73,35 @@ def test_p067_centree_sur_le_c0_mesure():
     with zipfile.ZipFile(PAQUET) as z:
         m = json.loads(z.read("manifest.json"))
     assert (m["centre"]["x"], m["centre"]["y"]) == pytest.approx((x, y), abs=1e-6)
+    assert math.dist((x, y), (MESURE_X, MESURE_Y)) == pytest.approx(151.9, abs=0.1)
     assert rayon == RAYON_M
     assert gpd.read_file(GPKG, layer="placettes").crs.to_epsg() == 2154
 
 
 def test_cibles_du_paquet_placees_comme_par_le_telephone():
-    """C1 to C3 recomputed from the package; the phone wrote them (real project,
-    2026-11-20) at these Lambert-93 points: same place within 1 cm."""
+    """C1 to C3 recomputed from the package around the planned centre; the phone wrote
+    them (real project, 2026-11-20) at these Lambert-93 points around the measured C0:
+    same place, moved by (planned - measured), within 1 cm."""
     du_telephone = {"C1": (849_659.4395, 6_689_245.3689), "C2": (849_668.8514, 6_689_234.6049),
                     "C3": (849_651.8171, 6_689_233.6400)}
+    with _ro(GPKG) as cx:
+        (g,) = cx.execute("SELECT geom FROM placettes WHERE plot_id = 'P067'").fetchone()
+    px, py = decoder_point(g)
     c = gpd.read_file(GPKG, layer="cibles")
     assert sorted(c["id_cible"]) == ["C1", "C2", "C3"]
     for _, r in c.iterrows():
-        assert (r.geometry.x, r.geometry.y) == pytest.approx(du_telephone[r["id_cible"]], abs=0.01)
+        tx, ty = du_telephone[r["id_cible"]]
+        assert (r.geometry.x, r.geometry.y) == pytest.approx((tx + px - MESURE_X, ty + py - MESURE_Y), abs=0.01)
+
+
+def test_ugf_et_parcelle_du_centre_prevu():
+    """The planned centre lies in the forest: the real UGF and parcel holding it are kept,
+    clipped to the 100 m square."""
+    carre = box(C0_X - 50, C0_Y - 50, C0_X + 50, C0_Y + 50).buffer(0.01)
+    for couche in ("ugf", "parcelles"):
+        g = gpd.read_file(GPKG, layer=couche)
+        assert len(g) == 1
+        assert g.geometry.iloc[0].contains(Point(C0_X, C0_Y)) and carre.contains(g.geometry.iloc[0])
 
 
 def test_chaque_sommet_dans_son_houppier():
@@ -113,18 +132,20 @@ def test_dalle_egale_au_bilineaire_du_mnt_a_1_m():
     mnt = lire_geotiff(EXEMPLE / "controle" / "mnt_1m.tif")
     gx, gy = dalle.centres()
     f = np.isfinite(dalle.valeurs)
-    assert f.sum() > 150_000
+    assert f.sum() > 120_000  # clipped UGF (78 % of the 100 m square) + 50 m: 137 240 pixels
     assert np.abs(mnt.echantillonner(gx[f], gy[f]) - dalle.valeurs[f]).max() <= 1 / 256 + 1e-6
 
 
 def test_dalle_proche_du_mnt_a_1_m_aux_noeuds_communs():
     """Each 1 m DTM node (pixel centre) is the corner shared by four 0.5 m pixels;
     the tile read there differs from the LiDAR value by 1/8 of the local second
-    difference (bilinear smoothing). Measured on 2026-11-21: median 0.9 cm,
-    95th percentile 4.0 cm, max 23 cm on a slope break 90 m east of the C0 (3 % of
-    the nodes above 5 cm); inside the plot, max 5.6 cm. The fiche asked < 5 cm at
-    every node, not met at slope breaks; the tolerance below was set by the
-    orchestrator (delegated decision recorded in pilotage/journal.md)."""
+    difference (bilinear smoothing). Measured on 2026-11-21 around the planned
+    centre: median 1.0 cm, 95th percentile 4.6 cm, max 30.5 cm on a slope break 64 m
+    south-west of the centre (4 % of the nodes above 5 cm); inside the plot, 95th
+    percentile 5.0 cm, 99th 7.9 cm, max 10.8 cm. The fiche asked < 5 cm at every node, not met at slope breaks; the
+    tolerance below was set by the orchestrator (delegated decision recorded in
+    pilotage/journal.md; when the plot moved, max raised from 25 to 35 cm and the
+    99th percentile inside the plot from 5 to 10 cm)."""
     dalle = lire_geotiff(EXEMPLE / "rasters" / "mnt_0849_6689.tif")
     mnt = lire_geotiff(EXEMPLE / "controle" / "mnt_1m.tif")
     gx, gy = mnt.centres()
@@ -134,9 +155,9 @@ def test_dalle_proche_du_mnt_a_1_m_aux_noeuds_communs():
     e = np.abs(z - mnt.valeurs)[ok]
     assert np.median(e) < 0.01
     assert np.percentile(e, 95) < 0.05
-    assert e.max() < 0.25
+    assert e.max() < 0.35
     disque = ok & (np.hypot(gx - C0_X, gy - C0_Y) <= RAYON_M)
-    assert np.percentile(np.abs(z - mnt.valeurs)[disque], 99) < 0.05
+    assert np.percentile(np.abs(z - mnt.valeurs)[disque], 99) < 0.10
 
 
 def test_rasters_de_placette_autour_du_c0():
@@ -320,6 +341,9 @@ def test_paquet_allege_garde_tout_le_manifeste(tmp_path):
         lu = json.loads(z.read("manifest.json"))
         noms = set(z.namelist())
     assert lu == neuf and lu["projet_id"] == "exemple" and lu["centre"] == m["centre"]
+    autre = S.alleger_paquet(src, tmp_path / "out2" / "P067.groma.zip", pas=10, centre=(MESURE_X, MESURE_Y))
+    assert autre["centre"] == {"x": MESURE_X, "y": MESURE_Y}
+    assert [i["pose"] for i in autre["images"]] == [i["pose"] for i in images]
     assert lu["detections_cibles"] == m["detections_cibles"]
     assert [i["pose"] for i in lu["images"]] == [i["pose"] for i in images]
     assert [i["id"] for i in lu["images"] if i["image"]] == [0, 10, 20]
