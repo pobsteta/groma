@@ -8,7 +8,11 @@ identifiés dessinés par-dessus (numéro et diamètre), pour que Pascal voie su
 que Groma a reconnu comme arbre, où, et ce qu'il a manqué (demande de Pascal du 2026-11-21 ; ce
 n'est pas le film mp4).
 
-**Redite par l'agent :** _à compléter par l'agent avant d'agir._
+**Redite par l'agent :** ajouter sous « Filmer » un bouton « Voir les images » qui ouvre, en lecture seule, les
+images retenues du paquet de la placette (une à la fois, glisser ou curseur, « n / N »), avec les arbres du
+projet dessinés par-dessus (trait du pied à 1,30 m, « numéro · diamètre ») et les cibles C0 à C3 vues, pour que
+Pascal juge sur les vraies images ce que Groma a reconnu et manqué. Aller-retour 1 : arbres ajoutés à la main en
+pointillé, case des faux positifs écartés, cibles et centre du projet d'abord, et les remarques du relecteur.
 
 ## Les trois questions (règle de staffing)
 

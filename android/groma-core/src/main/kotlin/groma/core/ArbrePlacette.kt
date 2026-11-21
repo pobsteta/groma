@@ -22,6 +22,8 @@ data class ArbrePlacette(
     val notes: String? = null,
     /** Photo paths of `arbres.photos`, relative to the project folder, in order (mission 022). */
     val photos: List<String> = emptyList(),
+    /** True for a detection marked as false positive (only read on request, mission 045: images screen). */
+    val fauxPositif: Boolean = false,
 ) {
     companion object {
         /** Pastille radius bounds (dp) and the diameters they correspond to (Marculus: 7.5 to 80 cm). */
@@ -49,14 +51,19 @@ data class ArbrePlacette(
 
         /** Trees of [plotId] without the false positives, by number; rows with no uuid, number or position are left out. */
         fun lire(db: BaseSqlite, plotId: String): List<ArbrePlacette> =
-            lirePlacette(db, plotId)
+            lirePlacette(db, plotId, false)
 
-        private fun lirePlacette(db: BaseSqlite, plotId: String): List<ArbrePlacette> {
+        /** Same as [lire], the false positives kept and flagged ([ArbrePlacette.fauxPositif]) when [avecFauxPositifs]. */
+        fun lire(db: BaseSqlite, plotId: String, avecFauxPositifs: Boolean): List<ArbrePlacette> =
+            lirePlacette(db, plotId, avecFauxPositifs)
+
+        private fun lirePlacette(db: BaseSqlite, plotId: String, avecFauxPositifs: Boolean): List<ArbrePlacette> {
             val estimes = db.requete("SELECT uuid, dbh_cm FROM detections WHERE plot_id = ?", listOf(plotId))
                 .associate { it["uuid"] as? String to (it["dbh_cm"] as? Number)?.toDouble() }
             return GeoPackage.lirePoints(db, "arbres", plotId).mapNotNull { r ->
                 val uuid = r["uuid"] as? String ?: return@mapNotNull null
-                if (r["etat_detection"] == "faux_positif") return@mapNotNull null
+                val faux = r["etat_detection"] == "faux_positif"
+                if (faux && !avecFauxPositifs) return@mapNotNull null
                 val x = r["x"] as? Double ?: return@mapNotNull null
                 val y = r["y"] as? Double ?: return@mapNotNull null
                 val numero = (r["tree_id"] as? String)?.takeIf { it.isNotBlank() }
@@ -70,6 +77,7 @@ data class ArbrePlacette(
                     ajoute = r["methode"] == "terrain",
                     notes = (r["notes"] as? String)?.takeIf { it.isNotBlank() },
                     photos = PhotosArbre.lister(r["photos"] as? String),
+                    fauxPositif = faux,
                 )
             }.sortedWith(compareBy(ORDRE_NUMEROS) { it.numero })
         }

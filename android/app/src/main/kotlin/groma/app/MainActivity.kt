@@ -121,7 +121,9 @@ class MainActivity : AppCompatActivity() {
                     var carte by rememberSaveable { mutableStateOf(false) }
                     var ciblesPlot by rememberSaveable { mutableStateOf<String?>(null) }
                     // Mission 045: images of the plot's package with the trees drawn over them.
+                    // The package path is found off the main thread (EtatCibles) and kept with the plot.
                     var imagesPlot by rememberSaveable { mutableStateOf<String?>(null) }
+                    var imagesPaquet by rememberSaveable { mutableStateOf<String?>(null) }
                     // Leaving the project releases the RTK receiver (for QField, and the battery).
                     LaunchedEffect(cle) { if (cle == null) ServiceGnssRtk.arreter(this@MainActivity) }
                     val ouvert = remember(cle) { cle?.let(depot::projet) }
@@ -154,12 +156,10 @@ class MainActivity : AppCompatActivity() {
                                 onRetour = { projetsServeur = false },
                             )
                         }
-                        ouvert != null && imagesPlot != null -> {
+                        ouvert != null && imagesPlot != null && imagesPaquet != null -> {
                             val plot = imagesPlot!!
-                            BackHandler { imagesPlot = null }
-                            val paquet = remember(ouvert, plot) { paquetPlacette(ouvert, plot) }
-                            if (paquet == null) imagesPlot = null
-                            else EcranImages(plotId = plot, projet = ouvert, paquet = paquet, onRetour = { imagesPlot = null })
+                            BackHandler { imagesPlot = null; imagesPaquet = null }
+                            EcranImages(plotId = plot, projet = ouvert, paquet = File(imagesPaquet!!), onRetour = { imagesPlot = null; imagesPaquet = null })
                         }
                         ouvert != null && ciblesPlot != null -> {
                             val plot = ciblesPlot!!
@@ -214,7 +214,7 @@ class MainActivity : AppCompatActivity() {
                                     },
                                     onFilmer = { demanderPlacette(plot) },
                                     imagesDisponibles = e.paquet != null,
-                                    onVoirImages = { imagesPlot = plot },
+                                    onVoirImages = { e.paquet?.let { imagesPlot = plot; imagesPaquet = it.path } },
                                     onRejouer = if (FilmCapture.rejeuAutorise(packageName)) ({ plotRejeu = plot; choisirFilm.launch(arrayOf("video/mp4", "application/octet-stream")) }) else null,
                                     onRetour = { ciblesPlot = null },
                                     dossierProjet = ouvert.dossier,

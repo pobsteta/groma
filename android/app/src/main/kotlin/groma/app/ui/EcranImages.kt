@@ -7,6 +7,15 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.Checkbox
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -57,8 +66,18 @@ import java.io.File
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-/** Trees of the plot placed in the local frame of the capture, or the reason they are not. */
-private class ArbresSurImages(val arbres: List<ArbreLocal>, val message: String?)
+/** Why there is no tree (or a caveat) under the images; explicit, no magic string. */
+private sealed interface Avis {
+    data object Aucun : Avis
+    data object SansSol : Avis
+    class Texte(val texte: String) : Avis
+}
+
+/**
+ * Trees of the plot (false positives included, flagged) placed in the local frame of the capture, or the reason
+ * they are not; [note] is a discreet caveat (targets taken from the package).
+ */
+private class ArbresSurImages(val arbres: List<ArbreLocal>, val avis: Avis, val note: String? = null)
 
 /**
  * Mission 045: the kept images of a package, one at a time (swipe or slider), with the trees of the plot
@@ -81,17 +100,19 @@ fun EcranImages(plotId: String, projet: Projet, paquet: File, onRetour: () -> Un
         val m = manifeste?.getOrNull() ?: return@produceState
         value = withContext(Dispatchers.Default) {
             runCatching {
-                val place = PlacementPaquet.calculer(m)
-                val geo = place.georef ?: return@runCatching ArbresSurImages(emptyList(), place.message)
-                val liste = withContext(Dispatchers.IO) { projet.arbresEnLecture(plotId) }
+                // Project first (latest measured targets and centre), the manifest's own only without targets there.
+                val (liste, reference) = withContext(Dispatchers.IO) { projet.pourImages(plotId, avecFauxPositifs = true) }
+                val place = PlacementPaquet.calculer(m, reference)
+                val geo = place.georef ?: return@runCatching ArbresSurImages(emptyList(), place.message?.let { Avis.Texte(it) } ?: Avis.Aucun, place.note)
                 val locaux = liste.associate { a -> a.uuid to geo.versLocal(a.x, a.y) }
                 val sols = SolLocal.estimer(locaux, m.images) { im -> im.profondeur?.let { z.octets(it) } }
-                if (sols.isEmpty()) ArbresSurImages(emptyList(), "SOL")
-                else ArbresSurImages(SurimpressionImage.enLocal(liste, geo, sols), place.message)
-            }.getOrElse { ArbresSurImages(emptyList(), it.message) }
+                val avis = if (sols.isEmpty()) Avis.SansSol else place.message?.let { Avis.Texte(it) } ?: Avis.Aucun
+                ArbresSurImages(if (sols.isEmpty()) emptyList() else SurimpressionImage.enLocal(liste, geo, sols), avis, place.note)
+            }.getOrElse { ArbresSurImages(emptyList(), Avis.Texte(it.message ?: it.javaClass.simpleName)) }
         }
     }
     val couleurs = GroupeEssence.entries.associateWith { it.couleur() }
+    var fauxPositifs by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         contentWindowInsets = margesContenu(),
@@ -113,19 +134,19 @@ fun EcranImages(plotId: String, projet: Projet, paquet: File, onRetour: () -> Un
                 erreur != null -> Text(stringResource(R.string.images_illisible, erreur.message ?: erreur.javaClass.simpleName), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(16.dp))
                 m == null || z == null -> Text(stringResource(R.string.images_chargement), modifier = Modifier.padding(16.dp))
                 m.retenues.isEmpty() -> Text(stringResource(R.string.images_vide), modifier = Modifier.padding(16.dp))
-                else -> Images(m, z, arbres, couleurs, Modifier.weight(1f))
+                else -> Images(m, z, arbres, couleurs, fauxPositifs, { fauxPositifs = it }, Modifier.weight(1f))
             }
         }
     }
 }
 
 @Composable
-private fun Images(m: ManifestePaquet, zip: PaquetZip, arbres: ArbresSurImages?, couleurs: Map<GroupeEssence, Color>, modifier: Modifier) {
+private fun Images(m: ManifestePaquet, zip: PaquetZip, arbres: ArbresSurImages?, couleurs: Map<GroupeEssence, Color>, fauxPositifs: Boolean, onFauxPositifs: (Boolean) -> Unit, modifier: Modifier) {
     val retenues = m.retenues
     val pager = rememberPagerState { retenues.size }
     val scope = rememberCoroutineScope()
     val dp = LocalDensity.current.density
-    val blanc = Color.White; val noir = Color.Black
+    val blanc = Color.White; val noir = Color.Black; val gris = Color(0xFFB0B0B0)
     Column(modifier) {
         HorizontalPager(pager, Modifier.weight(1f).fillMaxWidth().background(noir)) { page ->
             val im = retenues[page]
@@ -134,7 +155,9 @@ private fun Images(m: ManifestePaquet, zip: PaquetZip, arbres: ArbresSurImages?,
                     runCatching { zip.octets(im.image!!)?.let { BitmapFactory.decodeByteArray(it, 0, it.size)?.asImageBitmap() } }.getOrNull()
                 }
             }
-            val surimpression = remember(im.id, arbres) { SurimpressionImage.calculer(im, m, arbres?.arbres.orEmpty()) }
+            val surimpression = remember(im.id, arbres, fauxPositifs) {
+                SurimpressionImage.calculer(im, m, arbres?.arbres.orEmpty().filter { fauxPositifs || !it.arbre.fauxPositif })
+            }
             val k = im.k!!
             Box(Modifier.fillMaxSize()) {
                 bitmap?.let { Image(it, null, Modifier.fillMaxSize(), contentScale = ContentScale.Fit) }
@@ -144,15 +167,42 @@ private fun Images(m: ManifestePaquet, zip: PaquetZip, arbres: ArbresSurImages?,
                     fun pt(u: Double, v: Double) = Offset(ox + u.toFloat() * e, oy + v.toFloat() * e)
                     val texte = Paint().apply { textSize = 14 * dp; isAntiAlias = true; typeface = Typeface.DEFAULT_BOLD; color = blanc.toArgb() }
                     val contour = Paint(texte).apply { style = Paint.Style.STROKE; strokeWidth = 3 * dp; color = noir.toArgb() }
-                    fun etiquette(s: String, o: Offset) = drawIntoCanvas {
+                    fun etiquette(s: String, o: Offset, couleur: Color = blanc, barre: Boolean = false) = drawIntoCanvas {
+                        texte.color = couleur.toArgb()
                         it.nativeCanvas.drawText(s, o.x, o.y, contour); it.nativeCanvas.drawText(s, o.x, o.y, texte)
+                        if (barre) {
+                            val l = texte.measureText(s); val y = o.y - 5 * dp
+                            it.nativeCanvas.drawLine(o.x, y, o.x + l, y, contour); it.nativeCanvas.drawLine(o.x, y, o.x + l, y, texte.apply { strokeWidth = 2 * dp })
+                        }
                     }
+                    val tirets = PathEffect.dashPathEffect(floatArrayOf(10 * dp, 7 * dp))
                     for (t in surimpression.arbres) {
-                        val c = couleurs.getValue(Essences.groupe(t.arbre.essence))
                         val pied = pt(t.piedU, t.piedV); val tete = pt(t.teteU, t.teteV)
-                        drawLine(noir, pied, tete, strokeWidth = 7 * dp)
-                        drawLine(c, pied, tete, strokeWidth = 4 * dp)
-                        etiquette(t.etiquette, Offset(tete.x + 6 * dp, tete.y - 4 * dp))
+                        val ou = Offset(tete.x + 6 * dp, tete.y - 4 * dp)
+                        when {
+                            // False positive set aside: grey, crossed out.
+                            t.arbre.fauxPositif -> {
+                                drawLine(noir, pied, tete, strokeWidth = 5 * dp)
+                                drawLine(gris, pied, tete, strokeWidth = 2.5f * dp)
+                                val m2 = Offset((pied.x + tete.x) / 2, (pied.y + tete.y) / 2); val r = 9 * dp
+                                drawLine(gris, Offset(m2.x - r, m2.y - r), Offset(m2.x + r, m2.y + r), strokeWidth = 2.5f * dp)
+                                drawLine(gris, Offset(m2.x - r, m2.y + r), Offset(m2.x + r, m2.y - r), strokeWidth = 2.5f * dp)
+                                etiquette(t.etiquette, ou, gris, barre = true)
+                            }
+                            // Tree added by hand: dashed, provisional.
+                            t.arbre.ajoute -> {
+                                val c = couleurs.getValue(Essences.groupe(t.arbre.essence))
+                                drawLine(noir, pied, tete, strokeWidth = 7 * dp, pathEffect = tirets)
+                                drawLine(c, pied, tete, strokeWidth = 4 * dp, pathEffect = tirets)
+                                etiquette(t.etiquette, ou)
+                            }
+                            else -> {
+                                val c = couleurs.getValue(Essences.groupe(t.arbre.essence))
+                                drawLine(noir, pied, tete, strokeWidth = 7 * dp)
+                                drawLine(c, pied, tete, strokeWidth = 4 * dp)
+                                etiquette(t.etiquette, ou)
+                            }
+                        }
                     }
                     // Targets: what placed the trees (12 dp square, name beside it).
                     for (c in surimpression.cibles) {
@@ -167,10 +217,17 @@ private fun Images(m: ManifestePaquet, zip: PaquetZip, arbres: ArbresSurImages?,
         // Why there is no tree on the images, when that is the case (one line, no blame).
         val avis = when {
             arbres == null -> stringResource(R.string.images_calcul_arbres)
-            arbres.message == "SOL" -> stringResource(R.string.images_sans_sol)
-            else -> arbres.message
+            arbres.avis is Avis.SansSol -> stringResource(R.string.images_sans_sol)
+            arbres.avis is Avis.Texte -> arbres.avis.texte
+            else -> null
         }
-        if (avis != null) Text(avis, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+        // Targets taken from the package (the project has none for the plot): said once, discreetly.
+        val lignes = listOfNotNull(avis, arbres?.note)
+        if (lignes.isNotEmpty()) Text(lignes.joinToString(" — "), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+        Row(Modifier.fillMaxWidth().toggleable(fauxPositifs, role = Role.Checkbox, onValueChange = onFauxPositifs).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(fauxPositifs, onCheckedChange = null)
+            Text(stringResource(R.string.images_faux_positifs), modifier = Modifier.padding(start = 8.dp))
+        }
         if (retenues.size > 1) {
             Slider(
                 value = pager.currentPage.toFloat(),

@@ -10,7 +10,7 @@
     <string name="images_vide">Aucune image retenue dans ce paquet.</string>
     <string name="images_illisible">Paquet illisible : %1$s</string>
     <string name="images_sans_sol">Sol non retrouvé : arbres non placés sur les images</string>
-    <string name="images_retour">Retour</string>
+    <string name="images_faux_positifs">Montrer les faux positifs écartés</string>
     <string name="terminer">Terminer la prise de vue</string>
     <string name="suivi_ok">Suivi : OK</string>
     <string name="suivi_perdu">Suivi perdu</string>

@@ -142,6 +142,38 @@ class ImagesPaquetTest {
     }
 
     @Test
+    fun ciblesEtCentreDuProjetPrimentSurCeuxDuPaquet() {
+        val (m, _) = scene()
+        val duProjet = ReferencePlacette(
+            Pair(m.centreX, m.centreY), "deg", 0.0, 0.0,
+            m.ciblesMesurees.map { CibleMesuree(it.idCible, it.azimutMesure + 10.0, it.distanceMesureeM, it.dbhMesureCm) },
+        )
+        val p = PlacementPaquet.calculer(m, duProjet)
+        val geo = assertNotNull(p.georef)
+        assertNull(p.note, "le projet a des cibles : rien à signaler")
+        assertEquals(10.0, abs(geo.rotationDeg - 37.0), 1e-6, "ce sont les azimuts du projet qui orientent")
+    }
+
+    @Test
+    fun sansCibleDansLeProjetLeManifesteSertEtOnLeDit() {
+        val (m, _) = scene()
+        val vide = ReferencePlacette(Pair(m.centreX, m.centreY), "deg", 0.0, 0.0, emptyList())
+        val p = PlacementPaquet.calculer(m, vide)
+        assertNotNull(p.georef)
+        assertEquals(PlacementPaquet.NOTE_PAQUET, p.note)
+        assertNull(PlacementPaquet.calculer(m).note, "sans référence du projet : pas de note")
+    }
+
+    @Test
+    fun ciblesDuProjetSuffisentQuandLePaquetNEnALivreAucune() {
+        val (m, _) = scene(mesures = false)
+        val (m2, _) = scene()
+        val p = PlacementPaquet.calculer(m, ReferencePlacette(Pair(m.centreX, m.centreY), "deg", 0.0, 0.0, m2.ciblesMesurees))
+        assertNotNull(p.georef)
+        assertNull(p.message)
+    }
+
+    @Test
     fun ciblesVuesSansMesureNeOriententPas() {
         val (m, _) = scene(mesures = false)
         val p = PlacementPaquet.calculer(m)

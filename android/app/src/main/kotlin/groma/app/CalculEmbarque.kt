@@ -40,6 +40,8 @@ class CalculEmbarque(private val voxelM: Double = 0.02) {
 
     data class Resultat(val detections: List<Detection>, val message: String?)
 
+    // Same chain as `PlacementPaquet.calculer` (groma-core, mission 045, images screen): 3 views, 3 degrees.
+    // Keep both in step.
     fun calculer(
         p: ParametresPlacette, mesures: List<CibleMesuree>, houppiers: List<Houppier>, mnt: Grille?,
         precedentes: List<Detection>,

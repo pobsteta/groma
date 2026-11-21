@@ -46,18 +46,41 @@ object CameraPaquet {
 }
 
 /** From the package alone: the Lambert-93 <-> capture-frame transform, or why it cannot be had. */
-class PlacementImages(val georef: Georef?, val message: String?, val residuDeg: Double = Double.NaN)
+class PlacementImages(
+    val georef: Georef?, val message: String?, val residuDeg: Double = Double.NaN,
+    /** Discreet note (not a failure): where the targets came from when it is not the project. */
+    val note: String? = null,
+)
+
+/**
+ * What the project knows of the plot (mission 045, decision of Pascal): its latest measured targets and centre,
+ * which then place the trees instead of the ones recorded in the package manifest.
+ */
+class ReferencePlacette(
+    val centre: Pair<Double, Double>, val uniteAzimut: String, val declinaisonDeg: Double, val convergenceDeg: Double,
+    val cibles: List<CibleMesuree>,
+)
 
 object PlacementPaquet {
     const val MESSAGE_C0 = "C0 non vue : arbres non placés sur les images"
     private const val VUES_MIN = 3
     const val RESIDU_ALERTE_DEG = 3.0
+    const val NOTE_PAQUET = "Cibles du paquet (le projet n'en a pas pour cette placette)"
 
     /**
-     * Same chain as `CalculEmbarque`: each target seen on [VUES_MIN] images or more is triangulated, C0 is the
-     * fixed point, C1 to C3 and the measured targets of the manifest give the rotation.
+     * Same chain as `CalculEmbarque.calculer` (keep both in step: 3 views at least, same residual alert; cross
+     * reference there): each target seen on [VUES_MIN] images or more is triangulated, C0 is the fixed point,
+     * C1 to C3 and the measured targets give the rotation. The measured targets and centre are those of the
+     * project ([projet]); the manifest's own only when the project has no target for the plot.
      */
-    fun calculer(m: ManifestePaquet): PlacementImages {
+    fun calculer(m: ManifestePaquet, projet: ReferencePlacette? = null): PlacementImages {
+        val duProjet = projet?.takeIf { it.cibles.isNotEmpty() }
+        val ciblesMesurees = duProjet?.cibles ?: m.ciblesMesurees
+        val centre = duProjet?.centre ?: Pair(m.centreX, m.centreY)
+        val unite = duProjet?.uniteAzimut ?: m.uniteAzimut
+        val declinaison = duProjet?.declinaisonDeg ?: m.declinaisonDeg
+        val convergence = duProjet?.convergenceDeg ?: m.convergenceDeg
+        val note = if (duProjet == null && projet != null) NOTE_PAQUET else null
         val parId = m.images.associateBy { it.id }
         val rayons = HashMap<String, MutableList<Rayon>>()
         for (d in m.detectionsCibles) {
@@ -70,14 +93,14 @@ object PlacementPaquet {
         val c0 = cibles["C0"] ?: return PlacementImages(null, MESSAGE_C0)
         val autres = cibles.filterKeys { it != "C0" }.mapValues { Pair(it.value[0], it.value[1]) }
         if (autres.isEmpty()) return PlacementImages(null, "Aucune cible C1 à C3 vue : arbres non placés sur les images")
-        if (autres.keys.none { id -> m.ciblesMesurees.any { it.idCible == id } }) {
+        if (autres.keys.none { id -> ciblesMesurees.any { it.idCible == id } }) {
             return PlacementImages(null, "Cibles vues (${autres.keys.sorted().joinToString(", ")}) sans azimut ni distance saisis : arbres non placés sur les images")
         }
         val geo = Georeferencement.georeferencer(
-            Pair(c0[0], c0[1]), autres, m.ciblesMesurees, Pair(m.centreX, m.centreY), m.uniteAzimut, m.declinaisonDeg, m.convergenceDeg,
+            Pair(c0[0], c0[1]), autres, ciblesMesurees, centre, unite, declinaison, convergence,
         )
         val rmse = Georeferencement.rmse(geo.residusAzimutDeg.values)
-        return PlacementImages(geo, if (rmse > RESIDU_ALERTE_DEG) "Orientation douteuse (%.1f°) : vérifier les azimuts des cibles".format(rmse) else null, rmse)
+        return PlacementImages(geo, if (rmse > RESIDU_ALERTE_DEG) "Orientation douteuse (%.1f°) : vérifier les azimuts des cibles".format(rmse) else null, rmse, note)
     }
 }
 
