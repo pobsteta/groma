@@ -26,6 +26,15 @@ _Modèle de carte :_
 
 ## Validé
 
+- [037a](missions/037a-test-schema-1-7.md) + [037](missions/037-schema-1-7-foret.md) · depuis le cycle 8
+  - Homme : testeur (sonnet) puis dev (opus), prendre ; une seule PR
+  - Mission : schéma 1.7.0 (dalles MNT à plat dans `rasters/`, `cvat.tif`, houppiers avec `x_sommet`/`y_sommet`, `verifier_projet`)
+  - Moyens : brief vers nemeton du 2026-11-20, pytest, exemple régénéré
+- [041](missions/041-bouton-c0-avant-c1.md) · depuis le cycle 8
+  - Homme : dev (sonnet), donner
+  - Mission : « Relever C0 » à gauche de C1 dans la vue Placette
+  - Moyens : `EcranPlacette.kt` ; essai de Pascal sur le S23
+
 - [026](missions/026-essai-fumee.md) · depuis le cycle 7
   - Homme : dev (sonnet), appuyer
   - Mission : essai de fumée instrumenté comme Surculus (type `fumee`, androidTest sur SQLite d'Android, émulateur et téléphone, étape CI)
@@ -40,6 +49,10 @@ _Modèle de carte :_
   - Moyens : tests de 024, `EcranCarte`, `FicheArbre`, `EtatPhotos` ; essai de Pascal
 
 ## Planifié
+
+- [038](missions/038-transport-dalles-cvat.md) · après 037 — dev (sonnet) : dalles et `cvat.tif` jusqu'au téléphone
+- [039](missions/039-paquet-lidar-centre-releve.md) · après 038 — dev (opus) + testeur 039a : paquet avec MNT et houppiers autour du centre relevé, plan d'abord
+- [040](missions/040-carte-cvat-houppiers.md) · après 038 — afficheur (sonnet) : couches CVAT, contours et sommets
 
 
 ## Terminé
