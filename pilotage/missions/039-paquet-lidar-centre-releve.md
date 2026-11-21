@@ -44,6 +44,43 @@ _Rempli par Pascal seul._
    paquet et un message dans le manifeste (`lidar.remarque`) repris dans le rapport du serveur.
 5. Le rejeu (version d'essai) fait de même.
 
+## Plan validé (2026-11-21)
+
+Plan rendu par `dev` (opus) le 2026-11-21, validé par Pascal le même jour (« oui pour tout »), avec
+une correction : **tampon de 50 m autour du centre relevé** (carré de 100 m de côté) pour tout ce que
+le paquet emporte : MNT, relief CVAT, contours des houppiers et leurs sommets.
+
+1. **Découper, pas joindre les dalles.** Lire seulement les bandes des dalles qui touchent le carré
+   (centre relevé ± 50 m), assembler une à quatre dalles sur la grille commune (alignée au km, 0,5 m,
+   sans couture), écrire `lidar/mnt.tif` au format `rasters.format` (écrivain TIFF minimal en Kotlin :
+   petit-boutiste, Float32, en bandes, DEFLATE sans prédicteur, nodata -9999, EPSG:2154), soit
+   200 × 200 pixels, environ 130 Ko. MNT écrit s'il a au moins un pixel valide dans le disque de la
+   placette ; sous 100 % de couverture, remarque « MNT partiel : n % de la placette ».
+2. **Relief CVAT** (ajout de Pascal) : `lidar/cvat.tif`, découpe de `rasters/cvat.tif` sur le même
+   carré, au format `rasters.cvat` (Byte, 2 m, 0 = nodata), 50 × 50 pixels. Le serveur ne s'en sert
+   pas pour le calcul (il l'ignore s'il ne le connaît pas) ; il sert à l'affichage du rapport.
+3. **Appel** dans `CaptureActivity.terminer()`, sur `Dispatchers.Default`, avant
+   `enregistreur.terminer` ; GeoPackage en lecture seule ; `runCatching` : en échec, pas de `lidar/`,
+   remarque, paquet écrit quand même ; durée dans logcat.
+4. **Manifeste** : `"lidar": {"mnt", "mnh", "cvat", "houppiers", "decoupe": {"x", "y",
+   "demi_cote_m": 50.0, "source_mnt": "dalles"|"placette"|null}, "remarque"}`, chaque clé présente
+   seulement si le fichier l'est ; remarques jointes par « ; ». Serveur : `paquet.Lidar.remarque`
+   (facultatif), reprise en alerte « LiDAR : … » ; anciens paquets lisibles.
+5. **Houppiers** : 1.7.0 : sommet dans le carré (`BETWEEN`, `plot_id` NULL compris), contours
+   entiers ; 1.6.0 : ceux de la placette qui touchent le carré, sinon remarque. GeoJSON
+   FeatureCollection (membre `crs` EPSG:2154), champs `houppier_id`, `h_max`, `surface_m2`, et en
+   1.7.0 `x_sommet`, `y_sommet` ; Polygon/MultiPolygon, x = est, y = nord. Si `houppier_id` n'est
+   pas unique dans la sélection : remarque.
+6. **Repli** : sans dalles (ou sans pixel valide), `rasters/{plot_id}_mnt.tif` (et `_mnh.tif`) joint
+   tel quel s'il couvre centre relevé ± rayon ; sinon pas de MNT et remarque « Ni dalle MNT ni
+   raster de placette ne couvrent le centre relevé : sol reconstruit. »
+7. **Rejeu** : même `terminer()`, rien à part.
+8. **Mesure sur le S23** : lecture complète et découpe d'une dalle 2 000 × 2 000 dense (une ligne par
+   bande, puis une seule bande), cinq essais, médiane, logcat ; instrumentation en version d'essai
+   seulement, retirée avant le gel.
+9. **Limite connue** : avec le projet Marsannay 1.6.0, P067 (152 m du centre prévu) n'aura que la
+   remarque ; le sol MNT revient avec le projet 1.7.0 de nemeton.
+
 ## Harnais
 
 - **Peut (périmètre) :** `android/groma-core/src/main/kotlin/groma/core/` (nouveaux fichiers de
@@ -58,7 +95,7 @@ _Rempli par Pascal seul._
 
 ## Valeur provisoire (chiffre, réglage)
 
-- **Valeur provisoire :** marge de découpe = rayon + 15 m ; 2 s au plus à « Terminer ».
+- **Valeur provisoire :** tampon de découpe = 50 m autour du centre relevé (décision de Pascal du 2026-11-21, au lieu de rayon + 15 m) ; 2 s au plus à « Terminer ».
 - **Mesurée par :** cette mission, première tâche après le plan : temps de lecture d'une dalle de
   2 000 × 2 000 Float32 et mémoire sur le S23.
 - **Gel :** avant la publication qui contient 039.
