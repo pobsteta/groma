@@ -163,6 +163,16 @@ class NotesPhotosArbreTest {
     }
 
     @Test
+    fun fauxPositifsLusSurDemandeSeulementEtSignales() = exemple { db ->
+        db.executer("UPDATE arbres SET etat_detection = 'faux_positif' WHERE uuid = ?", listOf(U))
+        assertTrue(ArbrePlacette.lire(db, "P001").none { it.uuid == U }, "écarté par défaut")
+        assertTrue(ArbrePlacette.lire(db, "P001", false).none { it.uuid == U })
+        val avec = ArbrePlacette.lire(db, "P001", true)
+        assertTrue(avec.first { it.uuid == U }.fauxPositif)
+        assertTrue(avec.filter { it.uuid != U }.none { it.fauxPositif })
+    }
+
+    @Test
     fun noteEtPhotosLuesParLaVuePlacette() = exemple { db ->
         db.executer("UPDATE arbres SET notes = 'fourche', photos = 'DCIM/a.jpg;DCIM/b.jpg' WHERE uuid = ?", listOf(U))
         val a = ArbrePlacette.lire(db, "P001").first { it.uuid == U }

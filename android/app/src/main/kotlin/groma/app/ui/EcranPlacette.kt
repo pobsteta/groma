@@ -105,6 +105,9 @@ fun EcranPlacette(
     onSupprimerArbre: suspend (uuid: String) -> List<ArbrePlacette>,
     onPlacer: suspend (id: String, azimut: Double, distanceM: Double, dbhCm: Double, source: SourceAzimut) -> CiblePlacee,
     onFilmer: () -> Unit,
+    /** Mission 045: images of the plot's package with the trees over them; greyed without package. */
+    imagesDisponibles: Boolean = false,
+    onVoirImages: () -> Unit = {},
     /** Mission 036: replay of a recorded film, given only by the smoke build (null: no button). */
     onRejouer: (() -> Unit)? = null,
     onRetour: () -> Unit,
@@ -385,7 +388,11 @@ fun EcranPlacette(
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text(stringResource(R.string.arbre_ajouter)) }
             }
-            Button(onClick = onFilmer, modifier = Modifier.fillMaxWidth().padding(bottom = if (onRejouer == null) 24.dp else 8.dp)) { Text(stringResource(R.string.filmer)) }
+            Button(onClick = onFilmer, modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) { Text(stringResource(R.string.filmer)) }
+            OutlinedButton(
+                onClick = onVoirImages, enabled = imagesDisponibles,
+                modifier = Modifier.fillMaxWidth().padding(bottom = if (onRejouer == null) 24.dp else 8.dp),
+            ) { Text(stringResource(R.string.voir_images)) }
             if (onRejouer != null) {
                 OutlinedButton(onClick = onRejouer, modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp)) { Text(stringResource(R.string.rejouer_film)) }
             }

@@ -33,8 +33,10 @@ import groma.app.carte.configurerOsmdroid
 import groma.app.gnss.ServiceGnssRtk
 import groma.app.gnss.SourcePosition
 import groma.app.ui.EcranCarte
+import groma.app.ui.EcranImages
 import groma.app.ui.EcranPlacette
 import groma.core.ArbrePlacette
+import groma.core.ChoixPaquet
 import groma.core.FilmCapture
 import groma.core.CiblePlacee
 import groma.core.ParametresPlacette
@@ -118,6 +120,10 @@ class MainActivity : AppCompatActivity() {
                     var cle by rememberSaveable { mutableStateOf<String?>(null) }
                     var carte by rememberSaveable { mutableStateOf(false) }
                     var ciblesPlot by rememberSaveable { mutableStateOf<String?>(null) }
+                    // Mission 045: images of the plot's package with the trees drawn over them.
+                    // The package path is found off the main thread (EtatCibles) and kept with the plot.
+                    var imagesPlot by rememberSaveable { mutableStateOf<String?>(null) }
+                    var imagesPaquet by rememberSaveable { mutableStateOf<String?>(null) }
                     // Leaving the project releases the RTK receiver (for QField, and the battery).
                     LaunchedEffect(cle) { if (cle == null) ServiceGnssRtk.arreter(this@MainActivity) }
                     val ouvert = remember(cle) { cle?.let(depot::projet) }
@@ -150,6 +156,11 @@ class MainActivity : AppCompatActivity() {
                                 onRetour = { projetsServeur = false },
                             )
                         }
+                        ouvert != null && imagesPlot != null && imagesPaquet != null -> {
+                            val plot = imagesPlot!!
+                            BackHandler { imagesPlot = null; imagesPaquet = null }
+                            EcranImages(plotId = plot, projet = ouvert, paquet = File(imagesPaquet!!), onRetour = { imagesPlot = null; imagesPaquet = null })
+                        }
                         ouvert != null && ciblesPlot != null -> {
                             val plot = ciblesPlot!!
                             BackHandler { ciblesPlot = null }
@@ -160,7 +171,7 @@ class MainActivity : AppCompatActivity() {
                                     try {
                                         val p = ouvert.parametres(plot)
                                         val c = ouvert.centrePourCibles(plot)
-                                        EtatCibles(p, c.mesure, ouvert.ciblesPlacees(plot, p.uniteAzimut), Pair(c.x, c.y), ouvert.arbres(plot), c.qualite, c.precisionM, c.reception, c.dateMesure, c.ecartM, c.prevu)
+                                        EtatCibles(p, c.mesure, ouvert.ciblesPlacees(plot, p.uniteAzimut), Pair(c.x, c.y), ouvert.arbres(plot), c.qualite, c.precisionM, c.reception, c.dateMesure, c.ecartM, c.prevu, paquetPlacette(ouvert, plot))
                                     } catch (e: Exception) { null }
                                 } ?: if (centreVersion > 0) value else null
                             }
@@ -202,6 +213,8 @@ class MainActivity : AppCompatActivity() {
                                             .also { rafraichir++; ServicePartageQfield.demarrer(this@MainActivity) }
                                     },
                                     onFilmer = { demanderPlacette(plot) },
+                                    imagesDisponibles = e.paquet != null,
+                                    onVoirImages = { e.paquet?.let { imagesPlot = plot; imagesPaquet = it.path } },
                                     onRejouer = if (FilmCapture.rejeuAutorise(packageName)) ({ plotRejeu = plot; choisirFilm.launch(arrayOf("video/mp4", "application/octet-stream")) }) else null,
                                     onRetour = { ciblesPlot = null },
                                     dossierProjet = ouvert.dossier,
@@ -434,6 +447,13 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
+/** Mission 045: the most recent package of the plot, never a replay (null: none on the phone). */
+private fun MainActivity.paquetPlacette(projet: Projet, plotId: String): File? {
+    val dossier = File(getExternalFilesDir("paquets"), projet.projetId)
+    val nom = ChoixPaquet.plusRecent(plotId, dossier.listFiles().orEmpty().filter { it.isFile }.map { it.name to it.lastModified() }) ?: return null
+    return File(dossier, nom)
+}
+
 /** What the cibles view needs, loaded off the main thread. */
 private class EtatCibles(
     val parametres: ParametresPlacette, val centreMesure: Boolean, val cibles: List<CiblePlacee>,
@@ -441,6 +461,8 @@ private class EtatCibles(
     val centreQualite: String? = null, val centrePrecisionM: Double? = null,
     val centreReception: String? = null, val centreDate: String? = null,
     val centreEcartM: Double? = null, val centrePrevu: Position? = null,
+    /** Mission 045: package of the plot to show on the images screen (null: button greyed). */
+    val paquet: File? = null,
 )
 
 object Preferences {

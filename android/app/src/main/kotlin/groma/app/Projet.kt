@@ -26,6 +26,7 @@ import groma.core.Houppiers
 import groma.core.InfosProjet
 import groma.core.ParametresPlacette
 import groma.core.PhotosArbre
+import groma.core.ReferencePlacette
 import groma.core.Position
 import groma.core.Projections
 import java.io.File
@@ -52,12 +53,14 @@ class Projet(val dossier: File) {
 
     fun placettes(): List<Map<String, Any?>> = ouvrir().use { GeoPackage.lirePoints(SqliteAndroid(it), "placettes") }
 
-    fun parametres(plotId: String): ParametresPlacette = ouvrir().use { db ->
+    fun parametres(plotId: String): ParametresPlacette = ouvrir().use { parametres(it, plotId) }
+
+    private fun parametres(db: SQLiteDatabase, plotId: String): ParametresPlacette {
         val s = SqliteAndroid(db)
         val p = GeoPackage.lirePoints(s, "placettes", plotId).single()
         // Latest measured RTK centre when present, else the planned point.
         val c = GeoPackage.dernierCentreParPlacette(s, plotId).firstOrNull() ?: p
-        ParametresPlacette(
+        return ParametresPlacette(
             plotId, c["x"] as Double, c["y"] as Double,
             (p["rayon_m"] as? Number)?.toDouble() ?: 15.0,
             (p["seuil_diam_cm"] as? Number)?.toDouble() ?: 7.5,
@@ -88,14 +91,15 @@ class Projet(val dossier: File) {
         }
     }
 
-    fun cibles(plotId: String): List<CibleMesuree> = ouvrir().use { db ->
+    fun cibles(plotId: String): List<CibleMesuree> = ouvrir().use { cibles(it, plotId) }
+
+    private fun cibles(db: SQLiteDatabase, plotId: String): List<CibleMesuree> =
         GeoPackage.lirePoints(SqliteAndroid(db), "cibles", plotId).mapNotNull {
             val az = (it["azimut_mesure"] as? Number)?.toDouble() ?: return@mapNotNull null
             val d = (it["distance_mesuree_m"] as? Number)?.toDouble() ?: return@mapNotNull null
             val source = (it["source_azimut"] as? String)?.takeIf { s -> s.isNotBlank() } ?: SourceAzimut.BOUSSOLE_VISEE.code
             CibleMesuree(it["id_cible"] as String, az, d, (it["dbh_mesure_cm"] as? Number)?.toDouble(), source)
         }
-    }
 
     /** Centre of the cibles view: latest measured centre, else the planned point ([mesure] false). */
     fun centrePourCibles(plotId: String): CentreCibles = ouvrir().use { db ->
@@ -171,6 +175,21 @@ class Projet(val dossier: File) {
 
     /** Trees of the plot for the plan (false positives left out, by number): see [ArbrePlacette.lire]. */
     fun arbres(plotId: String): List<ArbrePlacette> = ouvrir().use { ArbrePlacette.lire(SqliteAndroid(it), plotId) }
+
+    private fun ouvrirEnLecture(): SQLiteDatabase = SQLiteDatabase.openDatabase(gpkg.path, null, SQLiteDatabase.OPEN_READONLY)
+
+    /**
+     * Mission 045 (images screen, nothing written: GeoPackage opened read-only): the trees of [arbres], the false
+     * positives flagged and added when [avecFauxPositifs], and what the project knows to place them (latest
+     * measured targets and centre, see [ReferencePlacette]).
+     */
+    fun pourImages(plotId: String, avecFauxPositifs: Boolean): Pair<List<ArbrePlacette>, ReferencePlacette> = ouvrirEnLecture().use { db ->
+        val p = parametres(db, plotId)
+        Pair(
+            ArbrePlacette.lire(SqliteAndroid(db), plotId, avecFauxPositifs),
+            ReferencePlacette(Pair(p.centreX, p.centreY), p.uniteAzimut, p.declinaisonDeg, p.convergenceDeg, cibles(db, plotId)),
+        )
+    }
 
     fun houppiers(plotId: String): List<Houppier> = ouvrir().use { db ->
         SqliteAndroid(db).requete("SELECT houppier_id, h_max, geom FROM houppiers WHERE plot_id = ?", listOf(plotId)).map {

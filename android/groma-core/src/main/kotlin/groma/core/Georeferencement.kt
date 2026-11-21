@@ -25,6 +25,13 @@ data class Georef(
         val t = Math.toRadians(rotationDeg)
         return Pair(centreGrille.first + dx * cos(t) + dy * sin(t), centreGrille.second - dx * sin(t) + dy * cos(t))
     }
+
+    /** Inverse of [versGrille]: Lambert-93 -> local frame of the capture (mission 045, trees drawn on the images). */
+    fun versLocal(gx: Double, gy: Double): Pair<Double, Double> {
+        val dx = gx - centreGrille.first; val dy = gy - centreGrille.second
+        val t = Math.toRadians(rotationDeg)
+        return Pair(centreLocal.first + dx * cos(t) - dy * sin(t), centreLocal.second + dx * sin(t) + dy * cos(t))
+    }
 }
 
 object Georeferencement {
