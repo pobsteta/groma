@@ -80,8 +80,7 @@ Brief : `briefs/vers-nemeton/2026-11-20-relief-cvat-houppiers-foret.md`.
 * **Exemples 1.7.0** : `exemples/inventaire_video/` (synthétique, deux
   placettes, coin de quatre dalles : cas limites) et
   `exemples/marsannay_p067/` (réel, mission 044 : P067 de Marsannay filmée
-  le 2026-11-20, posée sur son centre prévu avec le relevé de terrain déplacé
-  sur ce point, UGF et parcelle réelles, une dalle `mnt_0849_6689.tif`
+  le 2026-11-20, centrée sur le C0 mesuré, une dalle `mnt_0849_6689.tif`
   rééchantillonnée du MNT LiDAR HD à 1 m, houppiers calculés par Groma, paquet
   de terrain réduit dans `paquets/`). Le second est construit par
   `exemples/creer_marsannay_p067.py` depuis les sources réelles, lues sans
