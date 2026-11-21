@@ -109,6 +109,10 @@ def _motif_dalle(prefixe: str) -> re.Pattern:
     return re.compile(motif)
 
 
+# Any file that looks like a DTM/CHM tile but does not match the schema pattern.
+_MAL_NOMMEE = re.compile(r"(?i)mn[th][_-]")
+
+
 def _type(dtype: str) -> str:
     return _NOM_TYPE.get(dtype, dtype)
 
@@ -194,6 +198,11 @@ def verifier_projet(dossier: Path | str) -> list[str]:
             ecarts += _verifier_dalle(chemin, int(m.group(1)), int(m.group(2)))
         elif motif_mnh.fullmatch(chemin.name):
             ecarts.append(f"{chemin.name} : dalle MNH, le schéma n'en prévoit pas (MNH par placette seulement).")
+        elif _MAL_NOMMEE.match(chemin.name):
+            ecarts.append(
+                f"{chemin.name} : nom de dalle non conforme, attendu {_rasters()['dalles']['mnt']} "
+                "(coin sud-ouest en km sur quatre chiffres) ; le téléphone ne la trouvera pas."
+            )
     cvat = Path(dossier) / _rasters()["cvat"]["chemin"]
     if cvat.is_file():
         ecarts += _verifier_cvat(cvat)

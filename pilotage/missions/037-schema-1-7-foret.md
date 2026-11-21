@@ -201,3 +201,8 @@ Fait :
 « provisoire », règle 3 et lecture des projets 1.6.0 respectées). Points ouverts : `verifier_projet` ignore
 sans écart un fichier `mnt_*` mal nommé (par exemple trois chiffres) — à trancher par Pascal ; CI à voir
 sur la PR.
+
+**Décision de Pascal (2026-11-21) :** signaler les noms mal formés. Fait par l'orchestrateur : tout
+fichier de `rasters/` qui commence par `mnt_`/`mnh_` (ou `-`, casse ignorée) sans suivre le gabarit du
+schéma donne un écart « nom de dalle non conforme ». Les rasters par placette (`P002_mnt.tif`) ne sont
+pas concernés.

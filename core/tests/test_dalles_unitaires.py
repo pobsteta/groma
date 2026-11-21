@@ -104,6 +104,24 @@ def test_dalle_mnh_signalee(tmp_path):
     assert len(ecarts) == 1 and "mnh_0849_6689.tif" in ecarts[0] and "MNH" in ecarts[0]
 
 
+@pytest.mark.parametrize("nom", [
+    "mnt_849_6689.tif", "mnt_0849_6689.tiff", "mnt_0849-6689.tif", "MNT_0849_6689.tif",
+    "mnt_0849_6689_v2.tif", "mnh_849_6689.tif",
+])
+def test_dalle_mal_nommee_signalee(tmp_path, nom):
+    # Brief 2026-11-20 § 2.2: a misnamed tile would pass silently and never be found by the phone.
+    (tmp_path / "rasters").mkdir()
+    (tmp_path / "rasters" / nom).write_bytes(b"")
+    ecarts = dalles.verifier_projet(tmp_path)
+    assert len(ecarts) == 1 and nom in ecarts[0] and "nom" in ecarts[0]
+
+
+def test_raster_par_placette_pas_pris_pour_une_dalle(tmp_path):
+    _dalle(tmp_path / "rasters" / "P002_mnt.tif")
+    _dalle(tmp_path / "rasters" / "P002_mnh.tif")
+    assert dalles.verifier_projet(tmp_path) == []
+
+
 def test_dalle_tuilee_signalee(tmp_path):
     _dalle(tmp_path / "rasters" / "mnt_0849_6689.tif", tiled=True, blockxsize=256, blockysize=256)
     ecarts = dalles.verifier_projet(tmp_path)
