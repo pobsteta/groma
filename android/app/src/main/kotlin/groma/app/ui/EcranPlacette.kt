@@ -63,6 +63,9 @@ import groma.core.TypeAlerte
 import kotlinx.coroutines.launch
 import kotlin.math.max
 
+/** Mission 041b: ribbon state kept for the session (not across launches). */
+private var rubanDeplie by mutableStateOf(false)
+
 /**
  * Vue « Placette » (missions 016 and 019). After the centre is measured (C0, on the pole), C1 to
  * C3 are placed on a plan of the plot (north up) from the azimuth (typed from the sighting compass
@@ -216,38 +219,39 @@ fun EcranPlacette(
             Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            // Mission 029: the state of C0 is always visible, measured or not.
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    EtatCentre.ligne(centreMesure, centreQualite, centrePrecisionM, centreDate),
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.weight(1f),
-                )
-            }
-            if (!centreMesure) {
-                Text(stringResource(R.string.cibles_centre_prevu), color = MaterialTheme.colorScheme.error)
-            } else if (centreQualite == "telephone") {
-                // Mission 025: a centre taken with the phone's GNSS is flagged, like the planned-centre notice.
-                Text(
-                    stringResource(R.string.cibles_centre_telephone, centrePrecisionM?.let(::metres) ?: "?"),
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-            if (centreMesure && centreReception != null) {
-                Text(stringResource(R.string.cibles_centre_reception, centreReception), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            // Missions 029 and 041b: the state of C0 stays on one line (red if not measured / phone GNSS);
+            // the notices fold under it, folded by default, so the plan shows at once.
+            RubanReplie(
+                resume = EtatCentre.ligne(centreMesure, centreQualite, centrePrecisionM, centreDate),
+                alerte = RubanCentre.alerte(centreMesure, centreQualite),
+                deplie = rubanDeplie,
+                onBasculer = { rubanDeplie = !rubanDeplie },
+            ) {
+                if (!centreMesure) {
+                    Text(stringResource(R.string.cibles_centre_prevu), color = MaterialTheme.colorScheme.error)
+                } else if (centreQualite == "telephone") {
+                    // Mission 025: a centre taken with the phone's GNSS is flagged, like the planned-centre notice.
+                    Text(
+                        stringResource(R.string.cibles_centre_telephone, centrePrecisionM?.let(::metres) ?: "?"),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+                if (centreMesure && centreReception != null) {
+                    Text(stringResource(R.string.cibles_centre_reception, centreReception), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
             Plan(rayonM, unite, declinaisonDeg, convergenceDeg, cibles, choisie, arbres, centre, fiche, apercu) { fiche = it.uuid }
 
-            // Mission 041: « Relever C0 » sits left of C1, where the targets are entered (same flow as mission 030).
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(
-                    onClick = { fermerClavier(); releve.demanderDepuisFiche(plotId, centrePrevu) },
-                    contentPadding = PaddingValues(horizontal = 12.dp),
-                ) { Text(stringResource(R.string.relever_c0), maxLines = 1) }
-                if (ajout) {
-                    Text(stringResource(R.string.arbre_ajout_aide), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                } else {
+            // Missions 041 and 041b: « Relever C0 » sits left of C1 (same flow as mission 030); in tree-add mode
+            // only trees are surveyed, so neither C0 nor the targets are offered.
+            if (ajout) {
+                Text(stringResource(R.string.arbre_ajout_aide), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = { fermerClavier(); releve.demanderDepuisFiche(plotId, centrePrevu) },
+                        contentPadding = PaddingValues(horizontal = 12.dp),
+                    ) { Text(stringResource(R.string.relever_c0), maxLines = 1) }
                     PlacementCible.IDENTIFIANTS.forEach { id ->
                         FilterChip(
                             selected = choisie == id,

@@ -322,7 +322,7 @@ Dans nemetonshiny, génère le projet QField puis « Envoyer au téléphone ».<
     <string name="arbre_ajout_continuer">Saisir le diamètre au ruban</string>
     <string name="arbre_ajout_annuler">Annuler</string>
     <string name="arbre_ajout_saisie_incomplete">Renseigne l’azimut et la distance.</string>
-    <string name="arbre_ajout_sans_centre">Relève d’abord C0 de la placette : sans lui, l’arbre ne peut pas être placé.</string>
+    <string name="arbre_ajout_sans_centre">C0 n’est pas relevé : touche « Annuler », puis « Relever C0 ». Sans lui, l’arbre ne peut pas être placé.</string>
     <string name="fiche_titre_nouveau">Nouvel arbre (ajouté à la main)</string>
     <string name="fiche_ruban_obligatoire">Obligatoire : mesure le diamètre au ruban.</string>
     <string name="fiche_arbre_ajoute">Arbre ajouté à la main (pastille en pointillé).</string>

@@ -294,6 +294,10 @@ position est écoutée pendant le relevé, et à la fin la ligne d'état, le pla
 de C0 : « Centre C0 : RTK fixe, précision 0,02 m, relevé le 12/11 à 10:05 »
 (date et heure locales du téléphone), ou « Centre C0 non relevé ».
 
+Dans la vue Placette, l'état de C0 tient sur une ligne au-dessus du plan (en rouge si C0 n'est pas
+relevé ou vient du téléphone) ; un appui sur la ligne déplie les avertissements et la réception du
+centre. En mode « Ajouter un arbre », ni « Relever C0 » ni C1 à C3 : on ne relève que des arbres.
+
 Canne immobile sur le point, bulle calée : **Relever C0** fait la
 moyenne des positions **RTK fixes** pendant la durée réglée (10 s par
 défaut, Paramètres → Récepteur RTK) ; les positions non fixes sont

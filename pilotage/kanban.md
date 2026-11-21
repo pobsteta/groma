@@ -46,8 +46,10 @@ _Modèle de carte :_
 
 ## Planifié
 
+- [041b](missions/041b-vue-placette-epuree.md) · depuis le cycle 8 — dev (sonnet) : pas de « Relever C0 » en mode arbre, en-tête repliable
+- [042](missions/042-plan-cvat-houppiers.md) · après 041b — afficheur (sonnet) : relief CVAT, contours et sommets sur le plan de la placette
 - [039](missions/039-paquet-lidar-centre-releve.md) · après 038 — dev (opus) + testeur 039a : paquet avec MNT et houppiers autour du centre relevé, plan d'abord
-- [040](missions/040-carte-cvat-houppiers.md) · après 038 — afficheur (sonnet) : couches CVAT, contours et sommets
+- [040](missions/040-carte-cvat-houppiers.md) · après 042 — afficheur (sonnet) : couches CVAT, contours et sommets sur la carte
 
 
 ## Terminé
