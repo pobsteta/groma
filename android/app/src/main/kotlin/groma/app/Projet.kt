@@ -172,6 +172,10 @@ class Projet(val dossier: File) {
     /** Trees of the plot for the plan (false positives left out, by number): see [ArbrePlacette.lire]. */
     fun arbres(plotId: String): List<ArbrePlacette> = ouvrir().use { ArbrePlacette.lire(SqliteAndroid(it), plotId) }
 
+    /** Same trees as [arbres], the GeoPackage opened read-only (mission 045: the images screen writes nothing). */
+    fun arbresEnLecture(plotId: String): List<ArbrePlacette> =
+        SQLiteDatabase.openDatabase(gpkg.path, null, SQLiteDatabase.OPEN_READONLY).use { ArbrePlacette.lire(SqliteAndroid(it), plotId) }
+
     fun houppiers(plotId: String): List<Houppier> = ouvrir().use { db ->
         SqliteAndroid(db).requete("SELECT houppier_id, h_max, geom FROM houppiers WHERE plot_id = ?", listOf(plotId)).map {
             Houppier((it["houppier_id"] as Number).toInt(), GeoPackage.decoderAnneau(it["geom"] as ByteArray), (it["h_max"] as? Number)?.toDouble())

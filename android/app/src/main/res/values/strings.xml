@@ -3,6 +3,14 @@
     <string name="app_name">Groma</string>
     <string name="choisir_placette">Choisir la placette</string>
     <string name="filmer">Filmer</string>
+    <string name="voir_images">Voir les images</string>
+    <string name="images_chargement">Lecture du paquet…</string>
+    <string name="images_calcul_arbres">Calcul de la place des arbres…</string>
+    <string name="images_numero">%1$d / %2$d</string>
+    <string name="images_vide">Aucune image retenue dans ce paquet.</string>
+    <string name="images_illisible">Paquet illisible : %1$s</string>
+    <string name="images_sans_sol">Sol non retrouvé : arbres non placés sur les images</string>
+    <string name="images_retour">Retour</string>
     <string name="terminer">Terminer la prise de vue</string>
     <string name="suivi_ok">Suivi : OK</string>
     <string name="suivi_perdu">Suivi perdu</string>

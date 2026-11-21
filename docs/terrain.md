@@ -706,6 +706,27 @@ téléphone, signalé par le badge (« Position du téléphone, précision 4 m �
 que Groma tient le récepteur, QField n'y a pas accès, et inversement.
 Libérer le récepteur dans Groma avant de passer à QField.
 
+## Voir les images de la capture, arbres en surimpression (mission 045)
+
+Dans la vue Placette, sous **Filmer**, **Voir les images** (grisé tant que la placette n'a pas de paquet sur le
+téléphone : `paquets/<projet>/<plot_id>.groma.zip`, le plus récent, jamais un rejeu).
+
+* Une image retenue à la fois, plein écran, dans l'ordre du manifeste ; glisser ou curseur ; « 123 / 525 » en
+  bas. Le zip est lu entrée par entrée (jamais tout en mémoire), hors fil principal.
+* Les arbres de la placette (table `arbres`, comme le plan : faux positifs écartés, diamètre au compas s'il existe)
+  sont dessinés d'un trait vertical du pied à 1,30 m, avec « numéro · diamètre » ; couleur du groupe d'essence,
+  comme sur le plan. Pas dessiné : un arbre derrière la caméra ou hors de l'image.
+* Les cibles C0 à C3 détectées sur l'image portent un petit carré et leur nom : c'est ce qui a placé les arbres.
+* Placement refait **à partir du paquet seul** : triangulation de C0 à C3 sur leurs `detections_cibles` (3 vues
+  au moins), cibles mesurées **du manifeste**, centre du manifeste, même chaîne que `CalculEmbarque`. Sans C0 :
+  « C0 non vue : arbres non placés sur les images » ; sans C1 à C3 orientée : message équivalent. Si l'orientation
+  est douteuse (résidu > 3°), une ligne le dit.
+* **Pied de l'arbre** : la hauteur du sol est tirée des profondeurs du paquet, au voisinage du tronc (0,75 m, 5e
+  centile de la hauteur des points ; 150 images au plus) ; un arbre sans profondeur proche prend le sol médian
+  des autres (terrain supposé plat). Le MNT n'est pas utilisé. En pente forte, le pied peut flotter ou
+  s'enfoncer : le trait de 1,30 m reste vertical.
+* Lecture seule : rien n'est écrit dans le projet ni dans le paquet.
+
 ## Film rejouable de la capture (mission 036)
 
 Les paquets ne gardent que des images fixes. Si une capture est inutilisable (bug, mauvaise lumière), un **film
