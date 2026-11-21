@@ -68,6 +68,18 @@ object ExtractionQgz {
     private val RASTER = Regex("^[A-Za-z0-9_.-]{1,96}\\.tif$")
 
     /**
+     * Whether a file at [chemin] (relative to the project folder, `/`
+     * separated) may be copied when a project folder is imported or updated:
+     * under `rasters/` only flat, well-formed `.tif` names (tiles
+     * `mnt_<x>_<y>.tif`, `cvat.tif`, plot rasters), no sub-folder.
+     */
+    fun copiable(chemin: String): Boolean {
+        val morceaux = chemin.replace('\\', '/').split('/').filter { it.isNotEmpty() }
+        if (morceaux.firstOrNull() != "rasters") return true
+        return morceaux.size == 2 && RASTER.matches(morceaux[1])
+    }
+
+    /**
      * Streams [qgz] and calls [ecrire] with the relative output path and the
      * entry's bytes (do not close the stream). Throws when there is no
      * GeoPackage or it appears twice.

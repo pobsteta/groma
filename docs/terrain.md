@@ -199,6 +199,17 @@ d'Android sur `Download/groma` : toucher **Utiliser ce dossier**, puis
 sans elle, Groma n'a pas accès au dossier et la liste reste vide.
 L'autorisation est gardée, même après un redémarrage.
 
+### Dalles MNT et `cvat.tif` d'un projet 1.7.0
+
+Un projet 1.7.0 contient, en plus des rasters par placette, des dalles
+`rasters/mnt_<x>_<y>.tif` et `rasters/cvat.tif`. Elles arrivent dans
+`Android/data/fr.nemeton.groma/files/projets/<projet>/rasters/` par les trois
+chemins : « Projets du serveur… » (extraction du `.qgz`), import d'un dossier
+et mise à jour. Seuls les fichiers `.tif` directement dans `rasters/` sont
+repris : un sous-dossier est ignoré. Côté serveur, la limite d'un projet est
+`GROMA_TAILLE_MAX_PROJET` (500 Mio par défaut) ; un `.qgz` de 50 Mio de dalles
+passe (test). Taille réelle du premier projet 1.7.0 : à noter ici à sa livraison.
+
 ### Mettre à jour un projet
 
 Quand le plan change dans nemetonshiny (placettes ajoutées, rayon corrigé)

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
+import groma.core.ExtractionQgz
 import groma.core.GeoPackage
 import groma.core.InfosProjet
 import groma.core.ResumeProjet
@@ -222,13 +223,16 @@ class DepotProjets(private val ctx: Context) {
     private fun lireSource(dossier: File): Long? =
         File(dossier, SOURCE).takeIf { it.isFile }?.let { runCatching { JSONObject(it.readText()).getLong("gpkg_modifie") }.getOrNull() }
 
-    private fun copier(src: DocumentFile, dst: File, racine: Boolean = false) {
+    private fun copier(src: DocumentFile, dst: File, racine: Boolean = false, relatif: String = "") {
         dst.mkdirs()
         for (f in src.listFiles()) {
             val nom = f.name ?: continue
             // qfield/: the .qgz for QField already holds the GeoPackage and rasters, not needed by Groma.
             if (racine && nom == QFIELD) continue
-            if (f.isDirectory) copier(f, File(dst, nom))
+            val chemin = if (relatif.isEmpty()) nom else "$relatif/$nom"
+            // rasters/: tiles and plot rasters only, flat (no sub-folder).
+            if (f.isDirectory) { if (!chemin.startsWith("rasters/")) copier(f, File(dst, nom), relatif = chemin) }
+            else if (!ExtractionQgz.copiable(chemin)) continue
             else ctx.contentResolver.openInputStream(f.uri)!!.use { i -> File(dst, nom).outputStream().use { i.copyTo(it) } }
         }
     }
