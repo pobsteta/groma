@@ -11,24 +11,28 @@ pyogrio/rasterio in read mode; nothing is ever written next to the sources):
 
 What is written:
 
-* ``inventaire_video.gpkg`` (``creer_gpkg``): P067 centred on the measured C0
-  (decision of 2026-11-21), radius and plan attributes of the real project,
-  slope, aspect and cover recomputed at the measured C0; the C0 in
-  ``centres_mesures``; targets C1 to C3 placed from the package values; the real
-  ``ugf`` and ``parcelle`` holding the C0, clipped to a 100 m square around it
-  (none holds the C0 of 2026-11-20, about 107 m outside the communal forest: both
-  layers are left empty, never replaced by an invented outline);
+* ``inventaire_video.gpkg`` (``creer_gpkg``): P067 at its **planned** centre (the
+  plot of the real project). The measured C0 of 2026-11-20 fell about 107 m outside
+  the communal forest, 152 m from the planned centre; Pascal decided (2026-11-21)
+  to move the whole field survey onto the planned centre: the C0 is set there
+  (``ecart_prevu_m`` 0), targets C1 to C3 are placed from it with the package
+  values (same relative geometry), the package centre is rewritten. Radius and
+  plan attributes of the real project, slope, aspect and cover recomputed there;
+  the real ``ugf`` and ``parcelle`` holding the centre, clipped to a 100 m square
+  around it (a layer is left empty when none holds it, never replaced by an
+  invented outline);
   crowns segmented by Groma on the CHM (local maxima + watershed,
   ``scipy.ndimage``), apex = pixel of ``h_max``, ``plot_id`` P067 when the crown
   touches the plot;
 * ``rasters/mnt_0849_6689.tif``: the 1 km DTM tile of ``rasters.dalles``, bilinear
   from the 1 m DTM on the forest extent (clipped ``ugf``, or the 100 m square
   without one, plus ``marge_foret_m``), nodata elsewhere;
-  ``rasters/P067_mnt.tif`` / ``P067_mnh.tif`` around the C0;
+  ``rasters/P067_mnt.tif`` / ``P067_mnh.tif`` around the centre;
 * ``rasters/cvat.tif`` clipped to the extent, only with ``--cvat``;
 * ``controle/mnt_1m.tif``: the 1 m DTM window used, unchanged (test reference);
 * ``paquets/P067.groma.zip``: reduced copy of the field package (every frame
-  kept in the manifest, files of one frame in ``--pas-images`` only).
+  kept in the manifest, files of one frame in ``--pas-images`` only), ``centre``
+  set to the planned centre (poses are local to the AR session, unchanged).
 
 Run (sources at their default place):
 
@@ -68,7 +72,7 @@ PLOT_ID = "P067"
 # Own identifier: the real project (20261015_194200_yzoh) lives on the phone and
 # must never be overwritten by importing the example.
 PROJET_ID = "exemple_marsannay_p067"
-DEMI_CARRE_M = 50.0  # forest extent: 100 m square around the C0, plus marge_foret_m
+DEMI_CARRE_M = 50.0  # forest extent: 100 m square around the centre, plus marge_foret_m
 PAS_IMAGES = 25  # files of one frame in 25 kept in the package (at most one in ten)
 DATE_PREPARATION = "2026-11-21 12:00:00"  # fixed: the script is reproducible
 
@@ -315,14 +319,15 @@ def decouper_cvat(source: Path, emprise, destination: Path) -> Path:
 _DATE_ZIP = (2026, 11, 20, 0, 0, 0)  # fixed entry dates: same bytes at each run
 
 
-def alleger_paquet(source: Path, destination: Path, pas: int = PAS_IMAGES, projet_id: str | None = PROJET_ID) -> dict:
+def alleger_paquet(source: Path, destination: Path, pas: int = PAS_IMAGES, projet_id: str | None = PROJET_ID,
+                   centre: tuple[float, float] | None = None) -> dict:
     """Reduced copy of a field package.
 
     The manifest keeps every key and every frame (poses and intrinsics feed the
     target triangulation); for frames whose ``id`` is not a multiple of ``pas``
     the ``image``, ``profondeur`` and ``confiance`` paths are set to null and the
-    files left out, which the server readers accept. ``projet_id`` replaced when
-    given. Returns the new manifest.
+    files left out, which the server readers accept. ``projet_id`` and ``centre``
+    (Lambert-93 x, y) replaced when given. Returns the new manifest.
     """
     if pas < 10:
         raise ValueError(f"Une image sur dix au plus : pas {pas} < 10.")
@@ -331,6 +336,8 @@ def alleger_paquet(source: Path, destination: Path, pas: int = PAS_IMAGES, proje
         neuf = copy.deepcopy(m)
         if projet_id is not None:
             neuf["projet_id"] = projet_id
+        if centre is not None:
+            neuf["centre"] = {**neuf["centre"], "x": float(centre[0]), "y": float(centre[1])}
         garder: list[str] = []
         for img in neuf["images"]:
             cles = [k for k in ("image", "profondeur", "confiance") if img.get(k)]
@@ -372,7 +379,8 @@ def _lignes(cx: sqlite3.Connection, sql: str, params: Sequence = ()) -> list[dic
 
 
 def lire_projet_reel(gpkg: Path, centre: tuple[float, float]) -> dict:
-    """Plot row, measured C0 row (the one at ``centre``, 1 cm) and project row of the real GeoPackage."""
+    """Plot row, its planned centre (x, y), measured C0 row (the one at ``centre``, 1 cm)
+    and project row of the real GeoPackage."""
     from groma.gpkg import decoder_point
 
     with ouvrir_ro(gpkg) as cx:
@@ -384,11 +392,12 @@ def lire_projet_reel(gpkg: Path, centre: tuple[float, float]) -> dict:
     c0 = [c for c in centres if math.dist(decoder_point(c["geom"]), centre) < 0.01]
     if not c0:
         raise ValueError(f"{gpkg} : aucun centre de {PLOT_ID} au C0 du paquet {centre}.")
-    return {"placette": placette[0], "centre": c0[0], "projet": projet[0] if projet else {}}
+    return {"placette": placette[0], "prevu": decoder_point(placette[0]["geom"]), "centre": c0[0],
+            "projet": projet[0] if projet else {}}
 
 
 def polygone_au_centre(gpkg: Path, couche: str, centre, carre):
-    """The feature of ``couche`` holding the C0, clipped to ``carre`` (GeoDataFrame of one
+    """The feature of ``couche`` holding the centre, clipped to ``carre`` (GeoDataFrame of one
     row), or ``None`` when no feature holds it (never replaced by an invented outline)."""
     import pyogrio
     from shapely.geometry import Point
@@ -398,11 +407,11 @@ def polygone_au_centre(gpkg: Path, couche: str, centre, carre):
     if len(g) == 0:
         voisins = pyogrio.read_dataframe(gpkg, layer=couche, bbox=carre.buffer(500).bounds)
         d = float(voisins.distance(Point(centre)).min()) if len(voisins) else float("nan")
-        log.warning("%s : aucune entité de %s ne contient le C0 (la plus proche à %.1f m) ; couche laissée vide.",
+        log.warning("%s : aucune entité de %s ne contient le centre (la plus proche à %.1f m) ; couche laissée vide.",
                     gpkg, couche, d)
         return None
     if len(g) > 1:
-        raise ValueError(f"{gpkg} : {len(g)} entités de {couche} au C0, une attendue.")
+        raise ValueError(f"{gpkg} : {len(g)} entités de {couche} au centre, une attendue.")
     g = g.copy()
     couverture = g.geometry.iloc[0].intersection(carre).area / carre.area
     if couverture < 0.999:
@@ -452,9 +461,13 @@ def construire(mnt: Path, mnh: Path, gpkg: Path, paquet: Path, sortie: Path = SO
         manifeste = json.loads(z.read("manifest.json"))
     if manifeste["plot_id"] != PLOT_ID:
         raise ValueError(f"{paquet} : placette {manifeste['plot_id']}, {PLOT_ID} attendue.")
-    cx, cy = float(manifeste["centre"]["x"]), float(manifeste["centre"]["y"])
-    reel = lire_projet_reel(gpkg, (cx, cy))
+    mx, my = float(manifeste["centre"]["x"]), float(manifeste["centre"]["y"])  # measured C0
+    reel = lire_projet_reel(gpkg, (mx, my))
     p_reel, c_reel, projet_reel = reel["placette"], reel["centre"], reel["projet"]
+    # Whole field survey moved onto the planned centre (decision of Pascal, 2026-11-21).
+    cx, cy = reel["prevu"]
+    log.info("C0 mesuré (%.2f, %.2f) déplacé sur le centre prévu (%.2f, %.2f), à %.1f m.",
+             mx, my, cx, cy, math.dist((mx, my), (cx, cy)))
     params = manifeste["placette"]
     rayon = float(p_reel["rayon_m"] or params["rayon_m"])
     if not math.isclose(rayon, float(params["rayon_m"])):
@@ -466,10 +479,10 @@ def construire(mnt: Path, mnh: Path, gpkg: Path, paquet: Path, sortie: Path = SO
     (sortie / "rasters").mkdir(parents=True)
     (sortie / "controle").mkdir()
 
-    # Forest extent: 100 m square around the C0 plus marge_foret_m. The real UGF and
-    # parcel holding the C0 are clipped to the square; when none holds it (P067 was
-    # filmed about 107 m outside the communal forest) both layers stay empty and the
-    # tile still covers the square, a superset of the schema fallback (plot + marge_m).
+    # Forest extent: 100 m square around the centre plus marge_foret_m. The real UGF
+    # and parcel holding the centre are clipped to the square; when none holds it the
+    # layer stays empty and the tile still covers the square, a superset of the
+    # schema fallback (plot + marge_m).
     carre = box(cx - DEMI_CARRE_M, cy - DEMI_CARRE_M, cx + DEMI_CARRE_M, cy + DEMI_CARRE_M)
     ugf = polygone_au_centre(gpkg, "ugf", (cx, cy), carre)
     if ugf is not None:
@@ -499,7 +512,7 @@ def construire(mnt: Path, mnh: Path, gpkg: Path, paquet: Path, sortie: Path = SO
     for h in houppiers:
         h["plot_id"] = PLOT_ID if h["geometry"].intersects(disque) else None
 
-    # Plot centred on the measured C0; plan attributes of the real project.
+    # Plot at its planned centre; plan attributes of the real project.
     convergence = float(p_reel["convergence_deg"] if p_reel["convergence_deg"] is not None else params["convergence_deg"])
     declinaison = float(params["declinaison_deg"])  # value used on the field (NULL in the project)
     pente, exposition = pente_exposition(mnt_p, cx, cy, rayon, convergence)
@@ -510,7 +523,7 @@ def construire(mnt: Path, mnh: Path, gpkg: Path, paquet: Path, sortie: Path = SO
     placettes = gpd.GeoDataFrame([attributs], geometry=[Point(cx, cy)], crs=2154)
 
     centre = {k: c_reel[k] for k in noms_colonnes("centres_mesures") if k in c_reel}
-    centre["ecart_prevu_m"] = 0.0  # the example plot is placed on the C0 (151.9 m in the real project)
+    centre["ecart_prevu_m"] = 0.0  # C0 moved onto the planned centre (151.9 m away in the real project)
     centres = gpd.GeoDataFrame([centre], geometry=[Point(cx, cy)], crs=2154)
 
     cibles = []
@@ -533,7 +546,8 @@ def construire(mnt: Path, mnh: Path, gpkg: Path, paquet: Path, sortie: Path = SO
             "projet_nom": "Marsannay-la-Côte, P067 (exemple réel)",
             "description": (
                 "Exemple réel de Groma (mission 044) : placette P067 du plan de la forêt communale de "
-                "Marsannay-la-Côte, filmée le 2026-11-20, centrée sur le C0 mesuré "
+                "Marsannay-la-Côte, filmée le 2026-11-20, relevé de terrain (C0 et cibles) déplacé sur le "
+                "centre prévu de la placette (C0 mesuré à 152 m, hors forêt) "
                 + ("; UGF et parcelle réelles découpées sur 100 m" if ugf is not None else
                    "(hors des UGF et parcelles du projet : couches vides)")
                 + " ; MNT LiDAR HD rééchantillonné à 0,5 m ; houppiers et sommets calculés par Groma "
@@ -550,7 +564,7 @@ def construire(mnt: Path, mnh: Path, gpkg: Path, paquet: Path, sortie: Path = SO
     )
     figer_horodatage(sortie / "inventaire_video.gpkg")
 
-    alleger_paquet(paquet, sortie / "paquets" / f"{PLOT_ID}.groma.zip", pas_images)
+    alleger_paquet(paquet, sortie / "paquets" / f"{PLOT_ID}.groma.zip", pas_images, centre=(cx, cy))
     log.info("Exemple écrit dans %s : %d houppiers, emprise %s", sortie, len(houppiers), emprise.bounds)
     return sortie
 
