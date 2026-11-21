@@ -280,6 +280,9 @@ Dans nemetonshiny, génère le projet QField puis « Envoyer au téléphone ».<
     <string name="placette_bouton">Placette</string>
     <string name="placette_titre">Placette · %1$s</string>
     <string name="placette_tout_voir">Tout voir</string>
+    <string name="couche_relief">Relief</string>
+    <string name="couche_houppiers">Houppiers</string>
+    <string name="couche_sommets">Sommets</string>
     <string name="fiche_titre">Arbre n° %1$s</string>
     <string name="fiche_diametre_estime">Diamètre estimé (vidéo) : %1$s cm</string>
     <string name="fiche_sans_estimation">Pas de diamètre estimé.</string>

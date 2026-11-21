@@ -50,6 +50,7 @@ import groma.app.BoussoleMagnetique
 import groma.app.EtalonnageBoussole
 import groma.app.LectureBoussoleMagnetique
 import groma.app.C0Enregistre
+import groma.app.Projet
 import groma.app.R
 import groma.core.ArbrePlacette
 import groma.core.CiblePlacee
@@ -240,7 +241,9 @@ fun EcranPlacette(
                     Text(stringResource(R.string.cibles_centre_reception, centreReception), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            Plan(rayonM, unite, declinaisonDeg, convergenceDeg, cibles, choisie, arbres, centre, fiche, apercu) { fiche = it.uuid }
+            // Mission 042: CVAT relief and crowns of the project, read from the folder (null without it: no layer).
+            val chargerCouches = remember(dossierProjet, centre) { dossierProjet?.let { d -> { demiM: Double -> Projet(d).couchesPlan(centre, demiM) } } }
+            Plan(rayonM, unite, declinaisonDeg, convergenceDeg, cibles, choisie, arbres, centre, fiche, apercu, chargerCouches) { fiche = it.uuid }
 
             // Missions 041 and 041b: « Relever C0 » sits left of C1 (same flow as mission 030); in tree-add mode
             // only trees are surveyed, so neither C0 nor the targets are offered.
