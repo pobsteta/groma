@@ -1,5 +1,20 @@
 # Changelog
 
+## [2026.11.13](https://github.com/pobsteta/groma/compare/v2026.11.12...v2026.11.13) (2026-11-21)
+
+
+### Nouveautés
+
+* **exemples:** exemple réel P067 de Marsannay en 1.7.0, avec relief CVAT (mission 044) ([#128](https://github.com/pobsteta/groma/issues/128)) ([8aad4f8](https://github.com/pobsteta/groma/commit/8aad4f8eef63215a525769ff147f33f88d6d7a07))
+* **exemples:** P067 de nouveau centrée sur le C0 mesuré, le terrain fait foi (mission 044) ([#132](https://github.com/pobsteta/groma/issues/132)) ([b654fc5](https://github.com/pobsteta/groma/commit/b654fc549c62a5d723879cd8d8bc0f3aadb26d43))
+* **exemples:** relevé de P067 déplacé sur le centre prévu de la placette (mission 044) ([#130](https://github.com/pobsteta/groma/issues/130)) ([a17b7f7](https://github.com/pobsteta/groma/commit/a17b7f7b4160d0b419b838ead73bed7b27d42157))
+
+
+### Documentation
+
+* **brief:** brief de Groma rempli avec Pascal et critiqué ([#134](https://github.com/pobsteta/groma/issues/134)) ([c9945b3](https://github.com/pobsteta/groma/commit/c9945b39b0e6ae73c48b85a46ae9eb1118edcab0))
+* **briefs:** recaler P067 du plan d'échantillonnage sur son centre mesuré ([#131](https://github.com/pobsteta/groma/issues/131)) ([a634d78](https://github.com/pobsteta/groma/commit/a634d78495b6b5e3d7b6493d305bd34aeceea872))
+
 ## [2026.11.12](https://github.com/pobsteta/groma/compare/v2026.11.11...v2026.11.12) (2026-11-21)
 
 
