@@ -8,7 +8,7 @@
 
 > **PLAN.md reste la source maître de l'avancement et des décisions prises avant la méthode** (choix de Pascal, 2026-10-23). Ce kanban ne suit que les missions confiées par `/imperatrice:boucle`.
 
-**Dernier cycle :** 7 _(augmenté de 1 à la fin de chaque `/boucle`, même quand elle n'a
+**Dernier cycle :** 8 _(augmenté de 1 à la fin de chaque `/boucle`, même quand elle n'a
 rien lancé. Une carte est immobile quand dernier cycle − N ≥ 2.)_
 
 _Modèle de carte :_
@@ -26,14 +26,10 @@ _Modèle de carte :_
 
 ## Validé
 
-- [037a](missions/037a-test-schema-1-7.md) + [037](missions/037-schema-1-7-foret.md) · depuis le cycle 8
-  - Homme : testeur (sonnet) puis dev (opus), prendre ; une seule PR
-  - Mission : schéma 1.7.0 (dalles MNT à plat dans `rasters/`, `cvat.tif`, houppiers avec `x_sommet`/`y_sommet`, `verifier_projet`)
-  - Moyens : brief vers nemeton du 2026-11-20, pytest, exemple régénéré
-- [041](missions/041-bouton-c0-avant-c1.md) · depuis le cycle 8
-  - Homme : dev (sonnet), donner
-  - Mission : « Relever C0 » à gauche de C1 dans la vue Placette
-  - Moyens : `EcranPlacette.kt` ; essai de Pascal sur le S23
+- [038](missions/038-transport-dalles-cvat.md) · depuis le cycle 8
+  - Homme : dev (sonnet), donner ; lancé le 2026-11-21
+  - Mission : tests du transport des dalles et de `cvat.tif` jusqu'au téléphone (`.qgz`, import, mise à jour)
+  - Moyens : `ExtractionQgz`, `DepotProjets`, `TelechargementProjet`, `projets_qfield.py`
 
 - [026](missions/026-essai-fumee.md) · depuis le cycle 7
   - Homme : dev (sonnet), appuyer
@@ -50,13 +46,20 @@ _Modèle de carte :_
 
 ## Planifié
 
-- [038](missions/038-transport-dalles-cvat.md) · après 037 — dev (sonnet) : dalles et `cvat.tif` jusqu'au téléphone
 - [039](missions/039-paquet-lidar-centre-releve.md) · après 038 — dev (opus) + testeur 039a : paquet avec MNT et houppiers autour du centre relevé, plan d'abord
 - [040](missions/040-carte-cvat-houppiers.md) · après 038 — afficheur (sonnet) : couches CVAT, contours et sommets
 
 
 ## Terminé
 
+- [037a](missions/037a-test-schema-1-7.md) + [037](missions/037-schema-1-7-foret.md) · depuis le cycle 8
+  - Homme : testeur (sonnet) puis dev (opus), prendre ; une seule PR
+  - Mission : schéma 1.7.0 (dalles MNT à plat dans `rasters/`, `cvat.tif`, houppiers avec `x_sommet`/`y_sommet`, `verifier_projet`)
+  - Moyens : brief vers nemeton du 2026-11-20, pytest, exemple régénéré · PR #120 fusionnée (cbc24f5)
+- [041](missions/041-bouton-c0-avant-c1.md) · depuis le cycle 8
+  - Homme : dev (sonnet), donner
+  - Mission : « Relever C0 » à gauche de C1 dans la vue Placette
+  - Moyens : `EcranPlacette.kt` ; essai de Pascal sur le S23 · PR #119 fusionnée, release v2026.11.10
 - [020](missions/020-test-envoi-terrain.md) · depuis le cycle 7
   - Homme : testeur (sonnet), appuyer
   - Mission : tests de l'archive « terrain » d'une placette (extraction, photos, dépôt au serveur, renvoi, empreinte)
@@ -178,3 +181,4 @@ l'inscrit avec ce qu'elle nous apprend._
 - cycle 5 · Groma 0.14.0 publiée (thème lu dans `terrain-style` v0.7.1) · pour Pascal, mainteneur de Groma, Marculus et Surculus · un changement de style fait dans terrain arrive tout seul dans Groma, sans recopie ; rien ne change à l'écran pour l'opérateur
 - cycle 6 · la carte de Groma utilise `terrain-carte` v0.7.1 (#80, 65ce940), essayée sur le S23 Ultra · pour Pascal, mainteneur de Groma, Marculus et Surculus · les tuiles et fonds IGN viennent de la bibliothèque commune au lieu d'une copie (ligne ajoutée au cycle 7, oubliée à la clôture du cycle 6)
 - cycle 7 · Groma 0.15.0 avec la planche A4 des cibles C0-C3 (`docs/cibles_groma_a4.pdf`, #83) · pour Pascal, opérateur de terrain · pour la première fois des cibles prêtes à imprimer et plastifier, conformes au détecteur (motif 15 cm)
+- cycle 8 · Groma v2026.11.10 sur le S23 Ultra · pour Pascal, opérateur de terrain · le film de la capture s'enregistre et se rejoue (version d'essai), l'appli ne plante plus quand ARCore est indisponible, « Relever C0 » est à gauche de C1 sur la même ligne
