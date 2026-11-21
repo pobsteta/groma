@@ -1,6 +1,7 @@
 package groma.app
 
 import android.database.sqlite.SQLiteDatabase
+import android.util.Log
 import groma.core.ArbrePlacette
 import groma.core.Azimut
 import groma.core.CentreMesure
@@ -183,15 +184,15 @@ class Projet(val dossier: File) {
      * empty when its data is absent (a project prepared before schema 1.7.0 has no cvat.tif, no tops).
      */
     fun couchesPlan(centre: Pair<Double, Double>, demiM: Double): CouchesPlan {
-        val emprise = Emprise.autour(centre, demiM)
+        val emprise = Emprise.autour(centre, demiM.coerceAtMost(DEMI_FENETRE_MAX_M))
         val relief = runCatching {
             File(dossier, "rasters/cvat.tif").takeIf { it.exists() }?.let { GeoTiffOctets.fenetre(it, emprise) }
-        }.getOrNull()
+        }.onFailure { Log.w("groma", "Relief CVAT illisible", it) }.getOrNull()
         val houppiers = runCatching {
             SQLiteDatabase.openDatabase(gpkg.path, null, SQLiteDatabase.OPEN_READONLY).use {
                 Houppiers.dansEmprise(SqliteAndroid(it), emprise, MARGE_SOMMET_M)
             }
-        }.getOrDefault(emptyList())
+        }.onFailure { Log.w("groma", "Houppiers illisibles", it) }.getOrDefault(emptyList())
         return CouchesPlan(relief, houppiers)
     }
 
@@ -200,6 +201,9 @@ class Projet(val dossier: File) {
 
     private fun raster(nom: String): Grille? = File(dossier, "rasters/$nom").takeIf { it.exists() }?.let { GeoTiff.lire(it.readBytes()) }
 }
+
+/** Half-side cap of the window read for the plan: a tree misplaced by km must not make millions of pixels be read. */
+const val DEMI_FENETRE_MAX_M = 500.0
 
 /** Widening of the box on the crown tops: a crown whose top is just outside the plan can still reach into it. */
 private const val MARGE_SOMMET_M = 15.0

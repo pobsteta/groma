@@ -154,10 +154,26 @@ class PlanCouchesTest {
             val apres = Houppiers.dansEmprise(db, Emprise(xmaxAnneau + 1, sy - 1, xmaxAnneau + 2, sy + 1), margeSommetM = 50.0)
             assertTrue(apres.none { it.houppierId == h.houppierId })
             // Top just west of the box, ring reaching into it: lost without margin, kept with it.
-            val xmin = sx + 0.01
-            val boite = Emprise(xmin, sy - 1, xmin + 5, sy + 1)
+            assertTrue(xmaxAnneau > sx)
+            val xmin = (sx + xmaxAnneau) / 2
+            val boite = Emprise(xmin, sy - 50, xmaxAnneau + 1, sy + 50)
             assertTrue(Houppiers.dansEmprise(db, boite).none { it.houppierId == h.houppierId })
-            if (xmaxAnneau >= xmin) assertTrue(Houppiers.dansEmprise(db, boite, margeSommetM = 20.0).any { it.houppierId == h.houppierId })
+            assertTrue(Houppiers.dansEmprise(db, boite, margeSommetM = 20.0).any { it.houppierId == h.houppierId })
+        }
+    }
+
+    @Test
+    fun houppierMalForme_estIgnoreSeul() {
+        ouvrir("exemples/inventaire_video/inventaire_video.gpkg").use { cx ->
+            val db = SqliteJdbc(cx)
+            val tous = Houppiers.dansEmprise(db, Emprise(0.0, 0.0, 9e6, 9e6))
+            val (sx, sy) = tous.first().sommet!!
+            // The GeoPackage triggers call spatial functions the JDBC driver lacks: drop them in this copy.
+            db.requete("SELECT name FROM sqlite_master WHERE type = 'trigger' AND tbl_name = 'houppiers'").forEach { db.executer("DROP TRIGGER \"${it["name"]}\"") }
+            db.executer("INSERT INTO houppiers (houppier_id, x_sommet, y_sommet, h_max, geom) VALUES (999999, ?, ?, 10.0, X'00')", listOf(sx, sy))
+            val apres = Houppiers.dansEmprise(db, Emprise(0.0, 0.0, 9e6, 9e6))
+            assertEquals(tous.size, apres.size)
+            assertTrue(apres.none { it.houppierId == 999999 })
         }
     }
 

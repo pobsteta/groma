@@ -84,11 +84,14 @@ object Houppiers {
         return lignes.mapNotNull { l ->
             val xs = (l["x_sommet"] as? Number)?.toDouble()
             val ys = (l["y_sommet"] as? Number)?.toDouble()
-            val h = Houppier(
-                (l["houppier_id"] as Number).toInt(), GeoPackage.decoderAnneau(l["geom"] as ByteArray),
-                (l["h_max"] as? Number)?.toDouble(), if (xs != null && ys != null) Pair(xs, ys) else null,
-            )
-            h.takeIf { it.touche(emprise) }
+            // An empty or malformed ring drops that crown only, never the whole layer.
+            val h = runCatching {
+                Houppier(
+                    (l["houppier_id"] as Number).toInt(), GeoPackage.decoderAnneau(l["geom"] as ByteArray),
+                    (l["h_max"] as? Number)?.toDouble(), if (xs != null && ys != null) Pair(xs, ys) else null,
+                )
+            }.getOrNull()
+            h?.takeIf { it.touche(emprise) }
         }
     }
 }
