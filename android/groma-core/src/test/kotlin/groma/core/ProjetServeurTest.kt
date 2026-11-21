@@ -89,6 +89,9 @@ class ProjetServeurTest {
     @Test
     fun `import ou mise a jour d'un dossier ne copie que des rasters a plat`() {
         assertTrue(ExtractionQgz.copiable("inventaire_video.gpkg"))
+        assertTrue(ExtractionQgz.copiable("inventaire_video.qgs"))
+        assertTrue(ExtractionQgz.copiable("photos/x.jpg"))
+        assertTrue(ExtractionQgz.copiable("autre/sous/y.txt"))
         assertTrue(ExtractionQgz.copiable("rasters/mnt_0849_6689.tif"))
         assertTrue(ExtractionQgz.copiable("rasters/cvat.tif"))
         assertTrue(ExtractionQgz.copiable("rasters/P001_mnt.tif"))

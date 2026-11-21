@@ -71,7 +71,9 @@ object ExtractionQgz {
      * Whether a file at [chemin] (relative to the project folder, `/`
      * separated) may be copied when a project folder is imported or updated:
      * under `rasters/` only flat, well-formed `.tif` names (tiles
-     * `mnt_<x>_<y>.tif`, `cvat.tif`, plot rasters), no sub-folder.
+     * `mnt_<x>_<y>.tif`, `cvat.tif`, plot rasters), no sub-folder; any
+     * other path is accepted. Not a path-traversal guard: callers must only
+     * pass names they built themselves (DocumentFile names never hold `..`).
      */
     fun copiable(chemin: String): Boolean {
         val morceaux = chemin.replace('\\', '/').split('/').filter { it.isNotEmpty() }
